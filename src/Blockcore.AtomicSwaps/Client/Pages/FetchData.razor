@@ -1,47 +1,64 @@
 ﻿@page "/fetchdata"
 @using Blockcore.AtomicSwaps.Shared
+@using Blockcore.Consensus.BlockInfo
 @inject HttpClient Http
 
-<PageTitle>Weather forecast</PageTitle>
+<PageTitle>Fetch block</PageTitle>
 
-<h1>Weather forecast</h1>
+<h1>Fetch block</h1>
+
+
 
 <p>This component demonstrates fetching data from the server.</p>
 
-@if (forecasts == null)
+<p>Link to an indexer.</p>
+
+<textarea style="width:600px; height:50px" @bind="link" @bind:event="oninput" />
+
+<p>block height.</p>
+<textarea style="width:100px; height:30px" @bind="blockheight" @bind:event="oninput" />
+
+
+<button class="btn btn-primary" @onclick="Fetch">Fetch block</button>
+
+
+@if (block != null)
 {
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    
+    <p>block hash: @blockData.blockHash</p>
+    <p>block HashMerkleRoot: @block.Header.HashMerkleRoot.ToString()</p>
+    <p>block Bits: @block.Header.Bits.ToString()</p>
+    <p>block Version: @block.Header.Version.ToString()</p>
+
+    foreach (var trx in block.Transactions)
+    {
+        <p>trx hash: @trx.GetHash().ToString()</p>
+    }
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private BlockData? blockData;
+    public string link { get; set; } = string.Empty;
+    public int blockheight;
+    public Block block;
+    Networks.Network network;
+
+    private async Task Fetch()
+    {
+        blockData = await Http.GetFromJsonAsync<BlockData>(link + "api/query/block/index/" +blockheight );
+
+        var blockhex = await Http.GetStringAsync(link + "api/query/block/" + blockData.blockHash + "/hex");
+
+        block = Block.Parse(blockhex, network.Consensus.ConsensusFactory);
+
+        
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+        network = Blockcore.Networks.Networks1.Bitcoin.Mainnet();
+
+        link = "https://btc.indexer.coinvault.io/";
+
     }
 }

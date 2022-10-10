@@ -1,13 +1,11 @@
 namespace Blockcore.AtomicSwaps.Shared
 {
-    public class WeatherForecast
+    public class BlockData
     {
-        public DateTime Date { get; set; }
+        public string blockHash { get; set; }
 
-        public int TemperatureC { get; set; }
+        public int blockIndex { get; set; }
 
-        public string? Summary { get; set; }
-
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+     
     }
 }
