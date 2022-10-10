@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blockcore.AtomicSwaps.Server", "Blockcore.AtomicSwaps\Server\Blockcore.AtomicSwaps.Server.csproj", "{1C19E7EC-4EC5-406F-BB09-D3EFB66EF464}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Server", "Blockcore.AtomicSwaps\Server\Blockcore.AtomicSwaps.Server.csproj", "{1C19E7EC-4EC5-406F-BB09-D3EFB66EF464}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blockcore.AtomicSwaps.Client", "Blockcore.AtomicSwaps\Client\Blockcore.AtomicSwaps.Client.csproj", "{A384A61A-E30C-4C04-96DB-5148455D6FCD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Client", "Blockcore.AtomicSwaps\Client\Blockcore.AtomicSwaps.Client.csproj", "{A384A61A-E30C-4C04-96DB-5148455D6FCD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blockcore.AtomicSwaps.Shared", "Blockcore.AtomicSwaps\Shared\Blockcore.AtomicSwaps.Shared.csproj", "{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Shared", "Blockcore.AtomicSwaps\Shared\Blockcore.AtomicSwaps.Shared.csproj", "{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore", "..\..\blockcore\src\Blockcore\Blockcore.csproj", "{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

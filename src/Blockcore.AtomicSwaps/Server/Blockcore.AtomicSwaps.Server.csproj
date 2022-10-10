@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\blockcore\src\Blockcore\Blockcore.csproj" />
     <ProjectReference Include="..\Client\Blockcore.AtomicSwaps.Client.csproj" />
     <ProjectReference Include="..\Shared\Blockcore.AtomicSwaps.Shared.csproj" />
   </ItemGroup>
