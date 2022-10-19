@@ -20,4 +20,9 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\blockcore\src\Blockcore\Blockcore.csproj" />
+    <ProjectReference Include="..\Blockcore.AtomicSwaps\Shared\Blockcore.AtomicSwaps.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

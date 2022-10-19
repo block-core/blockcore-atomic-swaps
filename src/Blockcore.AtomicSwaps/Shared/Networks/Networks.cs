@@ -3,7 +3,7 @@ using Blockcore.Networks.Strax;
 
 namespace Blockcore.Networks
 {
-    public static class Networks1
+    public static class Networks
     {
         public static NetworksSelector Bitcoin
         {

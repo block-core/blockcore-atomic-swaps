@@ -10,38 +10,47 @@ namespace Blockcore.AtomicSwaps.Shared
     public class SwapScripts
     {
        
-        public byte[] GetAtomicSwapRecoveryTransaction(int hours)
+        public static Script GetAtomicSwapExchangeScriptSig(TransactionSignature senderSig, uint256 sharedSecret)
         {
-            Transaction transaction = new Transaction();
+            var redeemScript = new Script(
+                Op.GetPushOp(senderSig.ToBytes()),
+                Op.GetPushOp(sharedSecret.ToBytes()),
+                Op.GetPushOp(1));
 
-            transaction.LockTime = new LockTime(DateTime.UtcNow.AddHours(hours));
-
-            return transaction.ToBytes();
+            return redeemScript;
         }
-      
+        public static Script GetAtomicSwapRecoverScriptSig(TransactionSignature receiverSig)
+        {
+            var redeemScript = new Script(
+                Op.GetPushOp(receiverSig.ToBytes()), 
+                Op.GetPushOp(0));
+
+            return redeemScript;
+        }
+
         /// <summary>
         /// 
-        ///    OP_IF
-        ///         <sender-key> OP_CHECKSIGVERIFY <time_lock> OP_CHECKLOCKTIMEVERIFY
+        ///     OP_IF
+        ///         OP_HASH160<H(shared_secret)> OP_EQUALVERIFY <receiver-key> OP_CHECKSIG
         ///     OP_ELSE
-        ///         <receiver-key> OP_CHECKSIGVERIFY OP_HASH160<H(shared_secret)> OP_EQUAL
+        ///         <time_lock> OP_CHECKLOCKTIMEVERIFY OP_DROP <sender-key> OP_CHECKSIG       
         ///     OP_ENDIF
         /// 
         /// </summary>
-        public Script GetAtomicSwapHtlcScript(
+        public static Script GetAtomicSwapHtlcScript(
             ulong cltvTimelock,
             PubKey senderKey,
             PubKey receiverKey,
             uint256 sharedSecret)
         {
-            byte[]? sharedSecretHash160 = NBitcoin.Crypto.Hashes.RIPEMD160(sharedSecret.ToBytes().ToArray());
+            byte[]? sharedSecretHash160 = NBitcoin.Crypto.Hashes.Hash160(sharedSecret.ToBytes()).ToBytes();
 
             List<Op> ops = new List<Op>
             {
                 OpcodeType.OP_IF,
-                      Op.GetPushOp(senderKey.ToBytes()), OpcodeType.OP_CHECKSIGVERIFY, Op.GetPushOp((long)cltvTimelock), OpcodeType.OP_CHECKLOCKTIMEVERIFY,
+                    OpcodeType.OP_HASH160, Op.GetPushOp(sharedSecretHash160), OpcodeType.OP_EQUALVERIFY,Op.GetPushOp(receiverKey.ToBytes()), OpcodeType.OP_CHECKSIG,
                 OpcodeType.OP_ELSE,
-                      Op.GetPushOp(receiverKey.ToBytes()), OpcodeType.OP_CHECKSIGVERIFY, OpcodeType.OP_HASH160, Op.GetPushOp(sharedSecretHash160), OpcodeType.OP_EQUALVERIFY,
+                    Op.GetPushOp((long)cltvTimelock), OpcodeType.OP_CHECKLOCKTIMEVERIFY, OpcodeType.OP_DROP, Op.GetPushOp(senderKey.ToBytes()), OpcodeType.OP_CHECKSIG,
                 OpcodeType.OP_ENDIF,
             };
 
