@@ -4,6 +4,7 @@ using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using NBitcoin;
+using NBitcoin.BouncyCastle.Math;
 using NBitcoin.Policy;
 
 namespace Blockcore.AtomicSwaps.Shared
@@ -16,7 +17,7 @@ namespace Blockcore.AtomicSwaps.Shared
             PubKey senderPublicKey,
             PubKey senderChangePublicKey,
             PubKey receiverPublicKey,
-            TimeSpan lockTimeHours,
+            DateTime lockTime,
             Money amount,
             List<Utxo> utxos,
             FeeRate feeRate)
@@ -30,7 +31,7 @@ namespace Blockcore.AtomicSwaps.Shared
 
             TxOut changeOutput = swapTrx.AddOutput(Money.Coins(0), senderChangePublicKey.ScriptPubKey);
 
-            var locktime = Utils.DateTimeToUnixTime(DateTime.UtcNow.Add(lockTimeHours));
+            var locktime = Utils.DateTimeToUnixTime(lockTime);
 
             Script swapScript = SwapScripts.GetAtomicSwapHtlcScript(locktime, senderPublicKey, receiverPublicKey, sharedSecretHash);
 
@@ -84,11 +85,11 @@ namespace Blockcore.AtomicSwaps.Shared
             TxIn swapSpentInput = swapSpendTransaction.AddInput(swapTransaction, (int)swapOutput.N); 
             TxOut swapSpendTransactionTxOut = swapSpendTransaction.AddOutput(Money.Coins(0), sendToPublicKey.ScriptPubKey);
 
-            Money fee = feeRate.GetFee(swapTransaction, 1);
+            Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
             Money send = swapOutput.TxOut.Value - fee;
             swapSpendTransactionTxOut.Value = send;
 
-            uint256 sighash = swapSpendTransaction.GetSignatureHash(network, new Coin(swapTransaction, (uint)(swapTransaction.Outputs.Count - 1)));
+            uint256 sighash = swapSpendTransaction.GetSignatureHash(network, new Coin(swapTransaction, swapOutput.TxOut));
             TransactionSignature signature = receiverPrivateKey.Sign(sighash, SigHash.All);
 
             swapSpentInput.ScriptSig = SwapScripts.GetAtomicSwapExchangeScriptSig(signature, sharedSecret);
@@ -117,18 +118,18 @@ namespace Blockcore.AtomicSwaps.Shared
             PubKey sendToPublicKey,
             Key senderPrivateKey,
             FeeRate feeRate,
-            TimeSpan lockTimeHours)
+            DateTime lockTime)
         {
             var recoverTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
             IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs().Last(); // the swap is always the last output
             TxIn recoverInput = recoverTransaction.AddInput(swapTransaction, (int)swapOutput.N);
             TxOut recoverTransactionTxOut = recoverTransaction.AddOutput(Money.Coins(0), sendToPublicKey.ScriptPubKey);
 
-            Money fee = feeRate.GetFee(swapTransaction, 1);
+            Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
             Money send = swapOutput.TxOut.Value - fee;
             recoverTransactionTxOut.Value = send;
-
-            var locktime = Utils.DateTimeToUnixTime(DateTime.UtcNow.Add(lockTimeHours));
+            
+            var locktime = Utils.DateTimeToUnixTime(lockTime);
             recoverTransaction.LockTime = locktime;
             recoverInput.Sequence = new Sequence(locktime);
 
