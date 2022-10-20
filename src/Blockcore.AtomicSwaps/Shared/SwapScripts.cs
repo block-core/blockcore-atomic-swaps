@@ -41,14 +41,12 @@ namespace Blockcore.AtomicSwaps.Shared
             ulong cltvTimelock,
             PubKey senderKey,
             PubKey receiverKey,
-            uint256 sharedSecret)
+            uint160 sharedSecretHash)
         {
-            byte[]? sharedSecretHash160 = NBitcoin.Crypto.Hashes.Hash160(sharedSecret.ToBytes()).ToBytes();
-
             List<Op> ops = new List<Op>
             {
                 OpcodeType.OP_IF,
-                    OpcodeType.OP_HASH160, Op.GetPushOp(sharedSecretHash160), OpcodeType.OP_EQUALVERIFY,Op.GetPushOp(receiverKey.ToBytes()), OpcodeType.OP_CHECKSIG,
+                    OpcodeType.OP_HASH160, Op.GetPushOp(sharedSecretHash.ToBytes()), OpcodeType.OP_EQUALVERIFY,Op.GetPushOp(receiverKey.ToBytes()), OpcodeType.OP_CHECKSIG,
                 OpcodeType.OP_ELSE,
                     Op.GetPushOp((long)cltvTimelock), OpcodeType.OP_CHECKLOCKTIMEVERIFY, OpcodeType.OP_DROP, Op.GetPushOp(senderKey.ToBytes()), OpcodeType.OP_CHECKSIG,
                 OpcodeType.OP_ENDIF,
