@@ -20,9 +20,9 @@ Welcome to your new app. <br/><br/>
     private string address2 = "";
     private void IncrementCount()
     {
-        var netwrok = Blockcore.Networks.Networks1.Strax.Mainnet();
-        var netwrok1 = Blockcore.Networks.Networks1.Bitcoin.Mainnet();
-        var netwrok2 = Blockcore.Networks.Networks1.City.Mainnet();
+        var netwrok = Blockcore.Networks.Networks.Strax.Mainnet();
+        var netwrok1 = Blockcore.Networks.Networks.Bitcoin.Mainnet();
+        var netwrok2 = Blockcore.Networks.Networks.City.Mainnet();
 
         var key = new NBitcoin.Key();
         address = netwrok.Name + " : " + key.PubKey.GetSegwitAddress(netwrok).ToString() + " - " + key.PubKey.GetAddress(netwrok).ToString();

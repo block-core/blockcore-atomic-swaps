@@ -56,7 +56,7 @@ namespace Blockcore.AtomicSwaps.Test
                 senderKeyCITY.PubKey,
                 senderKeyCITY.PubKey,
                 receiverKeyCITY.PubKey, 
-                TimeSpan.FromHours(48),
+                DateTime.UtcNow.AddHours(48),
                 Money.Parse("10.1"),
                 new List<Utxo>() { new Utxo { OutPoint = new OutPoint(cityFakeInputTrx, 0), Amount = fakeTxout.Value, PrivateKey = fakeInputKey, Script = fakeTxout.ScriptPubKey } },
                 new FeeRate(Money.Satoshis(cityNetwork.MinTxFee * 2)));
@@ -79,7 +79,7 @@ namespace Blockcore.AtomicSwaps.Test
                 senderKeyCITY.PubKey,
                 senderKeyCITY,
                 new FeeRate(Money.Satoshis(cityNetwork.MinTxFee)),
-                TimeSpan.FromHours(48));
+                DateTime.UtcNow.AddHours(48));
 
             // 1 - create an htlc trx that sends from seller to buyer
 

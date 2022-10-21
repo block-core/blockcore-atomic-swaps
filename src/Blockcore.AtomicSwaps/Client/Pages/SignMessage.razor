@@ -45,7 +45,7 @@
     protected override async Task OnInitializedAsync()
     {
         key = new NBitcoin.Key();
-        network = Blockcore.Networks.Networks1.Bitcoin.Mainnet();
+        network = Blockcore.Networks.Networks.Bitcoin.Mainnet();
 
         WalletWords = key.ToString(network);
         Address = key.PubKey.GetAddress(network).ToString();

@@ -1,0 +1,83 @@
+﻿@page "/fetchswaps"
+@using Blockcore.AtomicSwaps.Shared
+@using Blockcore.Consensus.BlockInfo
+@using Blockcore.AtomicSwaps.Server.Controllers
+@inject HttpClient Http
+
+<PageTitle>Fetch Swaps</PageTitle>
+
+<h1>Fetch Swaps</h1>
+
+
+
+<p>This component demonstrates swaps data from the server.</p>
+
+<p>Swap.</p>
+
+<p>From   - <input @bind="SwapFrom" /></p>
+<p>Amount - <input @bind="amountToSell" /></p>
+<p>To     - <input @bind="SwapTo" /></p>
+<p>Amount - <input @bind="amountToBuy" /></p>
+
+<button class="btn btn-primary" @onclick="CreateSwap">Create Swap</button>
+
+<button class="btn btn-primary" @onclick="Fetch">Fetch Swaps</button>
+
+
+@if (swaps != null)
+{
+    
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Swap Id</th>
+            <th>Seller</th>
+            <th>Buyer</th>
+            <th>Status</th>
+            <th>Date</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var swap in swaps)
+        {
+            <tr>
+                <td>@swap.SwapSessionId</td>
+                <td>@swap.CoinSeller.Amount - @swap.CoinSeller.CoinSymbol</td>
+                <td>@swap.CoinBuyer.Amount - @swap.CoinBuyer.CoinSymbol</td>
+                <td>@swap.Status </td>
+                <td>@swap.Created </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private SwapSession[] swaps;
+    Networks.Network network;
+
+
+    string SwapFrom = "STRAX";
+    string SwapTo = "CITY";
+
+    long amountToSell = 1;
+    long amountToBuy = 10;
+
+    private async Task Fetch()
+    {
+        this.swaps = await Http.GetFromJsonAsync<SwapSession[]>("SwapCoordinator");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.Fetch();
+    }
+
+    protected async Task CreateSwap()
+    {
+        var postBody = new CreateSwapSession { FromCoinSymbol= SwapFrom, AmountToSell = amountToSell, ToCoinSymbol  = SwapTo, AmountToBuy  = amountToBuy};
+        await Http.PostAsJsonAsync($"SwapCoordinator", postBody);
+
+        await this.Fetch();
+    }
+}
