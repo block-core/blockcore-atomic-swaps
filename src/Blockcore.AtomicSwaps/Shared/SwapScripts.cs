@@ -29,11 +29,24 @@ namespace Blockcore.AtomicSwaps.Shared
         }
 
         /// <summary>
+        /// This is the atomic swap script, the logic here is as following:
+        /// IF TRUE path - if the receiver knows the shared-secret they can
+        /// spend the coins together with their private key, by spending the
+        /// coins they have to reveal the shared-secret
+        /// ELSE path - the sender (owner) of the coins can take back using
+        /// their private key after the lock time has passed.
         /// 
         ///     OP_IF
-        ///         OP_HASH160<H(shared_secret)> OP_EQUALVERIFY <receiver-key> OP_CHECKSIG
+        ///         OP_HASH160<H(shared_secret)>
+        ///         OP_EQUALVERIFY
+        ///         <receiver-key>
+        ///         OP_CHECKSIG
         ///     OP_ELSE
-        ///         <time_lock> OP_CHECKLOCKTIMEVERIFY OP_DROP <sender-key> OP_CHECKSIG       
+        ///         <time_lock>
+        ///         OP_CHECKLOCKTIMEVERIFY
+        ///         OP_DROP
+        ///         <sender-key>
+        ///         OP_CHECKSIG       
         ///     OP_ENDIF
         /// 
         /// </summary>
@@ -46,9 +59,17 @@ namespace Blockcore.AtomicSwaps.Shared
             List<Op> ops = new List<Op>
             {
                 OpcodeType.OP_IF,
-                    OpcodeType.OP_HASH160, Op.GetPushOp(sharedSecretHash.ToBytes()), OpcodeType.OP_EQUALVERIFY,Op.GetPushOp(receiverKey.ToBytes()), OpcodeType.OP_CHECKSIG,
+                    OpcodeType.OP_HASH160, 
+                    Op.GetPushOp(sharedSecretHash.ToBytes()), 
+                    OpcodeType.OP_EQUALVERIFY,
+                    Op.GetPushOp(receiverKey.ToBytes()), 
+                    OpcodeType.OP_CHECKSIG,
                 OpcodeType.OP_ELSE,
-                    Op.GetPushOp((long)cltvTimelock), OpcodeType.OP_CHECKLOCKTIMEVERIFY, OpcodeType.OP_DROP, Op.GetPushOp(senderKey.ToBytes()), OpcodeType.OP_CHECKSIG,
+                    Op.GetPushOp((long)cltvTimelock), 
+                    OpcodeType.OP_CHECKLOCKTIMEVERIFY, 
+                    OpcodeType.OP_DROP, 
+                    Op.GetPushOp(senderKey.ToBytes()), 
+                    OpcodeType.OP_CHECKSIG,
                 OpcodeType.OP_ENDIF,
             };
 

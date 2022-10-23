@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Blockcore.AtomicSwaps.Server.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class SwapCoordinatorController : ControllerBase
     {
         private readonly ILogger<SwapCoordinatorController> _logger;
@@ -24,25 +24,26 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         }
 
         [HttpGet]
-        [Route("session/{swapSessionId}")] 
+        [Route("session/{swapSessionId}")]
         public SwapSession? GetBySession(string swapSessionId)
         {
-            if(Swaps.TryGetValue(swapSessionId, out SwapSession? swapSession))
+            if (Swaps.TryGetValue(swapSessionId, out SwapSession? swapSession))
             {
-                return swapSession ;
+                return swapSession;
             }
 
             return null;
         }
 
         [HttpPost]
-        public SwapSession Post(CreateSwapSession data)
+        [Route("create")]
+        public SwapSession CreateSession(CreateSwapSession data)
         {
             SwapSession session = new()
             {
                 SwapSessionId = Guid.NewGuid().ToString("N"),
                 Created = DateTime.UtcNow,
-                Status = "Ready",
+                Status = "Available",
                 CoinSeller = new SwapSessionCoin {CoinSymbol = data.FromCoinSymbol, Amount = data.AmountToSell},
                 CoinBuyer= new SwapSessionCoin { CoinSymbol = data.ToCoinSymbol, Amount = data.AmountToBuy}
             };
@@ -51,7 +52,16 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
             return session;
         }
-    }
 
-  
+
+        [HttpPost]
+        [Route("update")]
+        public void UpdateSession(SwapSession data)
+        {
+            if (Swaps.TryGetValue(data.SwapSessionId, out SwapSession swapSession))
+            {
+                Swaps[data.SwapSessionId] = data;
+            }
+        }
+    }
 }

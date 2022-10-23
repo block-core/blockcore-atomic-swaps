@@ -1,0 +1,184 @@
+﻿@page "/walletdata"
+@using Blockcore.AtomicSwaps.Shared
+@using Blockcore.Consensus.BlockInfo
+@using Blockcore.AtomicSwaps.Server.Controllers
+@using Blockcore.Features.Wallet.Helpers
+@using NBitcoin
+@using Utxo = Blockcore.AtomicSwaps.Shared.Utxo
+@inject HttpClient Http
+@inject Storage storage;
+@inject GlobalData globalData;
+
+<PageTitle>Wallet and balances</PageTitle>
+
+<h1>Wallet and balances</h1>
+
+
+
+<p>Beta app only use test wallets!!!!!</p>
+
+<p>Wallet Words.</p>
+
+<textarea style="width:600px; height:100px" @bind="walletWrods"  />
+<button class="btn btn-primary" @onclick="SaveWallet">Save Wallet</button>
+
+<br/>
+<select @bind="selectedNetwork"   type="text"  @onselect="onSelected">
+    <option value=""></option>
+    @{
+        @foreach (var prp in NetworkList)
+        {          
+            <option value="@prp">@prp</option>
+        }
+    }
+</select>
+
+<button class="btn btn-primary" @onclick="Fetch">Fetch Balance</button>
+
+
+@if (UtxoData != null)
+{
+
+    <p> Total balance @Money.Satoshis(UtxoData.SelectMany(s => s.Value.Select(p => p.value)).Sum()) selectedNetwork</p>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Address</th>
+            <th>Amount</th>
+        </tr>
+        </thead>
+        <tbody>
+        
+        @foreach (var addressItem in UtxoData)
+        {
+            foreach (var addressUtxoItem in addressItem.Value)
+            {
+                <tr>
+                    <td>@addressItem .k.SwapSessionId</td>
+                    <td>@Money.Bits(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) selectedNetwork</td>
+                </tr>
+            }
+        }
+        
+        </tbody>
+    </table>
+   
+}
+
+@code {
+    private string walletWrods;
+    public string link { get; set; } = string.Empty;
+    public int blockheight;
+    public string outputs;
+    Block block;
+    Networks.Network network;
+    private Dictionary<string, List<UtxoData>>? UtxoData;
+
+
+    List<string> NetworkList;
+    string selectedNetwork; 
+
+    private async Task Fetch()
+    {
+        Networks.Network network = globalData.Networks[selectedNetwork];
+
+        var indexer = globalData.Indexers.First(f => f.Symbol == selectedNetwork);
+
+        ExtKey extendedKey;
+        try
+        {
+            extendedKey = HdOperations.GetExtendedKey(walletWrods);
+        }
+        catch (NotSupportedException ex)
+        {
+            Console.WriteLine("Exception occurred: {0}", ex.ToString());
+
+            if (ex.Message == "Unknown")
+                throw new Exception("Please make sure you enter valid mnemonic words.");
+
+            throw;
+        }
+
+        var utxoCache = globalData.UtxoData[selectedNetwork];
+        utxoCache.Clear();
+
+        var coinType = network.Consensus.CoinType;
+        var accountIndex = 0; // for now only account 0
+        var purpose = 44; // for now only legacy
+        string accountHdPath = HdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
+        //Key privateKey =  HdOperations.DecryptSeed(encryptedSeed, password, network);
+        Key privateKey = extendedKey.PrivateKey;
+        ExtPubKey accountExtPubKey = HdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
+
+        int scanCount = 50; // for the demo we just scan 50 addresses
+
+        for (int i = 0; i < scanCount; i++)
+        {
+            PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, i, false);
+            PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, i, true);
+
+            var adddress = pubkey.GetAddress(network).ToString();
+            var adddressChange = pubkeyChange.GetAddress(network).ToString();
+
+            var result = await FetchUtxos(indexer, adddress);
+            utxoCache.Add(adddress, result);
+
+            result = await FetchUtxos(indexer, adddressChange);
+            utxoCache.Add(adddressChange, result);
+        }
+
+        UtxoData = utxoCache;
+    }
+
+    private async Task<List<UtxoData>> FetchUtxos(IndexerUrl indexer, string adddress)
+    {
+        var limit = 10;
+        var offset = 0;
+        List<UtxoData> allItems = new();
+
+        int fetchCount = 10; // for the demo we just scan 50 addresses
+
+        for (int i = 0; i < fetchCount; i++)
+        {
+            // this is inefficient look at headers to know when to stop
+
+            var url = $"query/address/{adddress}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
+            var response = await Http.GetAsync(indexer.Url + url);
+            var utxo = await response.Content.ReadFromJsonAsync<List<UtxoData>>();
+
+            if (utxo == null || !utxo.Any())
+            {
+                break;
+            }
+
+            allItems.AddRange(utxo);
+
+            offset += limit;
+        }
+
+        return allItems;
+    }
+
+    private void onSelected()
+    {
+        Networks.Network network = globalData.Networks[selectedNetwork];
+
+        if (globalData.UtxoData.ContainsKey(selectedNetwork))
+        {
+            UtxoData = globalData.UtxoData[selectedNetwork];
+        }
+
+    }
+
+    private async Task SaveWallet()
+    {
+        storage.SaveWalletWords(walletWrods);
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        walletWrods = storage.GetWalletWords();
+        NetworkList = globalData.Networks.Keys.ToList();
+    }
+}

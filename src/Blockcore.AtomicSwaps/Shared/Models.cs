@@ -25,9 +25,23 @@ public class CreateSwapSession
 {
     public string FromCoinSymbol { get; set; }
     public string ToCoinSymbol { get; set; }
-
     public long AmountToSell { get; set; }
-
     public long AmountToBuy { get; set; }
+}
 
+public class Outpoint
+{
+    public string transactionId { get; set; }
+    public int outputIndex { get; set; }
+}
+
+public class UtxoData
+{
+    public Outpoint outpoint { get; set; }
+    public string address { get; set; }
+    public string scriptHex { get; set; }
+    public long value { get; set; }
+    public int blockIndex { get; set; }
+    public bool coinBase { get; set; }
+    public bool coinStake { get; set; }
 }
