@@ -35,12 +35,13 @@
 
 <button class="btn btn-primary" @onclick="Fetch">Fetch Balance</button>
 
-
+<br/>
 <p>@loadingStatus</p>
 @if (UtxoData != null)
 {
 
-    <p> Total balance @Money.Satoshis(UtxoData.SelectMany(s => s.Value.Select(p => p.value)).Sum()) selectedNetwork</p>
+    <p> Total balance @Money.Satoshis(UtxoData.SelectMany(s => s.Value.Select(p => p.value)).Sum()) @selectedNetwork</p>
+    <p> Addressed scanned @scannedAcount</p>
     <table class="table">
         <thead>
         <tr>
@@ -73,18 +74,23 @@
     public string outputs;
     Block block;
     Networks.Network network;
-    private Dictionary<string, List<UtxoData>>? UtxoData;
+    private Dictionary<string, List<UtxoData>>? UtxoData = new ();
 
     string loadingStatus = string.Empty;
 
     List<string> NetworkList;
-    string selectedNetwork; 
+    string selectedNetwork;
+    int scannedAcount;
 
     private async Task Fetch()
     {
-        loadingStatus = "Loading";
+        
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+        loadingStatus = "Loading key...";
+        StateHasChanged();    
+        await Task.Delay(1); 
 
         Networks.Network network = globalData.Networks[selectedNetwork];
 
@@ -105,8 +111,13 @@
             throw;
         }
 
+        loadingStatus = "Deriving keys...";
+        StateHasChanged();    
+        await Task.Delay(1); 
+
         var utxoCache = globalData.UtxoData[selectedNetwork];
         utxoCache.Clear();
+        UtxoData.Clear();
 
         var coinType = network.Consensus.CoinType;
         var accountIndex = 0; // for now only account 0
@@ -116,33 +127,63 @@
         Key privateKey = extendedKey.PrivateKey;
         ExtPubKey accountExtPubKey = HdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
 
-        int scanCount = 50; // for the demo we just scan 50 addresses
 
+        loadingStatus = "Fetching Addresses...";
+        StateHasChanged();    
+        await Task.Delay(1); 
+
+        int scanCount = 50; // for the demo we just scan 50 addresses
+        scannedAcount = 0;
+
+        bool fetch = true;
+        bool fetchChange = true;
         for (int i = 0; i < scanCount; i++)
         {
-            PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, i, false);
-            PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, i, true);
+            if (fetch)
+            {
+                scannedAcount += 1;
+                PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, i, false);
+                var adddress = pubkey.GetAddress(network).ToString();
+                var result = await FetchUtxos(indexer, adddress);
+                UtxoData.Add(adddress, result.data);
+                if (result.noHistory) fetch = false;
+            }
 
-            var adddress = pubkey.GetAddress(network).ToString();
-            var adddressChange = pubkeyChange.GetAddress(network).ToString();
+            if (fetchChange)
+            {
+                scannedAcount += 1;
+                PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, i, true);
+                var adddressChange = pubkeyChange.GetAddress(network).ToString();
+                var resulChange = await FetchUtxos(indexer, adddressChange);
+                UtxoData.Add(adddressChange, resulChange.data);
+                if (resulChange.noHistory) fetchChange = false;
+            }
 
-            var result = await FetchUtxos(indexer, adddress);
-            utxoCache.Add(adddress, result);
-
-            result = await FetchUtxos(indexer, adddressChange);
-            utxoCache.Add(adddressChange, result);
+            StateHasChanged();    
+            await Task.Delay(1); 
         }
 
-        UtxoData = utxoCache;
+        foreach (var utxoData in this.UtxoData)
+        {
+            utxoCache.Add(utxoData.Key, utxoData.Value);
+        }
 
         loadingStatus = string.Empty;
     }
 
-    private async Task<List<UtxoData>> FetchUtxos(IndexerUrl indexer, string adddress)
+    private async Task<(bool noHistory, List<UtxoData> data)> FetchUtxos(IndexerUrl indexer, string adddress)
     {
         var limit = 10;
         var offset = 0;
         List<UtxoData> allItems = new();
+
+        var urlBalance = $"/query/address/{adddress}";
+        var addressBalance = await Http.GetFromJsonAsync<AddressBalance>(indexer.Url + urlBalance);
+
+        if (addressBalance?.balance == 0 && (addressBalance.totalReceivedCount + addressBalance.totalSentCount) == 0)
+        {
+            return (true, allItems);
+        }
 
         int fetchCount = 10; // for the demo we just scan 50 addresses
 
@@ -151,20 +192,21 @@
             // this is inefficient look at headers to know when to stop
 
             var url = $"/query/address/{adddress}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
+
+            Console.WriteLine($"fetching {url}");
+
             var response = await Http.GetAsync(indexer.Url + url);
             var utxo = await response.Content.ReadFromJsonAsync<List<UtxoData>>();
 
             if (utxo == null || !utxo.Any())
-            {
                 break;
-            }
 
             allItems.AddRange(utxo);
 
             offset += limit;
         }
 
-        return allItems;
+        return (false, allItems);
     }
 
     private void onSelected()
