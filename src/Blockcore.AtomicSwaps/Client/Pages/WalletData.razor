@@ -36,6 +36,7 @@
 <button class="btn btn-primary" @onclick="Fetch">Fetch Balance</button>
 
 
+<p>@loadingStatus</p>
 @if (UtxoData != null)
 {
 
@@ -54,8 +55,8 @@
             foreach (var addressUtxoItem in addressItem.Value)
             {
                 <tr>
-                    <td>@addressItem .k.SwapSessionId</td>
-                    <td>@Money.Bits(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) selectedNetwork</td>
+                    <td>@addressUtxoItem.address</td>
+                    <td>@Money.Satoshis(addressUtxoItem.value).ToUnit(MoneyUnit.BTC) @selectedNetwork</td>
                 </tr>
             }
         }
@@ -74,12 +75,17 @@
     Networks.Network network;
     private Dictionary<string, List<UtxoData>>? UtxoData;
 
+    string loadingStatus = string.Empty;
 
     List<string> NetworkList;
     string selectedNetwork; 
 
     private async Task Fetch()
     {
+        loadingStatus = "Loading";
+        ExtKey.UseBCForHMACSHA512 = true;
+        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
         Networks.Network network = globalData.Networks[selectedNetwork];
 
         var indexer = globalData.Indexers.First(f => f.Symbol == selectedNetwork);
@@ -128,6 +134,8 @@
         }
 
         UtxoData = utxoCache;
+
+        loadingStatus = string.Empty;
     }
 
     private async Task<List<UtxoData>> FetchUtxos(IndexerUrl indexer, string adddress)
@@ -142,7 +150,7 @@
         {
             // this is inefficient look at headers to know when to stop
 
-            var url = $"query/address/{adddress}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
+            var url = $"/query/address/{adddress}/transactions/unspent?confirmations=0&offset={offset}&limit={limit}";
             var response = await Http.GetAsync(indexer.Url + url);
             var utxo = await response.Content.ReadFromJsonAsync<List<UtxoData>>();
 
