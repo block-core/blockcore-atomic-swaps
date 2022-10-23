@@ -67,7 +67,7 @@
 
     private async Task Fetch()
     {
-        this.swaps = await Http.GetFromJsonAsync<SwapSession[]>("SwapCoordinator");
+        this.swaps = await Http.GetFromJsonAsync<SwapSession[]>("api/SwapCoordinator");
     }
 
     protected override async Task OnInitializedAsync()
@@ -78,7 +78,7 @@
     protected async Task CreateSwap()
     {
         var postBody = new CreateSwapSession { FromCoinSymbol= SwapFrom, AmountToSell = amountToSell, ToCoinSymbol  = SwapTo, AmountToBuy  = amountToBuy};
-        await Http.PostAsJsonAsync($"SwapCoordinator", postBody);
+        await Http.PostAsJsonAsync($"api/SwapCoordinator/create", postBody);
 
         await this.Fetch();
     }

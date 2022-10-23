@@ -20,5 +20,15 @@ namespace Blockcore.AtomicSwaps.Client
         {
             return _storage.GetItemAsString("mnemonic");
         }
+
+        public AccountInfo GetAccountInfo(string network)
+        {
+            return _storage.GetItem<AccountInfo>($"utxo:{network}");
+        }
+
+        public void SetAccountInfo(string network, AccountInfo items)
+        {
+            _storage.SetItem($"utxo:{network}", items);
+        }
     }
 }

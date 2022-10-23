@@ -21,12 +21,12 @@ namespace Blockcore.AtomicSwaps.Client
             { "BTC", Blockcore.Networks.Networks.Bitcoin.Mainnet() }
         };
 
-        public Dictionary<string, Dictionary<string, List<UtxoData>>> UtxoData { get; } = new()
-        {
-            { "STRAX", new Dictionary<string, List<UtxoData>>() {}  },
-            { "CITY", new Dictionary<string, List<UtxoData>>() { } },
-            { "BTC", new Dictionary<string, List<UtxoData>>() { } },
-        };
+        //public Dictionary<string, Dictionary<string, List<UtxoData>>> UtxoData { get; } = new()
+        //{
+        //    { "STRAX", new Dictionary<string, List<UtxoData>>() {}  },
+        //    { "CITY", new Dictionary<string, List<UtxoData>>() { } },
+        //    { "BTC", new Dictionary<string, List<UtxoData>>() { } },
+        //};
     }
 
     public class IndexerUrl
