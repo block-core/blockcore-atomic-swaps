@@ -20,46 +20,54 @@
 <textarea style="width:100px; height:30px" @bind="blockheight" @bind:event="oninput" />
 
 
-<button class="btn btn-primary" @onclick="Fetch">Fetch block</button>
+<button class="btn btn-primary" disabled="@busy" @onclick="Fetch">Fetch block</button>
 
 
 @if (block != null)
 {
-    
-    <p>block hash: @blockData.blockHash</p>
-    <p>block HashMerkleRoot: @block.Header.HashMerkleRoot.ToString()</p>
-    <p>block Bits: @block.Header.Bits.ToString()</p>
-    <p>block Version: @block.Header.Version.ToString()</p>
 
-    foreach (var trx in block.Transactions)
-    {
-        <p>trx hash: @trx.GetHash().ToString()</p>
-    }
+	<p>block hash: @blockData.blockHash</p>
+	<p>block HashMerkleRoot: @block.Header.HashMerkleRoot.ToString()</p>
+	<p>block Bits: @block.Header.Bits.ToString()</p>
+	<p>block Version: @block.Header.Version.ToString()</p>
+
+	foreach (var trx in block.Transactions)
+	{
+		<p>trx hash: @trx.GetHash().ToString()</p>
+	}
 }
 
 @code {
-    private BlockData? blockData;
-    public string link { get; set; } = string.Empty;
-    public int blockheight;
-    public Block block;
-    Networks.Network network;
+	private bool busy = false;
+	private BlockData? blockData;
+	public string link { get; set; } = string.Empty;
+	public int blockheight;
+	public Block block;
+	Networks.Network network;
 
-    private async Task Fetch()
-    {
-        blockData = await Http.GetFromJsonAsync<BlockData>(link + "api/query/block/index/" +blockheight );
+	private async Task Fetch()
+	{
+		if (busy) return;
+		busy = true;
+		try
+		{
+			blockData = await Http.GetFromJsonAsync<BlockData>(link + "api/query/block/index/" + blockheight);
 
-        var blockhex = await Http.GetStringAsync(link + "api/query/block/" + blockData.blockHash + "/hex");
+			var blockhex = await Http.GetStringAsync(link + "api/query/block/" + blockData.blockHash + "/hex");
 
-        block = Block.Parse(blockhex, network.Consensus.ConsensusFactory);
+			block = Block.Parse(blockhex, network.Consensus.ConsensusFactory);
+		}
+		finally
+		{
+			busy = false;
+		}
+	}
 
-        
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		network = Blockcore.Networks.Networks.Bitcoin.Mainnet();
 
-    protected override async Task OnInitializedAsync()
-    {
-        network = Blockcore.Networks.Networks.Bitcoin.Mainnet();
+		link = "https://btc.indexer.coinvault.io/";
 
-        link = "https://btc.indexer.coinvault.io/";
-
-    }
+	}
 }
