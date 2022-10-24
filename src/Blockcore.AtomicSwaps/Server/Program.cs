@@ -1,4 +1,6 @@
+using Blockcore.AtomicSwaps.Server.Services;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddSwaggerGen();
-
+builder.Services.Configure<TelegramLoggingBotOptions>(options =>builder.Configuration.GetSection("TelegramLoggingBot").Bind(options));
+builder.Services.AddSingleton<ITelegramBotService, TelegramBotService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
