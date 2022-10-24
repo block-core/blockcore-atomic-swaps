@@ -159,45 +159,70 @@
 
             localAccountInfo = accountInfo;
 
+            loadingStatus = "Checking Addresses...";
+            StateHasChanged();
+            await Task.Delay(1);
+
+            await this.CheckExistingAddresses(indexer, localAccountInfo);
+
             ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
 
             loadingStatus = "Fetching Addresses...";
             StateHasChanged();
             await Task.Delay(1);
 
-            int scanCount = 50; // for the demo we just scan 50 addresses
 
-            for (int i = 0; i < scanCount; i++)
+            var scanIndex = accountInfo.LastFetchIndex;
+            var gap = 5;
+            while (gap > 0)
             {
                 scannedAcount += 1;
-                PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchIndex, false);
-                accountInfo.LastFetchIndex++;
+                PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, false);
+                scanIndex++;
                 var adddress = pubkey.GetAddress(network).ToString();
                 var result = await FetchUtxos(indexer, adddress);
+                accountInfo.UtxoItems.Remove(adddress);
                 accountInfo.UtxoItems.Add(adddress, result.data);
                 accountInfo.TotalBalance += result.data.Sum(s => s.value);
-                if (result.noHistory) break;
 
+                if (result.noHistory)
+                {
+                    gap--;
+                    continue;
+                }
+
+                accountInfo.LastFetchIndex = scanIndex;
                 StateHasChanged();
                 await Task.Delay(1);
             }
 
-            for (int i = 0; i < scanCount; i++)
+            scanIndex = accountInfo.LastFetchChangeIndex;
+            gap = 5;
+            while (gap > 0)
             {
                 scannedAcount += 1;
-                PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchChangeIndex, true);
-                accountInfo.LastFetchChangeIndex++;
+                PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, true);
+                scanIndex++;
                 var adddressChange = pubkeyChange.GetAddress(network).ToString();
                 var resulChange = await FetchUtxos(indexer, adddressChange);
+                accountInfo.UtxoChangeItems.Remove(adddressChange);
                 accountInfo.UtxoChangeItems.Add(adddressChange, resulChange.data);
                 accountInfo.TotalBalance += resulChange.data.Sum(s => s.value);
-                if (resulChange.noHistory) break;
 
+                if (resulChange.noHistory)
+                {
+                    gap--;
+                    continue;
+                }
+
+                accountInfo.LastFetchChangeIndex = scanIndex;
                 StateHasChanged();
                 await Task.Delay(1);
             }
 
-            // TODO: scan existing inputs
+
+            accountInfo.TotalBalance = accountInfo.UtxoItems.SelectMany(s => s.Value).Sum(s => s.value) 
+                                       + accountInfo.UtxoChangeItems.SelectMany(s => s.Value).Sum(s => s.value);
 
             storage.SetAccountInfo(selectedNetwork, accountInfo);
 
@@ -208,6 +233,63 @@
             busy = false;
         }
 
+    }
+
+    private async Task CheckExistingAddresses(IndexerUrl indexer, AccountInfo accountInfo)
+    {
+        foreach (var item in accountInfo.UtxoItems)
+        {
+            if (item.Value.Any())
+            {
+                var result = await FetchUtxos(indexer, item.Key);
+
+                if (result.data.Count == item.Value.Count)
+                {
+                    for (int i = 0; i < result.data.Count - 1; i++)
+                    {
+                        if (result.data[i].outpoint.transactionId != item.Value[i].outpoint.transactionId)
+                        {
+                            item.Value.Clear();
+                            item.Value.AddRange(result.data);
+                            break;
+                        }
+
+                    }
+                }
+                else
+                {
+                    item.Value.Clear();
+                    item.Value.AddRange(result.data);
+                }
+            }
+        }
+
+        foreach (var item in accountInfo.UtxoChangeItems)
+        {
+            if (item.Value.Any())
+            {
+                var result = await FetchUtxos(indexer, item.Key);
+
+                if (result.data.Count == item.Value.Count)
+                {
+                    for (int i = 0; i < result.data.Count - 1; i++)
+                    {
+                        if (result.data[i].outpoint.transactionId != item.Value[i].outpoint.transactionId)
+                        {
+                            item.Value.Clear();
+                            item.Value.AddRange(result.data);
+                            break;
+                        }
+
+                    }
+                }
+                else
+                {
+                    item.Value.Clear();
+                    item.Value.AddRange(result.data);
+                }
+            }
+        }
     }
 
     private async Task<(bool noHistory, List<UtxoData> data)> FetchUtxos(IndexerUrl indexer, string adddress)
