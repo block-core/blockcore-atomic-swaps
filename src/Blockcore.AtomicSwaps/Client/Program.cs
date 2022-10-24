@@ -1,5 +1,6 @@
 using Blazored.LocalStorage;
 using Blockcore.AtomicSwaps.Client;
+using Blockcore.AtomicSwaps.Client.Logging;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -8,6 +9,12 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+builder.Services.Configure<WebApiLoggerOptions>(options => builder.Configuration.GetSection("WebApiLogger").Bind(options));
+builder.Services.AddLogging(configure =>
+{
+    configure.AddWebApiLogger();
+});
 builder.Services.AddSingleton(sp => new GlobalData ());
 
 builder.Services.AddScoped<Storage>();
