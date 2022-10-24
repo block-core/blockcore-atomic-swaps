@@ -35,7 +35,7 @@
     }
 </select>
 
-<button class="btn btn-primary" @onclick="Fetch">Refresh Balance</button>
+<button class="btn btn-primary" disabled="@busy" @onclick="Fetch">Refresh Balance</button>
 <button class="btn btn-warning" @onclick="ClearAccount">Clear Balance</button>
 
 <br/>
@@ -85,6 +85,7 @@
 }
 
 @code {
+    private bool busy = false;
     private string walletWrods;
     public string link { get; set; } = string.Empty;
     public int blockheight;
@@ -102,102 +103,111 @@
 
     private async Task Fetch()
     {
-        
-        ExtKey.UseBCForHMACSHA512 = true;
-        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-        scannedAcount = 0;
-        localAccountInfo = null;
-
-        loadingStatus = "Loading key...";
-        StateHasChanged();    
-        await Task.Delay(1); 
-
-        Networks.Network network = globalData.Networks[selectedNetwork];
-
-        var indexer = globalData.Indexers.First(f => f.Symbol == selectedNetwork);
-
-        AccountInfo accountInfo = storage.GetAccountInfo(selectedNetwork);
-
-        if (accountInfo == null)
+        if (busy) return;
+        busy = true;
+        try
         {
-            accountInfo = new AccountInfo();
+            ExtKey.UseBCForHMACSHA512 = true;
+            NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+            scannedAcount = 0;
+            localAccountInfo = null;
 
-            ExtKey extendedKey;
-            try
+            loadingStatus = "Loading key...";
+            StateHasChanged();
+            await Task.Delay(1);
+
+            Networks.Network network = globalData.Networks[selectedNetwork];
+
+            var indexer = globalData.Indexers.First(f => f.Symbol == selectedNetwork);
+
+            AccountInfo accountInfo = storage.GetAccountInfo(selectedNetwork);
+
+            if (accountInfo == null)
             {
-                extendedKey = HdOperations.GetExtendedKey(walletWrods);
+                accountInfo = new AccountInfo();
+
+                ExtKey extendedKey;
+                try
+                {
+                    extendedKey = HdOperations.GetExtendedKey(walletWrods);
+                }
+                catch (NotSupportedException ex)
+                {
+                    Console.WriteLine("Exception occurred: {0}", ex.ToString());
+
+                    if (ex.Message == "Unknown")
+                        throw new Exception("Please make sure you enter valid mnemonic words.");
+
+                    throw;
+                }
+
+                loadingStatus = "Deriving keys...";
+                StateHasChanged();
+                await Task.Delay(1);
+
+                var coinType = network.Consensus.CoinType;
+                var accountIndex = 0; // for now only account 0
+                var purpose = 44; // for now only legacy
+                string accountHdPath = HdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
+                Key privateKey = extendedKey.PrivateKey;
+                ExtPubKey accountExtPubKeyTostore = HdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
+
+                accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
+                accountInfo.Path = accountHdPath;
+
             }
-            catch (NotSupportedException ex)
+
+            localAccountInfo = accountInfo;
+
+            ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
+
+            loadingStatus = "Fetching Addresses...";
+            StateHasChanged();
+            await Task.Delay(1);
+
+            int scanCount = 50; // for the demo we just scan 50 addresses
+
+            for (int i = 0; i < scanCount; i++)
             {
-                Console.WriteLine("Exception occurred: {0}", ex.ToString());
+                scannedAcount += 1;
+                PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchIndex, false);
+                accountInfo.LastFetchIndex++;
+                var adddress = pubkey.GetAddress(network).ToString();
+                var result = await FetchUtxos(indexer, adddress);
+                accountInfo.UtxoItems.Add(adddress, result.data);
+                accountInfo.TotalBalance += result.data.Sum(s => s.value);
+                if (result.noHistory) break;
 
-                if (ex.Message == "Unknown")
-                    throw new Exception("Please make sure you enter valid mnemonic words.");
-
-                throw;
+                StateHasChanged();
+                await Task.Delay(1);
             }
 
-            loadingStatus = "Deriving keys...";
-            StateHasChanged();
-            await Task.Delay(1);
+            for (int i = 0; i < scanCount; i++)
+            {
+                scannedAcount += 1;
+                PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchChangeIndex, true);
+                accountInfo.LastFetchChangeIndex++;
+                var adddressChange = pubkeyChange.GetAddress(network).ToString();
+                var resulChange = await FetchUtxos(indexer, adddressChange);
+                accountInfo.UtxoChangeItems.Add(adddressChange, resulChange.data);
+                accountInfo.TotalBalance += resulChange.data.Sum(s => s.value);
+                if (resulChange.noHistory) break;
 
-            var coinType = network.Consensus.CoinType;
-            var accountIndex = 0; // for now only account 0
-            var purpose = 44; // for now only legacy
-            string accountHdPath = HdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
-            Key privateKey = extendedKey.PrivateKey;
-            ExtPubKey accountExtPubKeyTostore = HdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
+                StateHasChanged();
+                await Task.Delay(1);
+            }
 
-            accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
-            accountInfo.Path = accountHdPath;
+            // TODO: scan existing inputs
 
+            storage.SetAccountInfo(selectedNetwork, accountInfo);
+
+            loadingStatus = string.Empty;
         }
-
-        localAccountInfo = accountInfo;
-
-        ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
-
-        loadingStatus = "Fetching Addresses...";
-        StateHasChanged();    
-        await Task.Delay(1); 
-
-        int scanCount =  50; // for the demo we just scan 50 addresses
-
-        for (int i = 0; i < scanCount; i++)
+        finally
         {
-            scannedAcount += 1;
-            PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchIndex, false);
-            accountInfo.LastFetchIndex++;
-            var adddress = pubkey.GetAddress(network).ToString();
-            var result = await FetchUtxos(indexer, adddress);
-            accountInfo.UtxoItems.Add(adddress, result.data);
-            accountInfo.TotalBalance += result.data.Sum(s => s.value);
-            if (result.noHistory) break;
-
-            StateHasChanged();
-            await Task.Delay(1);
+            busy = false;
         }
 
-        for (int i = 0; i < scanCount; i++)
-        {
-            scannedAcount += 1;
-            PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchChangeIndex, true);
-            accountInfo.LastFetchChangeIndex++;
-            var adddressChange = pubkeyChange.GetAddress(network).ToString();
-            var resulChange = await FetchUtxos(indexer, adddressChange);
-            accountInfo.UtxoChangeItems.Add(adddressChange, resulChange.data);
-            accountInfo.TotalBalance += resulChange.data.Sum(s => s.value);
-            if (resulChange.noHistory) break;
-
-            StateHasChanged();
-            await Task.Delay(1);
-        }
-
-    // TODO: scan existing inputs
-
-        storage.SetAccountInfo(selectedNetwork, accountInfo);
-        
-        loadingStatus = string.Empty;
     }
 
     private async Task<(bool noHistory, List<UtxoData> data)> FetchUtxos(IndexerUrl indexer, string adddress)
