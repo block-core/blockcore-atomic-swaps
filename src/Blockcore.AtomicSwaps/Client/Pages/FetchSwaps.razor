@@ -3,6 +3,9 @@
 @using Blockcore.Consensus.BlockInfo
 @using Blockcore.AtomicSwaps.Server.Controllers
 @inject HttpClient Http
+@inject Storage storage;
+@inject GlobalData globalData;
+@inject NavigationManager NavigationManager;
 
 <PageTitle>Fetch Swaps</PageTitle>
 
@@ -14,15 +17,37 @@
 
 <p>Swap.</p>
 
-<p>From   - <input @bind="SwapFrom" /></p>
+<p>From
+    <select @bind="SwapFrom"  type="text" >
+        <option value=""></option>
+        @{
+            @foreach (var prp in NetworkList)
+            {          
+                <option value="@prp">@prp</option>
+            }
+        }
+    </select>
+</p>
 <p>Amount - <input @bind="amountToSell" /></p>
-<p>To     - <input @bind="SwapTo" /></p>
+<p>To    
+    <select @bind="SwapTo"  type="text" >
+        <option value=""></option>
+        @{
+            @foreach (var prp in NetworkList)
+            {          
+                <option value="@prp">@prp</option>
+            }
+        }
+    </select>
+
+</p>
 <p>Amount - <input @bind="amountToBuy" /></p>
 
 <button class="btn btn-primary" @onclick="CreateSwap">Create Swap</button>
 
 <button class="btn btn-primary" @onclick="Fetch">Fetch Swaps</button>
 
+<p class="alert-danger">@error</p>
 
 @if (swaps != null)
 {
@@ -34,6 +59,7 @@
             <th>Seller</th>
             <th>Buyer</th>
             <th>Date</th>
+            <th>Is Mine</th>
             <th>Status</th>
         </tr>
         </thead>
@@ -45,9 +71,9 @@
                 <td>@swap.CoinSeller.Amount - @swap.CoinSeller.CoinSymbol</td>
                 <td>@swap.CoinBuyer.Amount - @swap.CoinBuyer.CoinSymbol</td>
                 <td>@swap.Created </td>
+                <td>@(swap.CoinSeller.OwnerPubkey == mypubkey ? "I am seller" : swap.CoinBuyer.OwnerPubkey == mypubkey ? "I am buyer" : "not my swap")</td>
                 <td>@swap.Status </td>
-                
-                <td><button class="btn btn-info" @onclick="ViewSwap">Details</button> </td>
+                <td><button class="btn btn-info" @onclick="() => this.ViewSwap(swap.SwapSessionId)">Details</button> </td>
             </tr>
         }
         </tbody>
@@ -57,7 +83,9 @@
 @code {
     private SwapSession[] swaps;
     Networks.Network network;
+    List<string> NetworkList;
 
+    string error;
 
     string SwapFrom = "STRAX";
     string SwapTo = "CITY";
@@ -65,28 +93,84 @@
     long amountToSell = 1;
     long amountToBuy = 10;
 
+    string mypubkey;
     private async Task Fetch()
     {
+        mypubkey = storage.GetWalletPubkey();
+
         this.swaps = await Http.GetFromJsonAsync<SwapSession[]>("api/SwapCoordinator");
     }
 
     protected override async Task OnInitializedAsync()
     {
+        NetworkList = globalData.Networks.Keys.ToList();
+
         await this.Fetch();
     }
 
     protected async Task CreateSwap()
     {
-        var postBody = new CreateSwapSession { FromCoinSymbol= SwapFrom, AmountToSell = amountToSell, ToCoinSymbol  = SwapTo, AmountToBuy  = amountToBuy};
+        // check that the user has enough money
+        error = string.Empty;
+        if (SwapFrom == SwapTo) {error = "Cant swap to the same network"; return;}
+        
+        Networks.Network network = globalData.Networks[SwapFrom];
+        AccountInfo? accountInfo = storage.GetAccountInfo(SwapFrom);
+
+        if (accountInfo == null)
+        {
+            error = "Please scan the wallet"; 
+            return;
+        }
+
+        if (accountInfo.TotalBalance < amountToSell)
+        {
+            error = "You do not have enough funds"; 
+            return;
+        }
+
+        var myswaps = storage.GetSwaps();
+
+        if (myswaps == null)
+        {
+            myswaps = new List<SwapSession>();
+            storage.SetSwaps(myswaps);
+        }
+
+        var pubkey = storage.GetWalletPubkey();
+
+        var totalBalanceInSwaps = myswaps.Sum(s => s.CoinSeller.OwnerPubkey == pubkey ? s.CoinSeller.Amount : s.CoinBuyer.OwnerPubkey == pubkey ? s.CoinBuyer.Amount : 0);
+
+        if (accountInfo.TotalBalance - totalBalanceInSwaps < amountToSell)
+        {
+            error = "funds are used in other swaps no funds left to make a swap"; 
+            return;
+        }
+
+        var postBody = new CreateSwapSession
+        {
+            OwnerPubkey = pubkey,
+            FromCoinSymbol= SwapFrom, 
+            AmountToSell = amountToSell, 
+            ToCoinSymbol  = SwapTo, 
+            AmountToBuy  = amountToBuy,
+            SwapSessionId = Guid.NewGuid().ToString("N")
+        };
+
         await Http.PostAsJsonAsync($"api/SwapCoordinator/create", postBody);
 
+        var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{postBody.SwapSessionId}");
+
+        myswaps.Add(swap);
+
+        storage.SetSwaps(myswaps);
+
         await this.Fetch();
     }
 
-    protected async Task ViewSwap()
+    protected async Task ViewSwap(string session)
     {
-      
-
-        await this.Fetch();
+        NavigationManager.NavigateTo($"viewswap/{session}");
     }
+    
 }

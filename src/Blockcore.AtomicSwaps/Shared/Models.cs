@@ -2,6 +2,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers;
 
 public class SwapSessionCoin
 {
+    public string OwnerPubkey { get; set; }
     public string CoinSymbol { get; set; }
     public long Amount { get; set; }
     public string SwapTransactionHex { get; set; }
@@ -23,6 +24,8 @@ public class SwapSession
 
 public class CreateSwapSession
 {
+    public string SwapSessionId { get; set; }
+    public string OwnerPubkey { get; set; }
     public string FromCoinSymbol { get; set; }
     public string ToCoinSymbol { get; set; }
     public long AmountToSell { get; set; }

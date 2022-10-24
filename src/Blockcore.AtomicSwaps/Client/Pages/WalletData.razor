@@ -4,7 +4,6 @@
 @using Blockcore.AtomicSwaps.Server.Controllers
 @using Blockcore.Features.Wallet.Helpers
 @using NBitcoin
-@using Utxo = Blockcore.AtomicSwaps.Shared.Utxo
 @inject HttpClient Http
 @inject Storage storage;
 @inject GlobalData globalData;
@@ -150,11 +149,11 @@
                 var purpose = 44; // for now only legacy
                 string accountHdPath = HdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
                 Key privateKey = extendedKey.PrivateKey;
+                storage.SetWalletPubkey(privateKey.PubKey.ToHex());
                 ExtPubKey accountExtPubKeyTostore = HdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
 
                 accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
                 accountInfo.Path = accountHdPath;
-
             }
 
             localAccountInfo = accountInfo;

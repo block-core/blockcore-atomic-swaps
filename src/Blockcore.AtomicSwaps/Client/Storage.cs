@@ -16,12 +16,22 @@ namespace Blockcore.AtomicSwaps.Client
             _storage.SetItemAsString("mnemonic", mnemonic);
         }
 
-        public string GetWalletWords()
+        public string? GetWalletWords()
         {
             return _storage.GetItemAsString("mnemonic");
         }
 
-        public AccountInfo GetAccountInfo(string network)
+        public void SetWalletPubkey(string pubkey)
+        {
+            _storage.SetItemAsString("pubkey", pubkey);
+        }
+
+        public string? GetWalletPubkey()
+        {
+            return _storage.GetItemAsString("pubkey");
+        }
+
+        public AccountInfo? GetAccountInfo(string network)
         {
             return _storage.GetItem<AccountInfo>($"utxo:{network}");
         }
@@ -29,6 +39,16 @@ namespace Blockcore.AtomicSwaps.Client
         public void SetAccountInfo(string network, AccountInfo items)
         {
             _storage.SetItem($"utxo:{network}", items);
+        }
+
+        public void SetSwaps(List<SwapSession> swapSessions)
+        {
+            _storage.SetItem($"swaps", swapSessions);
+        }
+
+        public List<SwapSession>? GetSwaps()
+        {
+            return _storage.GetItem<List<SwapSession>>($"swaps");
         }
     }
 }

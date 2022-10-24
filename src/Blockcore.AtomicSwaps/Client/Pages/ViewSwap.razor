@@ -1,0 +1,70 @@
+﻿@page "/viewswap/{swapsession}"
+@using Blockcore.AtomicSwaps.Shared
+@using Blockcore.Consensus.BlockInfo
+@using Blockcore.AtomicSwaps.Server.Controllers
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject Storage storage;
+@inject GlobalData globalData;
+
+<PageTitle>View Swaps</PageTitle>
+
+<h1>View Swaps</h1>
+
+
+
+<p>This component displays a swap.</p>
+
+
+
+<p class="alert-danger">@error</p>
+
+@if (swap != null)
+{
+    <p>@swap.SwapSessionId</p>
+
+    <p>@swap.Created</p>
+    <p>@swap.Status</p>
+
+    <h3>Seller</h3>
+    <p>@swap.CoinSeller.OwnerPubkey</p>
+    @if (swap.CoinSeller.OwnerPubkey == mypubkey)
+    {
+        <p>I am the seller</p>
+    }
+    <p>@swap.CoinSeller.Amount @swap.CoinSeller.CoinSymbol</p>
+
+    <h3>Buyer</h3>
+    <p>@swap.CoinBuyer.OwnerPubkey</p>
+      @if (swap.CoinBuyer.OwnerPubkey == mypubkey)
+      {
+          <p>I am the buyer</p>
+      }
+    <p>@swap.CoinBuyer.Amount @swap.CoinBuyer.CoinSymbol</p>
+}
+
+@code {
+    private SwapSession swap;
+    Networks.Network network;
+    List<string> NetworkList;
+
+    string error;
+    
+    [Parameter]
+    public string swapSession { get; set; }
+
+    string mypubkey;
+   
+
+    protected override async Task OnInitializedAsync()
+    {
+        NetworkList = globalData.Networks.Keys.ToList();
+
+        mypubkey = storage.GetWalletPubkey();
+
+        swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{swapSession}");
+    }
+
+   
+    
+}

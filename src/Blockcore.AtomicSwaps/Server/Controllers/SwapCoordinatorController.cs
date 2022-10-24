@@ -37,20 +37,19 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
         [HttpPost]
         [Route("create")]
-        public SwapSession CreateSession(CreateSwapSession data)
+        public void CreateSession(CreateSwapSession data)
         {
             SwapSession session = new()
             {
-                SwapSessionId = Guid.NewGuid().ToString("N"),
+                SwapSessionId = data.SwapSessionId,
                 Created = DateTime.UtcNow,
                 Status = "Available",
-                CoinSeller = new SwapSessionCoin {CoinSymbol = data.FromCoinSymbol, Amount = data.AmountToSell},
+                CoinSeller = new SwapSessionCoin {CoinSymbol = data.FromCoinSymbol, Amount = data.AmountToSell, OwnerPubkey = data.OwnerPubkey},
                 CoinBuyer= new SwapSessionCoin { CoinSymbol = data.ToCoinSymbol, Amount = data.AmountToBuy}
             };
 
             Swaps.TryAdd(session.SwapSessionId, session);
 
-            return session;
         }
 
 
