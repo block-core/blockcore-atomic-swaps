@@ -25,24 +25,37 @@ namespace Blockcore.AtomicSwaps.Server.Services
 
     public class TelegramBotService : ITelegramBotService
     {
-        private readonly string _chatId;
-        private readonly TelegramBotClient _client;
+        private readonly string chatId;
+        private readonly TelegramBotClient client;
+        private bool enabled;
 
         public TelegramBotService(IOptions<TelegramLoggingBotOptions> options)
         {
-            _chatId = options.Value.ChatId;
-            _client = new TelegramBotClient(options.Value.AccessToken);
+            if (string.IsNullOrWhiteSpace(options.Value.AccessToken))
+            {
+                enabled = false;
+            }
+            else {
+                enabled = true;
+                chatId = options.Value.ChatId;
+                client = new TelegramBotClient(options.Value.AccessToken);
+            }
         }
 
         public async Task SendLogAsync(ClientLog log)
         {
+            if (!enabled)
+            {
+                return;
+            }
+
             var text = formatMessage(log);
             if (string.IsNullOrWhiteSpace(text))
             {
                 return;
             }
 
-            await _client.SendTextMessageAsync(chatId: _chatId, text: text);
+            await client.SendTextMessageAsync(chatId: chatId, text: text);
            // await _client.SendTextMessageAsync(chatId: _chatId, text: text , parseMode:ParseMode.MarkdownV2);
         }
 
