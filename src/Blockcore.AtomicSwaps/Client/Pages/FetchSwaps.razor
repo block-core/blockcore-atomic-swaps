@@ -17,31 +17,88 @@
 
 <p>Swap.</p>
 
-<p>From
-    <select @bind="SwapFrom"  type="text" >
-        <option value=""></option>
-        @{
-            @foreach (var prp in NetworkList)
-            {          
-                <option value="@prp">@prp</option>
-            }
-        }
-    </select>
-</p>
-<p>Amount - <input @bind="amountToSell" /></p>
-<p>To    
-    <select @bind="SwapTo"  type="text" >
-        <option value=""></option>
-        @{
-            @foreach (var prp in NetworkList)
-            {          
-                <option value="@prp">@prp</option>
-            }
-        }
-    </select>
 
-</p>
-<p>Amount - <input @bind="amountToBuy" /></p>
+
+<div class="row g-3 align-items-center mb-2">
+	<div class="col-2">
+		<label for="SwapFrom" class="col-form-label">From</label>
+	</div>
+	<div class="col-4">
+		<select class="form-select" @bind="SwapFrom" type="text">
+			<option value="" selected disabled>Please select</option>
+			@{
+				@foreach (var prp in NetworkList)
+				{
+					<option value="@prp">@prp</option>
+				}
+			}
+		</select>
+	</div>
+	<div class="col-auto">
+		<span class="form-text">
+			seller
+		</span>
+	</div>
+</div>
+
+
+<div class="row g-3 align-items-center mb-2 mt-2">
+	<div class="col-2">
+		<label for="Amount" class="col-form-label">Amount</label>
+	</div>
+	<div class="col-4">
+		<input class="form-control" @bind="amountToSell" />
+	</div>
+	<div class="col-auto">
+		<span  class="form-text">
+			@SwapFrom
+		</span>
+	</div>
+</div>
+
+<hr />
+
+
+
+<div class="row g-3 align-items-center mb-2">
+	<div class="col-2">
+			<label for="SwapTo" class="col-form-label">To</label>
+	</div>
+	<div class="col-4">
+			<select class="form-select" @bind="SwapTo" type="text">
+				<option value="" selected disabled>Please select</option>
+				@{
+					@foreach (var prp in NetworkList)
+					{
+						<option value="@prp">@prp</option>
+					}
+				}
+			</select>
+	</div>
+	<div class="col-auto">
+		<span  class="form-text">
+			Buyer
+		</span>
+	</div>
+</div>
+
+
+
+ 
+<div class="row g-3 align-items-center mb-5 mt-2">
+	<div class="col-2">
+		<label for="Amount" class="col-form-label">Amount</label>
+	</div>
+	<div class="col-4">
+		<input class="form-control" @bind="amountToBuy" />
+	</div>
+	<div class="col-auto">
+		<span class="form-text">
+			@SwapTo
+		</span>
+	</div>
+</div>
+
 
 <button class="btn btn-primary" @onclick="CreateSwap">Create Swap</button>
 
@@ -51,126 +108,126 @@
 
 @if (swaps != null)
 {
-    
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Swap Id</th>
-            <th>Seller</th>
-            <th>Buyer</th>
-            <th>Date</th>
-            <th>Is Mine</th>
-            <th>Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var swap in swaps)
-        {
-            <tr>
-                <td>@swap.SwapSessionId</td>
-                <td>@swap.CoinSeller.Amount - @swap.CoinSeller.CoinSymbol</td>
-                <td>@swap.CoinBuyer.Amount - @swap.CoinBuyer.CoinSymbol</td>
-                <td>@swap.Created </td>
-                <td>@(swap.CoinSeller.OwnerPubkey == mypubkey ? "I am seller" : swap.CoinBuyer.OwnerPubkey == mypubkey ? "I am buyer" : "not my swap")</td>
-                <td>@swap.Status </td>
-                <td><button class="btn btn-info" @onclick="() => this.ViewSwap(swap.SwapSessionId)">Details</button> </td>
-            </tr>
-        }
-        </tbody>
-    </table>
+
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th>Swap Id</th>
+				<th>Seller</th>
+				<th>Buyer</th>
+				<th>Date</th>
+				<th>Is Mine</th>
+				<th>Status</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var swap in swaps)
+			{
+				<tr>
+					<td>@swap.SwapSessionId</td>
+					<td>@swap.CoinSeller.Amount - @swap.CoinSeller.CoinSymbol</td>
+					<td>@swap.CoinBuyer.Amount - @swap.CoinBuyer.CoinSymbol</td>
+					<td>@swap.Created </td>
+					<td>@(swap.CoinSeller.OwnerPubkey == mypubkey ? "I am seller" : swap.CoinBuyer.OwnerPubkey == mypubkey ? "I am buyer" : "not my swap")</td>
+					<td>@swap.Status </td>
+					<td><button class="btn btn-info" @onclick="() => this.ViewSwap(swap.SwapSessionId)">Details</button> </td>
+				</tr>
+			}
+		</tbody>
+	</table>
 }
 
 @code {
-    private SwapSession[] swaps;
-    Networks.Network network;
-    List<string> NetworkList;
+	private SwapSession[] swaps;
+	Networks.Network network;
+	List<string> NetworkList;
 
-    string error;
+	string error;
 
-    string SwapFrom = "STRAX";
-    string SwapTo = "CITY";
+	string SwapFrom = "STRAX";
+	string SwapTo = "CITY";
 
-    long amountToSell = 1;
-    long amountToBuy = 10;
+	long amountToSell = 1;
+	long amountToBuy = 10;
 
-    string mypubkey;
-    private async Task Fetch()
-    {
-        mypubkey = storage.GetWalletPubkey();
+	string mypubkey;
+	private async Task Fetch()
+	{
+		mypubkey = storage.GetWalletPubkey();
 
-        this.swaps = await Http.GetFromJsonAsync<SwapSession[]>("api/SwapCoordinator");
-    }
+		this.swaps = await Http.GetFromJsonAsync<SwapSession[]>("api/SwapCoordinator");
+	}
 
-    protected override async Task OnInitializedAsync()
-    {
-        NetworkList = globalData.Networks.Keys.ToList();
+	protected override async Task OnInitializedAsync()
+	{
+		NetworkList = globalData.Networks.Keys.ToList();
 
-        await this.Fetch();
-    }
+		await this.Fetch();
+	}
 
-    protected async Task CreateSwap()
-    {
-        // check that the user has enough money
-        error = string.Empty;
-        if (SwapFrom == SwapTo) {error = "Cant swap to the same network"; return;}
-        
-        Networks.Network network = globalData.Networks[SwapFrom];
-        AccountInfo? accountInfo = storage.GetAccountInfo(SwapFrom);
+	protected async Task CreateSwap()
+	{
+		// check that the user has enough money
+		error = string.Empty;
+		if (SwapFrom == SwapTo) { error = "Cant swap to the same network"; return; }
 
-        if (accountInfo == null)
-        {
-            error = "Please scan the wallet"; 
-            return;
-        }
+		Networks.Network network = globalData.Networks[SwapFrom];
+		AccountInfo? accountInfo = storage.GetAccountInfo(SwapFrom);
 
-        if (accountInfo.TotalBalance < amountToSell)
-        {
-            error = "You do not have enough funds"; 
-            return;
-        }
+		if (accountInfo == null)
+		{
+			error = "Please scan the wallet";
+			return;
+		}
 
-        var myswaps = storage.GetSwaps();
+		if (accountInfo.TotalBalance < amountToSell)
+		{
+			error = "You do not have enough funds";
+			return;
+		}
 
-        if (myswaps == null)
-        {
-            myswaps = new List<SwapSession>();
-            storage.SetSwaps(myswaps);
-        }
+		var myswaps = storage.GetSwaps();
 
-        var pubkey = storage.GetWalletPubkey();
+		if (myswaps == null)
+		{
+			myswaps = new List<SwapSession>();
+			storage.SetSwaps(myswaps);
+		}
 
-        var totalBalanceInSwaps = myswaps.Sum(s => s.CoinSeller.OwnerPubkey == pubkey ? s.CoinSeller.Amount : s.CoinBuyer.OwnerPubkey == pubkey ? s.CoinBuyer.Amount : 0);
+		var pubkey = storage.GetWalletPubkey();
 
-        if (accountInfo.TotalBalance - totalBalanceInSwaps < amountToSell)
-        {
-            error = "funds are used in other swaps no funds left to make a swap"; 
-            return;
-        }
+		var totalBalanceInSwaps = myswaps.Sum(s => s.CoinSeller.OwnerPubkey == pubkey ? s.CoinSeller.Amount : s.CoinBuyer.OwnerPubkey == pubkey ? s.CoinBuyer.Amount : 0);
 
-        var postBody = new CreateSwapSession
-        {
-            OwnerPubkey = pubkey,
-            FromCoinSymbol= SwapFrom, 
-            AmountToSell = amountToSell, 
-            ToCoinSymbol  = SwapTo, 
-            AmountToBuy  = amountToBuy,
-            SwapSessionId = Guid.NewGuid().ToString("N")
-        };
+		if (accountInfo.TotalBalance - totalBalanceInSwaps < amountToSell)
+		{
+			error = "funds are used in other swaps no funds left to make a swap";
+			return;
+		}
 
-        await Http.PostAsJsonAsync($"api/SwapCoordinator/create", postBody);
+		var postBody = new CreateSwapSession
+			{
+				OwnerPubkey = pubkey,
+				FromCoinSymbol = SwapFrom,
+				AmountToSell = amountToSell,
+				ToCoinSymbol = SwapTo,
+				AmountToBuy = amountToBuy,
+				SwapSessionId = Guid.NewGuid().ToString("N")
+			};
 
-        var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{postBody.SwapSessionId}");
+		await Http.PostAsJsonAsync($"api/SwapCoordinator/create", postBody);
 
-        myswaps.Add(swap);
+		var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{postBody.SwapSessionId}");
 
-        storage.SetSwaps(myswaps);
+		myswaps.Add(swap);
 
-        await this.Fetch();
-    }
+		storage.SetSwaps(myswaps);
 
-    protected async Task ViewSwap(string session)
-    {
-        NavigationManager.NavigateTo($"viewswap/{session}");
-    }
-    
+		await this.Fetch();
+	}
+
+	protected async Task ViewSwap(string session)
+	{
+		NavigationManager.NavigateTo($"viewswap/{session}");
+	}
+
 }

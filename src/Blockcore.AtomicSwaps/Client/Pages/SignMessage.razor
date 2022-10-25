@@ -6,22 +6,22 @@
 
 <p >Private key</p>
 
-<textarea style="width:600px; height:100px"  @bind="WalletWords" @bind:event="oninput" />
+<textarea class="form-control" rows="3" @bind="WalletWords" @bind:event="oninput" />
 
-<p >public key : @pubkey </p>
-<p >Address : @Address </p>
+<p class=" mb-1 mt-1">public key : @pubkey </p>
+<p class=" mb-1 mt-1">Address : @Address </p>
 
 <p >Data to sign</p>
-<textarea style="width:600px; height:100px" @bind="SignData" @bind:event="oninput" />
+<textarea class="form-control" rows="3" @bind="SignData" @bind:event="oninput" />
 
 
-<button class="btn btn-primary" @onclick="Sign">Sign Message</button>
+<button class="btn btn-primary mb-3 mt-3" @onclick="Sign">Sign Message</button>
 
 <p >Payload</p>
-<textarea style="width:600px; height:100px"  @bind="Payload" @bind:event="oninput" />
+<textarea class="form-control" rows="3" @bind="Payload" @bind:event="oninput" />
 
 
-<button class="btn btn-primary" @onclick="Verify">VerifyMessage</button>
+<button class="btn btn-primary mb-3 mt-3" @onclick="Verify">VerifyMessage</button>
 
 <p >Result : @Result </p>
 
