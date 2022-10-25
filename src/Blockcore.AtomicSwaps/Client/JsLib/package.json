@@ -3,8 +3,7 @@
     "version": "1.0.0",
     "description": "atomic swaps between blockcore networks",
     "main": "index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
+    "scripts": { 
         "build": "webpack ./src/index.js --output-path ../wwwroot/js --output-filename index.bundle.js --mode production"
     },
     "keywords": [ "blockcore", "atomicswap" ],
@@ -16,8 +15,6 @@
     },
     "dependencies": {
         "@blockcore/provider": "^0.0.9",
-        "buffer": "^6.0.3",
-        "igniteui-webcomponents-core": "^3.2.4",
-        "igniteui-webcomponents-gauges": "^3.2.4"
+        "buffer": "^6.0.3"
     }
 }

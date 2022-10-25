@@ -1,13 +1,4 @@
-import { ModuleManager } from 'igniteui-webcomponents-core';
-
 import { WebProvider } from "@blockcore/provider";
-
-// register the modules
-ModuleManager.register(
-    WebProvider
-);
-
-
 
 //window.circulatingSupply = async function (network) { //network : CITY
 //    let webProvider = await WebProvider.Create();
