@@ -18,14 +18,15 @@
 
 <p>Wallet Words.</p>
 
-<textarea style="width:600px; height:100px" @bind="walletWrods"  />
-<button class="btn btn-primary" @onclick="SaveWallet">Save Wallet</button>
+<textarea class="form-control" rows="3" @bind="walletWrods" />
+<button class="btn btn-primary mb-3 mt-3" @onclick="SaveWallet">Save Wallet</button>
 
 <br/>
 @*<select @bind="selectedNetwork"   type="text" @onchange="Callback" >*@
+<p class="text-info mb-3 mt-3 fw-bold" >Select network:</p>
 
-<select  type="text" @onchange="Callback" >
-    <option value=""></option>
+<select class="form-select mb-3" type="text" @onchange="Callback">
+    <option value="" selected disabled>Please select</option>
     @{
         @foreach (var prp in NetworkList)
         {          
@@ -44,7 +45,7 @@
     <p> Account path @localAccountInfo.Path</p>
     <p> Total balance @Money.Satoshis(localAccountInfo.TotalBalance) @selectedNetwork</p>
     <p> Addressed scanned @scannedAcount</p>
-    <table class="table">
+    <table class="table table-bordered">
         <thead>
         <tr>
             <th>Address</th>

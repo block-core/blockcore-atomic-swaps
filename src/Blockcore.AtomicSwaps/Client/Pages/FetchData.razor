@@ -14,13 +14,17 @@
 
 <p>Link to an indexer.</p>
 
-<textarea style="width:600px; height:50px" @bind="link" @bind:event="oninput" />
+<input class="form-control" @bind="link" @bind:event="oninput" />
 
 <p>block height.</p>
-<textarea style="width:100px; height:30px" @bind="blockheight" @bind:event="oninput" />
+<div class="row align-items-center mb-3 mt-2">
+	<div class="col-3">
+		<input class="form-control" @bind="blockheight" @bind:event="oninput" />
+	</div>
+</div>
 
 
-<button class="btn btn-primary" disabled="@busy" @onclick="Fetch">Fetch block</button>
+<button class="btn btn-primary mt-3 mb-3" disabled="@busy" @onclick="Fetch">Fetch block</button>
 
 
 @if (block != null)
