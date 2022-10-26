@@ -59,7 +59,30 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         {
             if (Swaps.TryGetValue(data.SwapSessionId, out SwapSession swapSession))
             {
+                if (data.CoinSeller.OwnerPubkey != swapSession.CoinSeller.OwnerPubkey)
+                    throw new Exception("Invalid CoinSeller owner");
+
+                if (swapSession.CoinBuyer.OwnerPubkey != null && data.CoinBuyer.OwnerPubkey != swapSession.CoinBuyer.OwnerPubkey)
+                    throw new Exception("Invalid CoinBuyer owner");
+
                 Swaps[data.SwapSessionId] = data;
+            }
+            else
+            {
+                Swaps.Add(data.SwapSessionId, data);
+            }
+        }
+
+        [HttpDelete]
+        [Route("delete/{swapSessionId}")]
+        public void DeleteSession(string swapSessionId)
+        {
+            if (Swaps.TryGetValue(swapSessionId, out SwapSession swapSession))
+            {
+                if(swapSession.CoinBuyer.OwnerPubkey !=null)
+                    throw new Exception("Can't delete session on progress");
+
+                Swaps.Remove(swapSessionId);
             }
         }
     }

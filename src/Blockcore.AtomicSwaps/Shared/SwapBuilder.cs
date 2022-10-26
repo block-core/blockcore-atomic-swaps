@@ -9,7 +9,7 @@ using NBitcoin.Policy;
 
 namespace Blockcore.AtomicSwaps.Shared
 {
-    public class SwapsBuilder
+    public class SwapBuilder
     {
         public static Transaction CreateSwapTransaction(
             Network network, 

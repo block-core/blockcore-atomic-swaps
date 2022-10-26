@@ -1,5 +1,8 @@
 ﻿using Blockcore.AtomicSwaps.Server.Controllers;
+using Blockcore.Features.Wallet.Helpers;
 using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin.Crypto;
 
 namespace Blockcore.AtomicSwaps.Client
 {
@@ -27,6 +30,16 @@ namespace Blockcore.AtomicSwaps.Client
         //    { "CITY", new Dictionary<string, List<UtxoData>>() { } },
         //    { "BTC", new Dictionary<string, List<UtxoData>>() { } },
         //};
+
+        public static uint256 GenerateSecret(string walletWrods, string sessionsId)
+        {
+            var extendedKey = HdOperations.GetExtendedKey(walletWrods);
+            var privateBytes = extendedKey.PrivateKey.ToBytes().ToList();
+            var sessionBytes = System.Text.Encoding.UTF8.GetBytes(sessionsId);
+            privateBytes.AddRange(sessionBytes);
+            var secret = Hashes.Hash256(privateBytes.ToArray());
+            return secret;
+        }
     }
 
     public class IndexerUrl

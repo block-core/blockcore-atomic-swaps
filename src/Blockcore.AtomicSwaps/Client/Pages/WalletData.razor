@@ -117,6 +117,9 @@
             await Task.Delay(1);
 
             Networks.Network network = globalData.Networks[selectedNetwork];
+            var coinType = network.Consensus.CoinType;
+            var accountIndex = 0; // for now only account 0
+            var purpose = 44; // for now only legacy
 
             var indexer = globalData.Indexers.First(f => f.Symbol == selectedNetwork);
 
@@ -145,9 +148,6 @@
                 StateHasChanged();
                 await Task.Delay(1);
 
-                var coinType = network.Consensus.CoinType;
-                var accountIndex = 0; // for now only account 0
-                var purpose = 44; // for now only legacy
                 string accountHdPath = HdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
                 Key privateKey = extendedKey.PrivateKey;
                 storage.SetWalletPubkey(privateKey.PubKey.ToHex());
@@ -180,7 +180,9 @@
                 PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, false);
                 scanIndex++;
                 var adddress = pubkey.GetAddress(network).ToString();
+                var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, false, scanIndex);
                 var result = await FetchUtxos(indexer, adddress);
+                foreach (var utxoData in result.data) utxoData.HdPath = path;
                 accountInfo.UtxoItems.Remove(adddress);
                 accountInfo.UtxoItems.Add(adddress, result.data);
                 accountInfo.TotalBalance += result.data.Sum(s => s.value);
@@ -204,7 +206,9 @@
                 PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, true);
                 scanIndex++;
                 var adddressChange = pubkeyChange.GetAddress(network).ToString();
+                var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, true, scanIndex);
                 var resulChange = await FetchUtxos(indexer, adddressChange);
+                foreach (var utxoData in resulChange.data) utxoData.HdPath = path;
                 accountInfo.UtxoChangeItems.Remove(adddressChange);
                 accountInfo.UtxoChangeItems.Add(adddressChange, resulChange.data);
                 accountInfo.TotalBalance += resulChange.data.Sum(s => s.value);

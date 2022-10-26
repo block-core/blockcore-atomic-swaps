@@ -50,7 +50,7 @@ namespace Blockcore.AtomicSwaps.Test
 
             // var citySwapTrx = Networks.Networks.City.Mainnet().Consensus.ConsensusFactory.CreateTransaction();
 
-            var citySwapTrx = SwapsBuilder.CreateSwapTransaction(
+            var citySwapTrx = SwapBuilder.CreateSwapTransaction(
                 cityNetwork,
                 sharedSecretHash160,
                 senderKeyCITY.PubKey,
@@ -63,7 +63,7 @@ namespace Blockcore.AtomicSwaps.Test
 
             // option 1 receiver can now claim the swap
 
-            var swapSpendTransaction = SwapsBuilder.CreateSwapSpendTransaction(
+            var swapSpendTransaction = SwapBuilder.CreateSwapSpendTransaction(
                 cityNetwork,
                 citySwapTrx,
                 sharedSecret,
@@ -73,7 +73,7 @@ namespace Blockcore.AtomicSwaps.Test
 
             // option 2 sender can recover the trx after enough time has passed
 
-            var swapRecoverTransaction = SwapsBuilder.CreateSwapRecoveryTransaction(
+            var swapRecoverTransaction = SwapBuilder.CreateSwapRecoveryTransaction(
                 cityNetwork,
                 citySwapTrx,
                 senderKeyCITY.PubKey,

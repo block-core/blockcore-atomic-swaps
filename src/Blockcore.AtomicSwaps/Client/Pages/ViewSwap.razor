@@ -2,25 +2,36 @@
 @using Blockcore.AtomicSwaps.Shared
 @using Blockcore.Consensus.BlockInfo
 @using Blockcore.AtomicSwaps.Server.Controllers
+@using Blockcore.Consensus.ScriptInfo
+@using Blockcore.Consensus.TransactionInfo
+@using Blockcore.Features.Wallet.Helpers
+@using DBreeze.Utils
+@using NBitcoin
+@using NBitcoin.Crypto
 @using Newtonsoft.Json
+@using System.Net
 @inject HttpClient Http
 @inject Storage storage;
 @inject GlobalData globalData;
+@inject NavigationManager NavigationManager;
 
 <PageTitle>View Swaps</PageTitle>
 
 <h1>View Swaps</h1>
 
-
-
 <p>This component displays a swap.</p>
-
-
 
 <p class="alert-danger">@error</p>
 
 @if (swap != null)
 {
+    <button class="btn btn-primary" @onclick="RefreshSwap">Refresh Swap</button>
+
+    @if (swap.CoinSeller.SwapTransactionHash != null || swap.CoinBuyer.SwapTransactionHash != null)
+    {
+        <button class="btn btn-primary" @onclick="RefreshConfirmations">Refresh confirmations</button>
+    }
+
     <p>@swap.SwapSessionId</p>
 
     <p>@swap.Created</p>
@@ -31,22 +42,57 @@
     @if (swap.CoinSeller.OwnerPubkey == mypubkey)
     {
         <p>I am the seller</p>
+
+        @if (swap.CoinBuyer.OwnerPubkey == null)
+        {
+            <button class="btn btn-danger" @onclick="DeleteSwap">Delete Swap</button>
+        }
+
+        @if (swap.CoinBuyer.OwnerPubkey != null && swap.CoinSeller.SwapTransactionHex == null)
+        {
+            <button class="btn btn-info" @onclick="BuildSellerSwap">Build Seller Swap Transaction</button>
+        }
+
+        @if (swap.CoinSeller.SwapTransactionHash != null)
+        {
+            <p>Buyer Transaction</p>
+            <p>Hash : @swap.CoinSeller.SwapTransactionHash</p>
+            <p>Confirmation : @SellerTransactionConfirmations</p>
+        }
     }
-    <p>@swap.CoinSeller.Amount @swap.CoinSeller.CoinSymbol</p>
+    <p>@Money.Satoshis(swap.CoinSeller.Amount) @swap.CoinSeller.CoinSymbol</p>
 
     <h3>Buyer</h3>
     <p>@swap.CoinBuyer.OwnerPubkey</p>
       @if (swap.CoinBuyer.OwnerPubkey == mypubkey)
       {
           <p>I am the buyer</p>
+
+          @if (swap.CoinBuyer.SwapTransactionHash != null)
+          {
+              <p>Buyer Transaction</p>
+              <p>Hash : @swap.CoinBuyer.SwapTransactionHash</p>
+              <p>Confirmation : @BuyerTransactionConfirmations</p>
+          }
+
+          @if (swap.CoinSeller.SwapTransactionHash != null)
+          {
+              @if (SellerTransactionConfirmations > 0)
+              {
+                  <button class="btn btn-info" @onclick="BuildBuyerSwap">Build Buyer Swap Transaction</button>
+              }
+          }
       }
-    <p>@swap.CoinBuyer.Amount @swap.CoinBuyer.CoinSymbol</p>
+    <p>@Money.Satoshis(swap.CoinBuyer.Amount) @swap.CoinBuyer.CoinSymbol</p>
+
+    @if (swap.CoinSeller.OwnerPubkey != mypubkey && swap.CoinBuyer.OwnerPubkey == null)
+    {
+        <button class="btn btn-success" @onclick="BuyerTakeSwap">Take Swap</button>
+    }
 }
 
 @code {
     private SwapSession swap;
-    Networks.Network network;
-    List<string> NetworkList;
 
     string error;
     
@@ -54,17 +100,199 @@
     public string swapSession { get; set; }
 
     string mypubkey;
-   
+
+    int SellerTransactionConfirmations;
+    int BuyerTransactionConfirmations;
 
     protected override async Task OnInitializedAsync()
     {
-        NetworkList = globalData.Networks.Keys.ToList();
-
         mypubkey = storage.GetWalletPubkey();
 
         swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{swapSession}");
     }
 
-   
-    
+
+    private async Task DeleteSwap()
+    {
+        // this method is of course problematic because anyone can delete using an api call
+        // we need to add pubkey validation to each request to the api
+
+        if (swap.CoinSeller.OwnerPubkey == mypubkey || swap.CoinBuyer.OwnerPubkey == mypubkey)
+        {
+            await Http.DeleteAsync($"api/SwapCoordinator/delete/{swapSession}");
+        }
+        else
+        {
+            error = "Only the owner can delete a swap";
+            return;
+        }
+
+        var swaps = storage.GetSwaps();
+        if (swaps != null)
+        {
+            var myswap = swaps.FirstOrDefault(s => s.SwapSessionId == swapSession);
+            if (myswap != null)
+            {
+                swaps.Remove(myswap);
+                storage.SetSwaps(swaps);
+            }
+        }
+
+        NavigationManager.NavigateTo($"fetchswaps");
+    }
+
+    private async Task BuyerTakeSwap()
+    {
+        Networks.Network network = globalData.Networks[swap.CoinBuyer.CoinSymbol];
+        AccountInfo accountInfo = storage.GetAccountInfo(network.CoinTicker);
+
+        if (accountInfo == null)
+        {
+            error = "Please scan the wallet";
+            return;
+        }
+
+        ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
+        PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchIndex, false);
+
+        swap.Status = "Matched";
+        swap.CoinBuyer.OwnerPubkey = mypubkey;
+        swap.CoinSeller.ReceiverPubkeyAddress = pubkey.ToHex();
+
+        var myswaps = storage.GetSwaps();
+
+        if (myswaps == null)
+        {
+            myswaps = new List<SwapSession>();
+            storage.SetSwaps(myswaps);
+        }
+
+        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+
+        myswaps.Add(swap);
+        storage.SetSwaps(myswaps);
+
+    }
+
+    private async Task BuildSellerSwap()
+    {
+        BuildSideSwap(swap.CoinSeller, DateTime.UtcNow.AddHours(48));
+
+        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+
+        await this.RefreshSwap();
+
+        await this.Broadcast(swap.CoinSeller);
+    }
+
+    private async Task BuildBuyerSwap()
+    {
+        BuildSideSwap(swap.CoinBuyer, swap.CoinSeller.RecoveryLockTime.Value.AddHours(-24));
+
+        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+
+        await this.RefreshSwap();
+
+        await this.Broadcast(swap.CoinBuyer);
+    }
+
+    private void BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
+    {
+        Networks.Network network = globalData.Networks[swapSessionCoin.CoinSymbol];
+        AccountInfo accountInfo = storage.GetAccountInfo(network.CoinTicker);
+        var scanIndex = accountInfo.LastFetchIndex;
+        ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
+        PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, true);
+        PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, false);
+
+        swapSessionCoin.RecoveryLockTime = recoveryLockTime;
+
+        var allItems = accountInfo.UtxoChangeItems.Values.SelectMany(s => s).ToList();
+        allItems.AddRange(accountInfo.UtxoItems.Values.SelectMany(s => s).ToList());
+
+        List<UtxoData> balancesList = new ();
+        long balance = 0;
+        long total = network.MinRelayTxFee + swap.CoinSeller.Amount;
+
+        foreach (var item in allItems)
+        {
+            balancesList.Add(item);
+            balance += item.value;
+
+            if(balance >= total)
+                break;
+        }
+
+        var extendedKey = HdOperations.GetExtendedKey(storage.GetWalletWords());
+        var utxos = balancesList.Select(s => new Utxo
+        {
+            Amount = s.value, 
+            OutPoint = new OutPoint(new uint256(s.outpoint.transactionId), s.outpoint.outputIndex), 
+            PrivateKey = HdOperations.GetExtendedPrivateKey(extendedKey.PrivateKey, extendedKey.ChainCode,s.HdPath, network ).PrivateKey, 
+            Script = new Script(s.scriptHex)
+        }).ToList();
+
+        var trasnaction = SwapBuilder.CreateSwapTransaction(network,
+            uint160.Parse(swap.SharedSecretHash),
+            pubkey,
+            pubkeyChange,
+            new PubKey(swapSessionCoin.ReceiverPubkeyAddress),
+            swapSessionCoin.RecoveryLockTime.Value, swapSessionCoin.Amount, utxos, new FeeRate(new Money(network.MinRelayTxFee)));
+
+        swapSessionCoin.SwapTransactionHex = trasnaction.ToHex(network.Consensus.ConsensusFactory);
+        swapSessionCoin.SwapTransactionHash = trasnaction.GetHash().ToString();
+
+        
+    }
+
+
+    private async Task RefreshSwap()
+    {
+        swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{swapSession}");
+
+        var myswaps = storage.GetSwaps();
+        if (myswaps != null)
+        {
+            var swapStore = myswaps.FirstOrDefault(s => s.SwapSessionId == swap.SwapSessionId);
+            if (swapStore != null)
+            {
+                myswaps.Remove(swapStore);
+                myswaps.Add(swap);
+                storage.SetSwaps(myswaps);
+            }
+        }
+    }
+
+    private async Task Broadcast(SwapSessionCoin sessionCoin)
+    {
+        var indexer = globalData.Indexers.First(f => f.Symbol == sessionCoin.CoinSymbol);
+
+        var url = $"/command/send";
+        var result = await Http.PostAsync(indexer.Url + url, new StringContent(sessionCoin.SwapTransactionHex));
+
+        if (result.StatusCode != HttpStatusCode.OK)
+        {
+            error = "Received status code " + result.StatusCode.ToString();
+        }
+    }
+
+    private async Task RefreshConfirmations()
+    {
+        if (swap.CoinSeller.SwapTransactionHash != null)
+        {
+            var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinSeller.CoinSymbol);
+            var url = $"/query/transaction/{swap.CoinSeller.SwapTransactionHash}";
+            var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
+            SellerTransactionConfirmations = res.confirmations;
+        }
+
+        if (swap.CoinBuyer.SwapTransactionHash != null)
+        {
+            var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinBuyer.CoinSymbol);
+            var url = $"/query/transaction/{swap.CoinBuyer.SwapTransactionHash}";
+            var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
+            BuyerTransactionConfirmations = res.confirmations;
+        }
+    }
+
 }
