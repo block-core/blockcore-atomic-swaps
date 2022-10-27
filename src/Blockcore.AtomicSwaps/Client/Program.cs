@@ -1,6 +1,7 @@
 using Blazored.LocalStorage;
 using Blockcore.AtomicSwaps.Client;
 using Blockcore.AtomicSwaps.Client.Logging;
+using Blockcore.AtomicSwaps.MetaMask;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -20,5 +21,7 @@ builder.Services.AddSingleton(sp => new GlobalData ());
 builder.Services.AddScoped<Storage>();
 
 builder.Services.AddBlazoredLocalStorage();
+
+builder.Services.AddMetaMask();
 
 await builder.Build().RunAsync();

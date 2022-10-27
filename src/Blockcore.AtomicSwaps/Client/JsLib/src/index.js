@@ -1,49 +1,16 @@
 import { WebProvider } from "@blockcore/provider";
 
-//window.circulatingSupply = async function (network) { //network : CITY
-//    let webProvider = await WebProvider.Create();
-//    webProvider.setNetwork(network);
 
-//    const response = await webProvider.request({
-//        method: 'wallet_getPermissions',
-//    });
 
-//    const result = await webProvider.indexer.getCirculatingSupply();
 
-//    console.log(result);
-//}
+window.signmessage = async function () {
+    const webProvider = await WebProvider.Create();
+    const msg = document.getElementById("blockcore-extension-input").value;
+    const signing1 = await webProvider.request({ method: "signMessage", params: [{ key: "CdnpNqSeqaXBMVnY1e13Ksijgr6FyWPM9J", message: msg }] });
+    document.getElementById("blockcore-extension-output").innerText = JSON.stringify(signing1);
+}
 
-//window.payment = async function () {
-//    try {
-//        const blockcore = globalThis.blockcore;
 
-//        if (!blockcore) {
-//            alert("The Blockcore provider is not available. Unable to continue.");
-//            return;
-//        }
-
-//        signature = await blockcore.request({
-//            method: "payment",
-//            params: [
-//                {
-//                    network: "city",
-//                    amount: 10.5,
-//                    address: "Ccoquhaae7u6ASqQ5BiYueASz8EavUXrKn",
-//                    label: "Your Local Info",
-//                    message: "Invoice Number 5",
-//                    data: "MzExMzUzNDIzNDY",
-//                    id: "4324",
-//                },
-//            ],
-//        });
-//    } catch (err) {
-//        console.error(err);
-//        signature = "Error: " + err.message;
-//    }
-
-//    // PAYMENT REQUESTS CURRENTLY DOES NOT RETURN ANY FEEDBACK!
-//    document.getElementById("blockcore-extension-output").innerText = JSON.stringify(signature);
-//}
 
 
 

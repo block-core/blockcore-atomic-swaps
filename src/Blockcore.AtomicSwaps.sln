@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Share
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore", "..\..\blockcore\src\Blockcore\Blockcore.csproj", "{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blockcore.AtomicSwaps.Test", "Blockcore.AtomicSwaps.Test\Blockcore.AtomicSwaps.Test.csproj", "{172554B5-8EB3-44E7-A1A3-E307F9362F5E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Test", "Blockcore.AtomicSwaps.Test\Blockcore.AtomicSwaps.Test.csproj", "{172554B5-8EB3-44E7-A1A3-E307F9362F5E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.MetaMask", "Blockcore.AtomicSwaps.MetaMask\Blockcore.AtomicSwaps.MetaMask.csproj", "{683B5575-64A0-4C52-88E7-E95E5E517E05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{683B5575-64A0-4C52-88E7-E95E5E517E05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{683B5575-64A0-4C52-88E7-E95E5E517E05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{683B5575-64A0-4C52-88E7-E95E5E517E05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{683B5575-64A0-4C52-88E7-E95E5E517E05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
