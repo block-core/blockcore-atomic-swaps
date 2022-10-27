@@ -7,6 +7,7 @@
 @inject HttpClient Http
 @inject Storage storage;
 @inject GlobalData globalData;
+@inject ILogger<WalletData> Logger;
 
 <PageTitle>Wallet and balances</PageTitle>
 
@@ -133,6 +134,7 @@
                 try
                 {
                     extendedKey = HdOperations.GetExtendedKey(walletWrods);
+
                 }
                 catch (NotSupportedException ex)
                 {
@@ -178,7 +180,6 @@
             {
                 scannedAcount += 1;
                 PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, false);
-                scanIndex++;
                 var adddress = pubkey.GetAddress(network).ToString();
                 var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, false, scanIndex);
                 var result = await FetchUtxos(indexer, adddress);
@@ -186,6 +187,7 @@
                 accountInfo.UtxoItems.Remove(adddress);
                 accountInfo.UtxoItems.Add(adddress, result.data);
                 accountInfo.TotalBalance += result.data.Sum(s => s.value);
+                scanIndex++;
 
                 if (result.noHistory)
                 {
@@ -204,7 +206,6 @@
             {
                 scannedAcount += 1;
                 PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, true);
-                scanIndex++;
                 var adddressChange = pubkeyChange.GetAddress(network).ToString();
                 var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, true, scanIndex);
                 var resulChange = await FetchUtxos(indexer, adddressChange);
@@ -212,6 +213,7 @@
                 accountInfo.UtxoChangeItems.Remove(adddressChange);
                 accountInfo.UtxoChangeItems.Add(adddressChange, resulChange.data);
                 accountInfo.TotalBalance += resulChange.data.Sum(s => s.value);
+                scanIndex++;
 
                 if (resulChange.noHistory)
                 {

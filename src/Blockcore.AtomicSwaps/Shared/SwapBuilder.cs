@@ -39,7 +39,7 @@ namespace Blockcore.AtomicSwaps.Shared
 
             swapTrx.AddOutput(amount, swapScript);
 
-            Money expectedFee = feeRate.GetFee(swapTrx, 1);
+            Money expectedFee = feeRate.GetFee(swapTrx, network.Consensus.Options.WitnessScaleFactor);
             Money totalInInputs = utxos.Sum(inp => inp.Amount);
             Money changeAmount = totalInInputs - amount - expectedFee;
             changeOutput.Value = changeAmount;

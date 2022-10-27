@@ -14,6 +14,7 @@
 @inject Storage storage;
 @inject GlobalData globalData;
 @inject NavigationManager NavigationManager;
+@inject ILogger<ViewSwap> Logger;
 
 <PageTitle>View Swaps</PageTitle>
 
@@ -143,6 +144,9 @@
 
     private async Task BuyerTakeSwap()
     {
+        ExtKey.UseBCForHMACSHA512 = true;
+        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
         Networks.Network network = globalData.Networks[swap.CoinBuyer.CoinSymbol];
         AccountInfo accountInfo = storage.GetAccountInfo(network.CoinTicker);
 
@@ -198,6 +202,9 @@
 
     private void BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
     {
+        ExtKey.UseBCForHMACSHA512 = true;
+        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
         Networks.Network network = globalData.Networks[swapSessionCoin.CoinSymbol];
         AccountInfo accountInfo = storage.GetAccountInfo(network.CoinTicker);
         var scanIndex = accountInfo.LastFetchIndex;
@@ -212,7 +219,8 @@
 
         List<UtxoData> balancesList = new ();
         long balance = 0;
-        long total = network.MinRelayTxFee + swap.CoinSeller.Amount;
+        long fee = network.MinRelayTxFee * 2;
+        long total = fee + swap.CoinSeller.Amount;
 
         foreach (var item in allItems)
         {
@@ -223,21 +231,25 @@
                 break;
         }
 
+        if (balance < total)
+            throw new Exception("not enough balance");
+
         var extendedKey = HdOperations.GetExtendedKey(storage.GetWalletWords());
+
         var utxos = balancesList.Select(s => new Utxo
         {
             Amount = s.value, 
             OutPoint = new OutPoint(new uint256(s.outpoint.transactionId), s.outpoint.outputIndex), 
             PrivateKey = HdOperations.GetExtendedPrivateKey(extendedKey.PrivateKey, extendedKey.ChainCode,s.HdPath, network ).PrivateKey, 
-            Script = new Script(s.scriptHex)
+            Script = Script.FromHex(s.scriptHex)
         }).ToList();
-
+        
         var trasnaction = SwapBuilder.CreateSwapTransaction(network,
             uint160.Parse(swap.SharedSecretHash),
             pubkey,
             pubkeyChange,
             new PubKey(swapSessionCoin.ReceiverPubkeyAddress),
-            swapSessionCoin.RecoveryLockTime.Value, swapSessionCoin.Amount, utxos, new FeeRate(new Money(network.MinRelayTxFee)));
+            swapSessionCoin.RecoveryLockTime.Value, swapSessionCoin.Amount, utxos, new FeeRate(new Money(fee)));
 
         swapSessionCoin.SwapTransactionHex = trasnaction.ToHex(network.Consensus.ConsensusFactory);
         swapSessionCoin.SwapTransactionHash = trasnaction.GetHash().ToString();

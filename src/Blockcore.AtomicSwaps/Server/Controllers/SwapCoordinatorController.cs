@@ -44,6 +44,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
                 SwapSessionId = data.SwapSessionId,
                 Created = DateTime.UtcNow,
                 Status = "Available",
+                SharedSecretHash = data.SharedSecretHash,
                 CoinSeller = new SwapSessionCoin {CoinSymbol = data.FromCoinSymbol, Amount = data.AmountToSell, OwnerPubkey = data.OwnerPubkey},
                 CoinBuyer= new SwapSessionCoin { CoinSymbol = data.ToCoinSymbol, Amount = data.AmountToBuy}
             };

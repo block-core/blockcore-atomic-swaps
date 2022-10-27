@@ -42,7 +42,7 @@ namespace Blockcore.AtomicSwaps.Test
             // seller builds the trx that sends 10 city to the buyer
 
             var cityNetwork = Networks.Networks.City.Mainnet();
-
+            
             // create a fake inputTrx
             var cityFakeInputTrx = Networks.Networks.City.Mainnet().Consensus.ConsensusFactory.CreateTransaction();
             Key fakeInputKey = new Key();

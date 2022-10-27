@@ -24,9 +24,20 @@ namespace Blockcore.Networks.Strax
 
             var consensusFactory = new StraxConsensusFactory();
 
+            var consensusOptions = new PosConsensusOptions
+            {
+                MaxBlockBaseSize = 1_000_000,
+                MaxBlockSerializedSize = 4_000_000,
+                MaxStandardVersion = 2,
+                MaxStandardTxWeight = 150_000,
+                MaxBlockSigopsCost = 20_000,
+                MaxStandardTxSigopsCost = 20_000 / 5,
+                WitnessScaleFactor = 4
+            };
+
             this.Consensus = new Consensus.Consensus(
                 consensusFactory: consensusFactory,
-                consensusOptions: null,
+                consensusOptions: consensusOptions,
                 coinType: 105105, // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
                 hashGenesisBlock: null,
                 subsidyHalvingInterval: 210000,
