@@ -35,12 +35,15 @@
 
 	<ItemGroup>
 		<PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
+		<PackageReference Include="Nethereum.ABI" Version="4.7.0" />
+		<PackageReference Include="Nethereum.Web3" Version="4.7.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.10" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.10" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\blockcore\src\Blockcore\Blockcore.csproj" />
+		<ProjectReference Include="..\..\Blockcore.AtomicSwaps.MetaMask\Blockcore.AtomicSwaps.MetaMask.csproj" />
 		<ProjectReference Include="..\Shared\Blockcore.AtomicSwaps.Shared.csproj" />
 	</ItemGroup>
 
