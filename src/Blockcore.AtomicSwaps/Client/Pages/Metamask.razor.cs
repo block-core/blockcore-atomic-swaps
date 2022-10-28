@@ -7,6 +7,7 @@ using Nethereum.ABI.Model;
 using Blockcore.AtomicSwaps.MetaMask.Enums;
 using System.Numerics;
 using Blockcore.AtomicSwaps.Client.Models;
+using Nethereum.Web3;
 
 namespace Blockcore.AtomicSwaps.Client.Pages
 {
@@ -250,7 +251,8 @@ namespace Blockcore.AtomicSwaps.Client.Pages
         {
             var address = await MetaMaskService.GetSelectedAddress();
             var result = await MetaMaskService.GetBalance(address);
-            RpcResult = $"Balance result: {result} wei";
+            var balance = Web3.Convert.FromWei(result);
+            RpcResult = $"Balance result: {Math.Round(balance, 4)} ETH";
         }
 
         public void Dispose()

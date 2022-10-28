@@ -14,7 +14,6 @@
         "webpack-cli": "^4.10.0"
     },
     "dependencies": {
-        "@blockcore/provider": "0.0.11",
-        "buffer": "^6.0.3"
+        "@blockcore/provider": "0.0.11"
     }
 }
