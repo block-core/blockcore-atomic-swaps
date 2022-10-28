@@ -8,14 +8,7 @@
 		<IncludeSymbols>True</IncludeSymbols>
 		<Authors>Blockcore</Authors>
 		<Version>1.0.0</Version>
-		<Product>Blockcore.AtomicSwaps.MetaMask</Product>
-		<PackageProjectUrl></PackageProjectUrl>
-		<RepositoryUrl></RepositoryUrl>
-		<RepositoryType>github</RepositoryType>
-		<PackageTags>metamask ethereum blockchain web3</PackageTags>
-		<Description>Blockcore.AtomicSwaps.MetaMask Extension</Description>
 	</PropertyGroup>
-
 
 	<ItemGroup>
 		<SupportedPlatform Include="browser" />
