@@ -1,9 +1,15 @@
-﻿@page "/provider"
+﻿@page "/blockcorewallet"
 @inject IJSRuntime JSRuntime;
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Blockcore Wallet!</PageTitle>
 
-<h1>Blockcore Provider!</h1>
+<h1>Blockcore Wallet!</h1>
+
+@if (!HasBlockcoreWallet)
+{
+    <p>No Blockcore Wallet detected. Please install <a href="https://chrome.google.com/webstore/detail/blockcore-wallet/peigonhbenoefaeplkpalmafieegnapj" target="_blank">Blockcore Wallet</a>.</p>
+}
+else{
 <textarea class="form-control" rows="5" id="blockcore-extension-input">
 {
         "id": "123",
@@ -11,18 +17,13 @@
 }</textarea>
 <br />
 <button class="btn btn-primary" @onclick="SigningMessage">Ask for Signing (Message)</button>
-<button class="btn btn-primary" @onclick="SigningCustomKey">Ask for Signing (Custom Key)</button>
 <br />
 <div class="form-control mt-3 p-3"  id="blockcore-extension-output"></div>
 
+}
 @code {
     async void SigningMessage()
     {
-        await JSRuntime.InvokeVoidAsync("connect3");
-    }
-
-    async void SigningCustomKey()
-    {
-        await JSRuntime.InvokeVoidAsync("connect5");
+        await JSRuntime.InvokeVoidAsync("signmessage");
     }
 }

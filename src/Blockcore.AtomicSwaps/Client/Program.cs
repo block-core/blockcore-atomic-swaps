@@ -1,4 +1,5 @@
 using Blazored.LocalStorage;
+using Blockcore.AtomicSwaps.BlockcoreWallet;
 using Blockcore.AtomicSwaps.Client;
 using Blockcore.AtomicSwaps.Client.Logging;
 using Blockcore.AtomicSwaps.MetaMask;
@@ -23,5 +24,7 @@ builder.Services.AddScoped<Storage>();
 builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddMetaMask();
+
+builder.Services.AddBlockcoreWallet();
 
 await builder.Build().RunAsync();
