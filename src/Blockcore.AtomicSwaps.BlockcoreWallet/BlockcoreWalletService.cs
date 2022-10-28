@@ -2,6 +2,7 @@ using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions;
 using Microsoft.JSInterop;
 using System;
 using System.Numerics;
+using System.Reflection.Emit;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -72,6 +73,23 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
                 throw;
             }
         }
+
+
+        public async ValueTask<string> SignMessage(string msg)
+        {
+            var module = await moduleTask.Value;
+            try
+            {
+                return await module.InvokeAsync<string>("signMessage", msg);
+            }
+            catch (Exception ex)
+            {
+                HandleExceptions(ex);
+                throw;
+            }
+        }  
+        
+        
         public async ValueTask DisposeAsync()
         {
             if (moduleTask.IsValueCreated)

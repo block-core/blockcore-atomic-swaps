@@ -1,4 +1,5 @@
 ﻿using Blockcore.AtomicSwaps.BlockcoreWallet;
+using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions;
 using Blockcore.AtomicSwaps.Client.Models;
 using Blockcore.AtomicSwaps.MetaMask;
 using Microsoft.AspNetCore.Components;
@@ -12,13 +13,34 @@ namespace Blockcore.AtomicSwaps.Client.Pages
         private bool disposedValue;
 
         [Inject]
-        public IBlockcoreWalletService BlockcoreWalletService { get; set; } = default!;
+        public IBlockcoreWalletService blockcoreWalletService { get; set; } = default!;
         public bool HasBlockcoreWallet { get; set; }
+        public string? SignedMessage { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-           HasBlockcoreWallet = await BlockcoreWalletService.HasBlockcoreWallet();
+           HasBlockcoreWallet = await blockcoreWalletService.HasBlockcoreWallet();
         }
+
+        public async Task SignMessage( string message)
+        {
+            try
+            {
+                var result = await blockcoreWalletService.SignMessage(message);
+                SignedMessage = $"Signed: {result}";
+            }
+            catch (UserDeniedException)
+            {
+                SignedMessage = "User Denied";
+            }
+            catch (Exception ex)
+            {
+                SignedMessage = $"Exception: {ex}";
+            }
+        }
+
+
+
 
         protected virtual void Dispose(bool disposing)
         {
@@ -35,12 +57,7 @@ namespace Blockcore.AtomicSwaps.Client.Pages
             }
         }
 
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~BlockcoreWallet()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
+ 
 
         public void Dispose()
         {
