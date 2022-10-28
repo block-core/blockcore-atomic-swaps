@@ -11,7 +11,7 @@
 
 <textarea class="form-control" rows="3" @bind="TransactionHex" />
 
-<select class="form-select" @bind="selectedNetwork" type="text">
+<select class="form-select mt-3 mb-2" @bind="selectedNetwork" type="text">
     <option value="" selected disabled>Please select</option>
     @{
         @foreach (var prp in NetworkList)
