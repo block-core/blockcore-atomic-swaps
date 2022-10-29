@@ -1,0 +1,15 @@
+﻿@page "/blockcoredns"
+@using Blockcore.AtomicSwaps.BlockcoreDns
+@inject IJSRuntime JSRuntime;
+
+<PageTitle>Blockcore Dns</PageTitle>
+
+<h1>Blockcore Dns!</h1>
+
+
+<div class="form-control mb-3 p-3">@blockcoreDnsUrl</div>
+
+<button class="btn btn-primary" >Get Indexers</button>
+ <br />
+<div class="form-control mt-3 p-3"  id="blockcore-indexers"></div>
+ 

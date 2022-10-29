@@ -1,5 +1,6 @@
 using Blazored.LocalStorage;
 using Blockcore.AtomicSwaps.BlockcoreWallet;
+using Blockcore.AtomicSwaps.BlockcoreDns;
 using Blockcore.AtomicSwaps.Client;
 using Blockcore.AtomicSwaps.Client.Logging;
 using Blockcore.AtomicSwaps.MetaMask;
@@ -25,6 +26,8 @@ builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddMetaMask();
 
-builder.Services.AddBlockcoreWallet();
+builder.Services.AddBlockcoreWallet(); 
+
+builder.Services.AddBlockcoreDns();
 
 await builder.Build().RunAsync();
