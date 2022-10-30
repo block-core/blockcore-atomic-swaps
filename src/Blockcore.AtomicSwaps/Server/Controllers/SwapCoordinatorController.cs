@@ -45,8 +45,8 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
                 Created = DateTime.UtcNow,
                 Status = "Available",
                 SharedSecretHash = data.SharedSecretHash,
-                CoinSeller = new SwapSessionCoin {CoinSymbol = data.FromCoinSymbol, Amount = data.AmountToSell, OwnerPubkey = data.OwnerPubkey},
-                CoinBuyer= new SwapSessionCoin { CoinSymbol = data.ToCoinSymbol, Amount = data.AmountToBuy}
+                CoinSeller = new SwapSessionCoin { CoinSymbol = data.FromCoinSymbol, Amount = data.AmountToSell, SenderPubkey = data.SenderPubkey },
+                CoinBuyer = new SwapSessionCoin { CoinSymbol = data.ToCoinSymbol, Amount = data.AmountToBuy, ReceiverPubkey = data.SenderPubkey }
             };
 
             Swaps.TryAdd(session.SwapSessionId, session);
@@ -60,10 +60,10 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         {
             if (Swaps.TryGetValue(data.SwapSessionId, out SwapSession swapSession))
             {
-                if (data.CoinSeller.OwnerPubkey != swapSession.CoinSeller.OwnerPubkey)
+                if (data.CoinSeller.SenderPubkey != swapSession.CoinSeller.SenderPubkey)
                     throw new Exception("Invalid CoinSeller owner");
 
-                if (swapSession.CoinBuyer.OwnerPubkey != null && data.CoinBuyer.OwnerPubkey != swapSession.CoinBuyer.OwnerPubkey)
+                if (swapSession.CoinBuyer.SenderPubkey != null && data.CoinBuyer.SenderPubkey != swapSession.CoinBuyer.SenderPubkey)
                     throw new Exception("Invalid CoinBuyer owner");
 
                 Swaps[data.SwapSessionId] = data;
@@ -80,7 +80,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         {
             if (Swaps.TryGetValue(swapSessionId, out SwapSession swapSession))
             {
-                if(swapSession.CoinBuyer.OwnerPubkey !=null)
+                if(swapSession.CoinBuyer.SenderPubkey !=null)
                     throw new Exception("Can't delete session on progress");
 
                 Swaps.Remove(swapSessionId);

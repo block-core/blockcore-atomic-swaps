@@ -2,17 +2,18 @@ namespace Blockcore.AtomicSwaps.Server.Controllers;
 
 public class SwapSessionCoin
 {
-    public string? OwnerPubkey { get; set; }
-    public string? OwnerPubkeyAddress { get; set; }
-    public string? OwnerPubkeyAddressChange { get; set; }
-    public string? ReceiverPubkeyAddress{ get; set; }
+    public string? SenderPubkey { get; set; }
+    public string? ReceiverPubkey { get; set; }
     public string CoinSymbol { get; set; }
     public long Amount { get; set; }
     public string? SwapTransactionHex { get; set; }
+    public string? SwapRedeemScriptHex { get; set; }
     public string? SwapTransactionHash { get; set; }
-    public string? RecoveryTransactionHex { get; set; }
-    public string? ClaimTransactionHex { get; set; }
+    public string? SenderRecoveryTransactionHex { get; set; }
+    public string? ReceiverExchangeTransactionHex { get; set; }
+    public string? ReceiverExchangeTransactionHash { get; set; }
     public DateTime? RecoveryLockTime { get; set; }
+    public string? SwapAddress { get; set; }
 }
 
 public class SwapSession
@@ -23,13 +24,14 @@ public class SwapSession
     public SwapSessionCoin CoinBuyer { get; set; }
     public decimal ExchangeRate { get; set; }
     public string? SharedSecretHash { get; set; }
+    public string? SharedSecret { get; set; }
     public string Status { get; set; }
 }
 
 public class CreateSwapSession
 {
     public string SwapSessionId { get; set; }
-    public string OwnerPubkey { get; set; }
+    public string SenderPubkey { get; set; }
     public string FromCoinSymbol { get; set; }
     public string ToCoinSymbol { get; set; }
     public long AmountToSell { get; set; }
@@ -88,7 +90,7 @@ public class Input
 {
     public int inputIndex { get; set; }
     public string inputAddress { get; set; }
-    public int inputAmount { get; set; }
+    public long inputAmount { get; set; }
     public string inputTransactionId { get; set; }
     public string scriptSig { get; set; }
     public string scriptSigAsm { get; set; }
@@ -99,11 +101,12 @@ public class Input
 public class Output
 {
     public string address { get; set; }
-    public int balance { get; set; }
+    public long balance { get; set; }
     public int index { get; set; }
     public string outputType { get; set; }
     public string scriptPubKeyAsm { get; set; }
     public string scriptPubKey { get; set; }
+    public string? spentInTransaction { get; set; }
 }
 
 public class TransactionData

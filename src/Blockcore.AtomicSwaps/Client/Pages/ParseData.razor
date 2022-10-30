@@ -41,8 +41,6 @@
     protected override async Task OnInitializedAsync()
     {
         NetworkList = globalData.Networks.Keys.ToList();
-
-        network = Blockcore.Networks.Networks.Bitcoin.Mainnet();
     }
 
    
@@ -55,6 +53,7 @@
             return;
         }
 
+        network = globalData.Networks[selectedNetwork];
 
         var trx = network.Consensus.ConsensusFactory.CreateTransaction(TransactionHex);
 

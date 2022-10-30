@@ -11,16 +11,17 @@ namespace Blockcore.AtomicSwaps.Shared
 {
     public class SwapBuilder
     {
-        public static Transaction CreateSwapTransaction(
+        public static (Transaction Transaction, Script RedeemScript, string SwapAddress) CreateSwapTransaction(
             Network network, 
             uint160 sharedSecretHash, 
             PubKey senderPublicKey,
-            PubKey senderChangePublicKey,
+            Script scriptPubKeyChange,
             PubKey receiverPublicKey,
             DateTime lockTime,
             Money amount,
             List<Utxo> utxos,
-            FeeRate feeRate)
+            FeeRate feeRate,
+            RedeemType redeemType)
         {
             var swapTrx = network.Consensus.ConsensusFactory.CreateTransaction();
 
@@ -28,16 +29,17 @@ namespace Blockcore.AtomicSwaps.Shared
             {
                 swapTrx.AddInput(new TxIn(utxo.OutPoint));
             }
-
-            TxOut changeOutput = swapTrx.AddOutput(Money.Coins(0), senderChangePublicKey.ScriptPubKey);
+            
+            TxOut changeOutput = swapTrx.AddOutput(Money.Coins(0), scriptPubKeyChange);
 
             var locktime = Utils.DateTimeToUnixTime(lockTime);
 
             Script swapScript = SwapScripts.GetAtomicSwapHtlcScript(locktime, senderPublicKey, receiverPublicKey, sharedSecretHash);
 
-            // Script swapScriptHash = swapScript.GetScriptAddress(Networks.Networks.City.Mainnet()).ScriptPubKey;
+            IDestination swapScriptHash = redeemType == RedeemType.P2SH ? swapScript.Hash : swapScript.WitHash;
+            var swapAddress = swapScriptHash.ScriptPubKey.GetDestinationAddress(network).ToString();
 
-            swapTrx.AddOutput(amount, swapScript);
+            swapTrx.AddOutput(amount, swapScriptHash.ScriptPubKey);
 
             Money expectedFee = feeRate.GetFee(swapTrx, network.Consensus.Options.WitnessScaleFactor);
             Money totalInInputs = utxos.Sum(inp => inp.Amount);
@@ -48,51 +50,46 @@ namespace Blockcore.AtomicSwaps.Shared
                     .AddKeys(utxos.Select(s => s.PrivateKey).ToArray())
                     .AddCoins(utxos.Select(s => new Coin(s.OutPoint, new TxOut(s.Amount, s.Script))));
                 
-            var signedCitySwapTrx = builder.SignTransaction(swapTrx);
+            var signTransaction = builder.SignTransaction(swapTrx);
 
-            var verifyresult = builder.Verify(signedCitySwapTrx, out TransactionPolicyError[] result);
-            
+            var verifyresult = builder.Verify(signTransaction, out TransactionPolicyError[] result);
+
             if (result.Any())
             {
                 StringBuilder sb = new();
-                bool foundError = false;
                 foreach (var policyError in result)
                 {
-                    if(policyError.ToString() == "Non-Standard scriptPubKey")
-                        continue;
-
-                    foundError = true;
                     sb.AppendLine(policyError.ToString());
                 }
 
-                if (foundError)
-                    throw new Exception(sb.ToString());
+                throw new Exception(sb.ToString());
             }
 
-            return signedCitySwapTrx;
+            return (signTransaction, swapScript, swapAddress);
         }
 
         public static Transaction CreateSwapSpendTransaction(
             Network network,
             Transaction swapTransaction,
+            Script redeemScript,
             uint256 sharedSecret,
-            PubKey sendToPublicKey,
+            Script sendToPublicKey,
             Key receiverPrivateKey,
             FeeRate feeRate)
         {
             var swapSpendTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
             IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs().Last(); // the swap is always the last output
             TxIn swapSpentInput = swapSpendTransaction.AddInput(swapTransaction, (int)swapOutput.N); 
-            TxOut swapSpendTransactionTxOut = swapSpendTransaction.AddOutput(Money.Coins(0), sendToPublicKey.ScriptPubKey);
+            TxOut swapSpendTransactionTxOut = swapSpendTransaction.AddOutput(Money.Coins(0), sendToPublicKey);
 
             Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
             Money send = swapOutput.TxOut.Value - fee;
             swapSpendTransactionTxOut.Value = send;
 
-            uint256 sighash = swapSpendTransaction.GetSignatureHash(network, new Coin(swapTransaction, swapOutput.TxOut));
+            uint256 sighash = swapSpendTransaction.GetSignatureHash(network, new Coin(swapTransaction, swapOutput.TxOut).ToScriptCoin(redeemScript));
             TransactionSignature signature = receiverPrivateKey.Sign(sighash, SigHash.All);
 
-            swapSpentInput.ScriptSig = SwapScripts.GetAtomicSwapExchangeScriptSig(signature, sharedSecret);
+            swapSpentInput.ScriptSig = SwapScripts.GetAtomicSwapExchangeScriptSig(signature, sharedSecret, redeemScript);
 
             TransactionBuilder builder = new TransactionBuilder(network);
             builder.AddCoins(swapTransaction);
@@ -115,7 +112,8 @@ namespace Blockcore.AtomicSwaps.Shared
         public static Transaction CreateSwapRecoveryTransaction(
             Network network,
             Transaction swapTransaction,
-            PubKey sendToPublicKey,
+            Script redeemScript,
+            Script sendToPublicKey,
             Key senderPrivateKey,
             FeeRate feeRate,
             DateTime lockTime)
@@ -123,7 +121,7 @@ namespace Blockcore.AtomicSwaps.Shared
             var recoverTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
             IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs().Last(); // the swap is always the last output
             TxIn recoverInput = recoverTransaction.AddInput(swapTransaction, (int)swapOutput.N);
-            TxOut recoverTransactionTxOut = recoverTransaction.AddOutput(Money.Coins(0), sendToPublicKey.ScriptPubKey);
+            TxOut recoverTransactionTxOut = recoverTransaction.AddOutput(Money.Coins(0), sendToPublicKey);
 
             Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
             Money send = swapOutput.TxOut.Value - fee;
@@ -133,10 +131,10 @@ namespace Blockcore.AtomicSwaps.Shared
             recoverTransaction.LockTime = locktime;
             recoverInput.Sequence = new Sequence(locktime);
 
-            uint256 sighash = recoverTransaction.GetSignatureHash(network, new Coin(swapTransaction, swapOutput.TxOut));
+            uint256 sighash = recoverTransaction.GetSignatureHash(network, new Coin(swapTransaction, swapOutput.TxOut).ToScriptCoin(redeemScript));
             TransactionSignature signature = senderPrivateKey.Sign(sighash, SigHash.All);
 
-            recoverInput.ScriptSig = SwapScripts.GetAtomicSwapRecoverScriptSig(signature);
+            recoverInput.ScriptSig = SwapScripts.GetAtomicSwapRecoverScriptSig(signature, redeemScript);
 
             TransactionBuilder builder = new TransactionBuilder(network);
             builder.AddCoins(swapTransaction);

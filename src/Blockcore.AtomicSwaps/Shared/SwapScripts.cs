@@ -9,23 +9,33 @@ namespace Blockcore.AtomicSwaps.Shared
     /// </summary>
     public class SwapScripts
     {
-       
-        public static Script GetAtomicSwapExchangeScriptSig(TransactionSignature senderSig, uint256 sharedSecret)
+        public static uint256 GetSecretFromScriptSig(Transaction transaciton)
         {
-            var redeemScript = new Script(
-                Op.GetPushOp(senderSig.ToBytes()),
-                Op.GetPushOp(sharedSecret.ToBytes()),
-                Op.GetPushOp(1));
+            var secretBytes = transaciton.Inputs[0].ScriptSig.ToOps()[1].PushData;
 
-            return redeemScript;
+            var secret = new uint256(secretBytes);
+
+            return secret;
         }
-        public static Script GetAtomicSwapRecoverScriptSig(TransactionSignature receiverSig)
-        {
-            var redeemScript = new Script(
-                Op.GetPushOp(receiverSig.ToBytes()), 
-                Op.GetPushOp(0));
 
-            return redeemScript;
+        public static Script GetAtomicSwapExchangeScriptSig(TransactionSignature senderSig, uint256 sharedSecret, Script redeemScript)
+        {
+            var exchangeRedeemScript = new Script(
+                Op.GetPushOp(senderSig.ToBytes()),     // put the senders signature on the stack
+                Op.GetPushOp(sharedSecret.ToBytes()),           // put the shared secret on the stack
+                Op.GetPushOp(1),                                // go down the if == true condition
+                Op.GetPushOp(redeemScript.ToBytes()));          // the redeem script
+
+            return exchangeRedeemScript;
+        }
+        public static Script GetAtomicSwapRecoverScriptSig(TransactionSignature receiverSig, Script redeemScript)
+        {
+            var recoverRedeemScript = new Script(
+                Op.GetPushOp(receiverSig.ToBytes()),   // put the receivers signature on the stack
+                Op.GetPushOp(0),                                // go down the if === false (the else path) condition
+                Op.GetPushOp(redeemScript.ToBytes()));          // the redeem script
+
+            return recoverRedeemScript;
         }
 
         /// <summary>

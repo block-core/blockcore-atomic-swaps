@@ -131,7 +131,7 @@
 					<td>@Money.Satoshis(swap.CoinSeller.Amount) - @swap.CoinSeller.CoinSymbol</td>
 					<td>@Money.Satoshis(swap.CoinBuyer.Amount) - @swap.CoinBuyer.CoinSymbol</td>
 					<td>@swap.Created </td>
-					<td>@(swap.CoinSeller.OwnerPubkey == mypubkey ? "I am seller" : swap.CoinBuyer.OwnerPubkey == mypubkey ? "I am buyer" : "not my swap")</td>
+					<td>@(swap.CoinSeller.SenderPubkey == mypubkey ? "I am seller" : swap.CoinBuyer.SenderPubkey == mypubkey ? "I am buyer" : "not my swap")</td>
 					<td>@swap.Status </td>
 					<td><button class="btn btn-info" @onclick="() => this.ViewSwap(swap.SwapSessionId)">Details</button> </td>
 				</tr>
@@ -228,10 +228,10 @@
 
 		var totalBalanceInSwaps = myswaps.Sum(s =>
 		{
-            if(s.CoinSeller.OwnerPubkey == pubkey)
+            if(s.CoinSeller.SenderPubkey == pubkey)
                 return s.CoinSeller.Amount ;
 
-            if (s.CoinBuyer.OwnerPubkey == pubkey)
+            if (s.CoinBuyer.SenderPubkey == pubkey)
                 return s.CoinBuyer.Amount;
 
             return 0;
@@ -253,7 +253,7 @@
 
 		var postBody = new CreateSwapSession
 			{
-				OwnerPubkey = pubkey,
+				SenderPubkey = pubkey,
 				FromCoinSymbol = SwapFrom,
 				AmountToSell = amountToSellSats.Satoshi,
 				ToCoinSymbol = SwapTo,

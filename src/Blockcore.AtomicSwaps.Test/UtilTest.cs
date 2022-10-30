@@ -46,7 +46,6 @@ namespace Blockcore.AtomicSwaps.Test
                 throw;
             }
 
-
             string accountHdPath = HdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
             Key privateKey = extendedKey.PrivateKey;
             ExtPubKey accountExtPubKeyTostore = HdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);

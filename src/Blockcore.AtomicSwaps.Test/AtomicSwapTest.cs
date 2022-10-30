@@ -6,6 +6,7 @@ using Blockcore.AtomicSwaps.Shared;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBitcoin.Policy;
 using Xunit;
 
@@ -50,35 +51,42 @@ namespace Blockcore.AtomicSwaps.Test
 
             // var citySwapTrx = Networks.Networks.City.Mainnet().Consensus.ConsensusFactory.CreateTransaction();
 
-            var citySwapTrx = SwapBuilder.CreateSwapTransaction(
+            var swapTransaction = SwapBuilder.CreateSwapTransaction(
                 cityNetwork,
                 sharedSecretHash160,
                 senderKeyCITY.PubKey,
-                senderKeyCITY.PubKey,
+                senderKeyCITY.PubKey.GetAddress(cityNetwork).ScriptPubKey,
                 receiverKeyCITY.PubKey, 
                 DateTime.UtcNow.AddHours(48),
                 Money.Parse("10.1"),
                 new List<Utxo>() { new Utxo { OutPoint = new OutPoint(cityFakeInputTrx, 0), Amount = fakeTxout.Value, PrivateKey = fakeInputKey, Script = fakeTxout.ScriptPubKey } },
-                new FeeRate(Money.Satoshis(cityNetwork.MinTxFee * 2)));
+                new FeeRate(Money.Satoshis(cityNetwork.MinTxFee * 3)),
+                RedeemType.P2SH);
 
             // option 1 receiver can now claim the swap
 
             var swapSpendTransaction = SwapBuilder.CreateSwapSpendTransaction(
                 cityNetwork,
-                citySwapTrx,
+                swapTransaction.Transaction,
+                swapTransaction.RedeemScript,
                 sharedSecret,
-                receiverKeyCITY.PubKey,
+                receiverKeyCITY.PubKey.GetAddress(cityNetwork).ScriptPubKey,
                 receiverKeyCITY,
-                new FeeRate(Money.Satoshis(cityNetwork.MinTxFee)));
+                new FeeRate(Money.Satoshis(cityNetwork.MinTxFee * 3)));
+
+            var secret = SwapScripts.GetSecretFromScriptSig(swapSpendTransaction);
+
+            Assert.Equal(secret, sharedSecret);
 
             // option 2 sender can recover the trx after enough time has passed
 
             var swapRecoverTransaction = SwapBuilder.CreateSwapRecoveryTransaction(
                 cityNetwork,
-                citySwapTrx,
-                senderKeyCITY.PubKey,
+                swapTransaction.Transaction,
+                swapTransaction.RedeemScript,
+                senderKeyCITY.PubKey.GetAddress(cityNetwork).ScriptPubKey,
                 senderKeyCITY,
-                new FeeRate(Money.Satoshis(cityNetwork.MinTxFee)),
+                new FeeRate(Money.Satoshis(cityNetwork.MinTxFee * 3)),
                 DateTime.UtcNow.AddHours(48));
 
             // 1 - create an htlc trx that sends from seller to buyer
