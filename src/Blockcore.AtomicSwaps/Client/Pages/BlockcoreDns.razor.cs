@@ -13,8 +13,14 @@ namespace Blockcore.AtomicSwaps.Client.Pages
 
         protected override Task OnInitializedAsync()
         {
-            blockcoreDnsUrl = blockcoreDnsService.LoadUrl();
+            blockcoreDnsUrl = blockcoreDnsService.GetDnsServiceUrl();
             return Task.CompletedTask;
+        }
+
+        public async Task test()
+        {
+            var dnsServices = await blockcoreDnsService.GetServicesByNetwork("SBC");
+            //blockcoreDnsUrl = dnsResults;
         }
 
         protected virtual void Dispose(bool disposing)
