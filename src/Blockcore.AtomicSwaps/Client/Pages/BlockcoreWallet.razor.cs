@@ -1,7 +1,5 @@
 ﻿using Blockcore.AtomicSwaps.BlockcoreWallet;
 using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions;
-using Blockcore.AtomicSwaps.Client.Models;
-using Blockcore.AtomicSwaps.MetaMask;
 using Microsoft.AspNetCore.Components;
 
 

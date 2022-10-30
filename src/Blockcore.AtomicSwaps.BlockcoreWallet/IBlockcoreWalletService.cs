@@ -14,7 +14,5 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
         ValueTask<bool> IsSiteConnected();
         ValueTask<string> SignMessage(string msg);
 
-
-
     }
 }

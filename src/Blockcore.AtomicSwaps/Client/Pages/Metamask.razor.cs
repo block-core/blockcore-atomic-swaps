@@ -1,5 +1,4 @@
-﻿using Blockcore.P2P.Protocol;
-using Blockcore.AtomicSwaps.MetaMask.Exceptions;
+﻿using Blockcore.AtomicSwaps.MetaMask.Exceptions;
 using Blockcore.AtomicSwaps.MetaMask;
 using Microsoft.AspNetCore.Components;
 using Nethereum.ABI.FunctionEncoding;
