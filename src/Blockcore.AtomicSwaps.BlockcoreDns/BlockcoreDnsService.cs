@@ -33,9 +33,9 @@ namespace Blockcore.AtomicSwaps.BlockcoreDns
                     var result = await new JsonToolKit<List<DnsResult>>().DownloadAndConverJsonToObjectAsync(ns.Url + "/api/dns/services/symbol/"+ network);
                     if (result.Any())
                     {
-                        dnsResult.AddRange(result);
+                        dnsResult.AddRange(result);                   
+                        dnsservices.Add(new DnsServices { Url = ns.Url, DnsResults = dnsResult });
                     }
-                    dnsservices.Add(new DnsServices { Url = ns.Url, DnsResults = dnsResult });
                 }
                 return dnsservices;
             }
@@ -58,9 +58,9 @@ namespace Blockcore.AtomicSwaps.BlockcoreDns
                     var result = await new JsonToolKit<List<DnsResult>>().DownloadAndConverJsonToObjectAsync(ns.Url + "/api/dns/services/service/" + type);
                     if (result.Any())
                     {
-                        dnsResult.AddRange(result);
+                        dnsResult.AddRange(result);                    
+                        dnsservices.Add(new DnsServices { Url = ns.Url, DnsResults = dnsResult });
                     }
-                    dnsservices.Add(new DnsServices { Url = ns.Url, DnsResults = dnsResult });
                 }
                 return dnsservices;
             }
@@ -81,12 +81,12 @@ namespace Blockcore.AtomicSwaps.BlockcoreDns
                 foreach (var ns in nsServices)
                 {
                     List<DnsResult> dnsResult = new List<DnsResult>();
-                    var result = await new JsonToolKit<List<DnsResult>>().DownloadAndConverJsonToObjectAsync(ns.Url + "/api/dns/services/symbol/"+ network + "service/" + type);
+                    var result = await new JsonToolKit<List<DnsResult>>().DownloadAndConverJsonToObjectAsync(ns.Url + "/api/dns/services/symbol/"+ network + "/service/" + type);
                     if (result.Any())
                     {
                         dnsResult.AddRange(result);
+                        dnsservices.Add(new DnsServices { Url = ns.Url, DnsResults = dnsResult });
                     }
-                    dnsservices.Add(new DnsServices { Url = ns.Url, DnsResults = dnsResult });
                 }
                 return dnsservices;
             }

@@ -1,4 +1,5 @@
 ﻿using Blockcore.AtomicSwaps.BlockcoreDns;
+using Blockcore.AtomicSwaps.BlockcoreDns.Models;
 using Microsoft.AspNetCore.Components;
 
 
@@ -10,6 +11,11 @@ namespace Blockcore.AtomicSwaps.Client.Pages
         [Inject]
         public IBlockcoreDnsService blockcoreDnsService { get; set; } = default!;
         public string? blockcoreDnsUrl { get; set; }
+        public string? network { get; set; }
+        public string? type { get; set; }
+        public string textColor { get; set; } = "text-success";
+
+        public IList<DnsServices> services { get; set; }
 
         protected override Task OnInitializedAsync()
         {
@@ -17,10 +23,19 @@ namespace Blockcore.AtomicSwaps.Client.Pages
             return Task.CompletedTask;
         }
 
-        public async Task test()
+        public async Task GetServicesByNetwork()
         {
-            var dnsServices = await blockcoreDnsService.GetServicesByNetwork("SBC");
-            //blockcoreDnsUrl = dnsResults;
+            services = await blockcoreDnsService.GetServicesByNetwork(network);
+        }
+
+        public async Task GetServicesByType()
+        {
+            services = await blockcoreDnsService.GetServicesByType(type);
+        }
+
+        public async Task GetServicesByTypeAndNetwork()
+        {
+            services = await blockcoreDnsService.GetServicesByTypeAndNetwork(type,network);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -37,8 +52,6 @@ namespace Blockcore.AtomicSwaps.Client.Pages
                 disposedValue = true;
             }
         }
-
-
 
         public void Dispose()
         {
