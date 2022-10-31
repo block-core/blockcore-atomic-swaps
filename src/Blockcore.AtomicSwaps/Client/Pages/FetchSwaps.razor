@@ -248,7 +248,7 @@
 		}
 
 	    var sessionId = Guid.NewGuid().ToString("N");
-	    var sharedSecret = GlobalData.GenerateSecret(storage.GetWalletWords(), sessionId);
+	    var sharedSecret = GlobalData.GenerateSecret(network, storage, sessionId);
 	    var sharedSecretHash = Hashes.Hash160(sharedSecret.ToBytes());
 
 		var postBody = new CreateSwapSession

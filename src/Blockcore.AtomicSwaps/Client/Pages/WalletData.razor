@@ -19,8 +19,10 @@
 
 <p>Wallet Words.</p>
 
+<p><strong>@(hasWallet ? "Wallet Found" : "No Wallet Found")</strong></p>
 <textarea class="form-control" rows="3" @bind="walletWrods" />
 <button class="btn btn-primary mb-3 mt-3" @onclick="SaveWallet">Save Wallet</button>
+<button class="btn btn-primary mb-3 mt-3" @onclick="ShowWallet">Show Wallet</button>
 
 <br/>
 @*<select @bind="selectedNetwork"   type="text" @onchange="Callback" >*@
@@ -88,6 +90,7 @@
 @code {
     private bool busy = false;
     private string walletWrods;
+    private bool hasWallet;
     public string link { get; set; } = string.Empty;
     public int blockheight;
     public string outputs;
@@ -133,7 +136,6 @@
                 try
                 {
                     extendedKey = HdOperations.GetExtendedKey(walletWrods);
-
                 }
                 catch (NotSupportedException ex)
                 {
@@ -152,6 +154,7 @@
                 string accountHdPath = HdOperations.GetAccountHdPath(purpose, coinType, accountIndex);
                 Key privateKey = extendedKey.PrivateKey;
                 storage.SetWalletPubkey(privateKey.PubKey.ToHex());
+                storage.SetWalletPrivkey(extendedKey.ToString(network)!);
                 ExtPubKey accountExtPubKeyTostore = HdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
 
                 accountInfo.ExtPubKey = accountExtPubKeyTostore.ToString(network);
@@ -338,24 +341,37 @@
     private async Task SaveWallet()
     {
         storage.SaveWalletWords(walletWrods);
+        await ClearAccount();
+    }
+
+    private async Task ShowWallet()
+    {
+        walletWrods = storage.GetWalletWords();
     }
 
     private async Task ClearAccount()
     {
         var account = storage.GetAccountInfo(selectedNetwork);
-        account.TotalBalance = 0;
-        account.LastFetchChangeIndex = 0;
-        account.LastFetchIndex = 0;
-        account.UtxoItems.Clear();
-        account.UtxoChangeItems.Clear();
-        storage.SetAccountInfo(selectedNetwork,  account);
-        localAccountInfo = account;
+        if (account != null)
+        {
+            account.TotalBalance = 0;
+            account.LastFetchChangeIndex = 0;
+            account.LastFetchIndex = 0;
+            account.UtxoItems.Clear();
+            account.UtxoChangeItems.Clear();
+            storage.SetAccountInfo(selectedNetwork, account);
+            localAccountInfo = account;
+        }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        walletWrods = storage.GetWalletWords();
         NetworkList = globalData.Networks.Keys.ToList();
+
+        if (storage.GetWalletWords() != null)
+        {
+            hasWallet = true;
+        }
     }
 
     private void Callback(ChangeEventArgs obj)

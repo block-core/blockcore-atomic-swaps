@@ -10,6 +10,8 @@
 @using NBitcoin.Crypto
 @using Newtonsoft.Json
 @using System.Net
+@using Blockcore.Networks.Bitcoin
+@using Blockcore.Utilities
 @inject HttpClient Http
 @inject Storage storage;
 @inject GlobalData globalData;
@@ -130,12 +132,15 @@
         @if (BuyerTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHex != null && 
              SellerTransactionConfirmations > 0 && swap.CoinSeller.SwapTransactionHex != null)
         {
-            <button class="btn btn-warning" @onclick="ScanForSecretHash">Check the Blockchain for the secret hash</button>
+            if (string.IsNullOrEmpty(SharedSecret))
+            {
+                <button class="btn btn-warning" @onclick="ScanForSecretHash">Check the Blockchain for the secret hash</button>
+            }
         }
 
         @if (swap.CoinBuyer.ReceiverExchangeTransactionHex != null)
         {
-            if (!string.IsNullOrEmpty(SharedSecret))
+            if (!string.IsNullOrEmpty(SharedSecret) && swap.CoinSeller.ReceiverExchangeTransactionHex == null)
             {
                 <button class="btn btn-success" @onclick="BuyerExchangeSwapFund">Claim Buyer Swap Transaction</button>
             }
@@ -299,48 +304,29 @@
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
         Networks.Network network = globalData.Networks[swapSessionCoin.CoinSymbol];
-        AccountInfo accountInfo = storage.GetAccountInfo(network.CoinTicker);
-        ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
-        PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchChangeIndex, true);
 
         swapSessionCoin.RecoveryLockTime = recoveryLockTime;
 
-        var allItems = accountInfo.UtxoChangeItems.Values.SelectMany(s => s).ToList();
-        allItems.AddRange(accountInfo.UtxoItems.Values.SelectMany(s => s).ToList());
+        AccountInfo? accountInfo = storage.GetAccountInfo(network.CoinTicker);
+        Guard.NotNull(accountInfo, nameof(accountInfo));
 
-        List<UtxoData> balancesList = new ();
-        long balance = 0;
-        long fee = network.MinRelayTxFee * 3;
-        long total = fee + swap.CoinSeller.Amount;
-
-        foreach (var item in allItems)
+        var fee = network.MinRelayTxFee * 3;
+        if (!GlobalData.FindInputs(network, storage, swap.CoinSeller.Amount, fee, out List<UtxoData> balancesList))
         {
-            balancesList.Add(item);
-            balance += item.value;
-
-            if(balance >= total)
-                break;
+            error = "not enough balance";
+            return;
         }
 
-        if (balance < total)
-            throw new Exception("not enough balance");
-
-        var extendedKey = HdOperations.GetExtendedKey(storage.GetWalletWords());
-
-        var utxos = balancesList.Select(s => new Utxo
-        {
-            Amount = s.value, 
-            OutPoint = new OutPoint(new uint256(s.outpoint.transactionId), s.outpoint.outputIndex), 
-            PrivateKey = HdOperations.GetExtendedPrivateKey(extendedKey.PrivateKey, extendedKey.ChainCode,s.HdPath, network ).PrivateKey, 
-            Script = Script.FromHex(s.scriptHex)
-        }).ToList();
+        var utxos = GlobalData.AddPrivateKeys(network, storage, balancesList);
+        
+        PubKey pubKey = GlobalData.GetNextAvailableAddress(network, storage);
 
         RedeemType redeemType = HdOperations.GetPurpose(accountInfo.Path) == 44 ? RedeemType.P2SH :
             HdOperations.GetPurpose(accountInfo.Path) == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
 
         var change = redeemType == RedeemType.P2SH ? 
-            pubkeyChange.GetScriptAddress(network).ScriptPubKey : 
-            pubkeyChange.GetSegwitAddress(network).ScriptPubKey;
+            pubKey.GetAddress(network).ScriptPubKey : 
+            pubKey.GetSegwitAddress(network).ScriptPubKey;
 
         var transactionContext = SwapBuilder.CreateSwapTransaction(network,
             uint160.Parse(swap.SharedSecretHash),
@@ -432,9 +418,10 @@
         if (swap.CoinBuyer.ReceiverPubkey != mypubkey)
             throw new Exception("seller pubkey was changed");
 
-        var walletWrods = storage.GetWalletWords();
-        var sharedSecret = GlobalData.GenerateSecret(walletWrods, swap.SwapSessionId);
-        var extendedKey = HdOperations.GetExtendedKey(walletWrods);
+        Networks.Network network = globalData.Networks[swap.CoinBuyer.CoinSymbol];
+
+        var sharedSecret = GlobalData.GenerateSecret(network, storage, swap.SwapSessionId);
+        var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
 
         ExchangeSwapFund(swap.CoinBuyer, sharedSecret, extendedKey.PrivateKey);
 
@@ -481,16 +468,14 @@
 
         long fee = network.MinRelayTxFee * 3;
 
-        AccountInfo accountInfo = storage.GetAccountInfo(network.CoinTicker);
-        ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
-        PubKey pubkeyChange = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchChangeIndex, true);
+        PubKey pubKey = GlobalData.GetNextAvailableAddress(network, storage);
 
         var exchangeTransaction = SwapBuilder.CreateSwapSpendTransaction(
             network,
             transaciton,
             redeemScript,
             sharedSecret,
-            pubkeyChange.GetAddress(network).ScriptPubKey,
+            pubKey.GetAddress(network).ScriptPubKey,
             privateKey,
             new FeeRate(new Money(fee)));
 
@@ -527,6 +512,8 @@
 
                     if (res != null)
                     {
+                        swap.CoinBuyer.ReceiverExchangeTransactionHex = trxHex; // the other side didn't tell us they spent the coins
+
                         var exchangeTransaciton = network.Consensus.ConsensusFactory.CreateTransaction(trxHex);
 
                         var secret = SwapScripts.GetSecretFromScriptSig(exchangeTransaciton);

@@ -17,10 +17,8 @@ namespace Blockcore.AtomicSwaps.Test
         [Fact]
         public void PerformAnAtomicSwap()
         {
-
             // in this example we swap coins from strax to city
             // the seller is on the city chain and offers to sell 10 city for 1 strax
-
 
             string senderKeySTRAXString = "";
             string receiverKeySTRAXString = "";

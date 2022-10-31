@@ -31,6 +31,16 @@ namespace Blockcore.AtomicSwaps.Client
             return _storage.GetItemAsString("pubkey");
         }
 
+        public void SetWalletPrivkey(string privkey)
+        {
+            _storage.SetItemAsString("privkey", privkey);
+        }
+
+        public string? GetWalletPrivkey()
+        {
+            return _storage.GetItemAsString("privkey");
+        }
+
         public AccountInfo? GetAccountInfo(string network)
         {
             return _storage.GetItem<AccountInfo>($"utxo:{network}");
