@@ -311,7 +311,7 @@
         Guard.NotNull(accountInfo, nameof(accountInfo));
 
         var fee = network.MinRelayTxFee * 3;
-        if (!GlobalData.FindInputs(network, storage, swap.CoinSeller.Amount, fee, out List<UtxoData> balancesList))
+        if (!GlobalData.FindInputs(network, storage, swapSessionCoin.Amount, fee, out List<UtxoData> balancesList))
         {
             error = "not enough balance";
             return;
