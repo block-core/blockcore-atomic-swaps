@@ -28,5 +28,13 @@ namespace Blockcore.Networks
                 return new NetworksSelector(() => new City.Networks.CityMain(), () => null, () => null);
             }
         }
+
+        public static NetworksSelector Implx
+        {
+            get
+            {
+                return new NetworksSelector(() => new  Implx.ImpleumMain(), () => null, () => null);
+            }
+        }
     }
 }

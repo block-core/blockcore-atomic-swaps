@@ -19,13 +19,15 @@ namespace Blockcore.AtomicSwaps.Client
         {
             new IndexerUrl { Symbol = "STRAX", Url = "https://strax.indexer.blockcore.net/api" },
             new IndexerUrl { Symbol = "CITY", Url = "https://city.indexer.blockcore.net/api" },
+            new IndexerUrl { Symbol = "IMPLX", Url = "https://implx.indexer.blockcore.net/api" },
         };
 
         public Dictionary<string, Network> Networks { get; } = new()
         {
             { "STRAX", Blockcore.Networks.Networks.Strax.Mainnet() },
             { "CITY", Blockcore.Networks.Networks.City.Mainnet() },
-            { "BTC", Blockcore.Networks.Networks.Bitcoin.Mainnet() }
+            { "BTC", Blockcore.Networks.Networks.Bitcoin.Mainnet() },
+            { "IMPLX", Blockcore.Networks.Networks.Implx.Mainnet() },
         };
 
         public static uint256 GenerateSecret(Networks.Network network, Storage storage, string sessionsId)
