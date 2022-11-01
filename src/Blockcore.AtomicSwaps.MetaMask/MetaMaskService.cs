@@ -31,7 +31,7 @@ namespace Blockcore.AtomicSwaps.MetaMask
         public ValueTask<IJSObjectReference> LoadScripts(IJSRuntime jsRuntime)
         {
             //await jsRuntime.InvokeAsync<IJSObjectReference>("import", "https://cdn.ethers.io/lib/ethers-5.1.0.umd.min.js");
-            return jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Blockcore.AtomicSwaps.MetaMask/metaMaskJsInterop.js");
+            return jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Blockcore.AtomicSwaps.MetaMask/metaMask.js");
         }
 
         public async ValueTask ConnectMetaMask()

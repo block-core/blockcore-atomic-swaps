@@ -1,0 +1,87 @@
+@inherits LayoutComponentBase
+@layout MasterInit
+@inject IJSRuntime JS
+
+@using Layout._Helpers
+@using Layout
+@using Layout.Partials.SidebarLayout
+@using Blockcore.AtomicSwaps.Website.Shared.Partials
+
+<!--begin::App-->
+<div class="d-flex flex-column flex-root app-root" id="dex_app_root">
+	<!--begin::Page-->
+	<div class="app-page flex-column flex-column-fluid" id="dex_app_page">
+		<_Header></_Header>
+		<!--begin::Wrapper-->
+		<div class="app-wrapper flex-column flex-row-fluid" id="dex_app_wrapper">
+			<_Sidebar></_Sidebar>
+			<!--begin::Main-->
+			<div class="app-main flex-column flex-row-fluid" id="dex_app_main">
+				<!--begin::Content wrapper-->
+				<div class="d-flex flex-column flex-column-fluid">
+					<_Toolbar></_Toolbar>
+					<!--begin::Content-->
+                    <div id="dex_app_content" class="app-content flex-column-fluid">
+                    	<!--begin::Content container-->
+                    	<div id="dex_app_content_container" class="app-container container-fluid">
+                    		@Body
+                    	</div>
+                    	<!--end::Content container-->
+                    </div>
+                    <!--end::Content-->
+				</div>
+				<!--end::Content wrapper-->
+				<_Footer></_Footer>
+			</div>
+			<!--end:::Main-->
+		</div>
+		<!--end::Wrapper-->
+	</div>
+	<!--end::Page-->
+</div>
+<!--end::App-->
+
+<_Drawers></_Drawers>
+<_ModalComponents></_ModalComponents>
+<_Scrolltop></_Scrolltop>
+
+@code {
+	private IThemeHelpers _helper;
+
+	protected override void OnInitialized() // = On Page Load
+	{
+		_helper = new ThemeHelpers(JS);   
+		_helper.addBodyAttribute("data-dex-app-page-loading", "on");
+	}
+	
+	protected override void OnAfterRender(bool firstRender)
+	{
+		//Initialize classes and attributes for layout with dark sidebar
+		_helper.addBodyAttribute("data-dex-app-reset-transition", "true");
+
+		_helper.addBodyAttribute("data-dex-app-layout", "dark-sidebar");
+		_helper.addBodyAttribute("data-dex-app-header-fixed", "true");
+		_helper.addBodyAttribute("data-dex-app-sidebar-fixed", "true");
+		_helper.addBodyAttribute("data-dex-app-sidebar-hoverable", "true");
+		_helper.addBodyAttribute("data-dex-app-sidebar-push-header", "true");
+		_helper.addBodyAttribute("data-dex-app-sidebar-push-toolbar", "true");
+		_helper.addBodyAttribute("data-dex-app-sidebar-push-footer", "true");
+		_helper.addBodyAttribute("data-dex-app-toolbar-enabled", "true");
+
+		_helper.addBodyClass("app-default");
+
+		JS.InvokeVoidAsync("DEXModalUpgradePlan.init"); 
+		JS.InvokeVoidAsync("DEXCreateApp.init");
+		JS.InvokeVoidAsync("DEXModalUserSearch.init");
+		JS.InvokeVoidAsync("DEXModalNewTarget.init");
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+		if(firstRender){
+			await Task.Delay(300);
+			await JS.InvokeVoidAsync("document.body.removeAttribute", "data-dex-app-reset-transition");
+			await JS.InvokeVoidAsync("document.body.removeAttribute", "data-dex-app-page-loading");
+		}
+    }
+}

@@ -1,0 +1,46 @@
+@using Layout.Partials.HeaderLayout.Header._Menu
+@using Layout.Partials.HeaderLayout.Header
+@using Layout._Helpers
+@inject IJSRuntime JS
+
+<!--begin::Header-->
+<div id="dex_app_header" class="app-header">
+	<!--begin::Header container-->
+	<div class="app-container container-xxl d-flex align-items-stretch justify-content-between">
+		<!--begin::Logo-->
+		<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 me-lg-15">
+			<a href="?page=index">
+			@if(header=="dark-header"){
+				<img alt="Logo" src="assets/media/logos/default-dark.svg" class="h-40px h-lg-40px" />
+			} else {
+				if(header=="light-header"){
+					<img alt="Logo" src="assets/media/logos/default.svg" class="theme-light-show h-40px h-lg-40px" />
+					<img alt="Logo" src="assets/media/logos/default-dark.svg" class="theme-dark-show h-40px h-lg-40px" />
+				}
+			}
+			</a>
+		</div>
+		<!--end::Logo-->
+		<!--begin::Header wrapper-->
+		<div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1" id="dex_app_header_wrapper">
+			<_Menu></_Menu>
+			<_Navbar></_Navbar>
+		</div>
+		<!--end::Header wrapper-->
+	</div>
+	<!--end::Header container-->
+</div>
+<!--end::Header-->
+
+@code {
+	public string header;
+	
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if(firstRender)
+		{
+			header = await JS.InvokeAsync<string>("document.body.getAttribute", "data-dex-app-layout");
+			StateHasChanged();
+		}
+	}
+}

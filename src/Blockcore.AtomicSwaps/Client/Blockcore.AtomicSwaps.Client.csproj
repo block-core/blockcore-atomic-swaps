@@ -42,7 +42,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\blockcore\src\Blockcore\Blockcore.csproj" />
 		<ProjectReference Include="..\..\Blockcore.AtomicSwaps.BlockcoreDns\Blockcore.AtomicSwaps.BlockcoreDns.csproj" />
 		<ProjectReference Include="..\..\Blockcore.AtomicSwaps.BlockcoreWallet\Blockcore.AtomicSwaps.BlockcoreWallet.csproj" />
 		<ProjectReference Include="..\..\Blockcore.AtomicSwaps.MetaMask\Blockcore.AtomicSwaps.MetaMask.csproj" />
