@@ -36,5 +36,12 @@ namespace Blockcore.Networks
                 return new NetworksSelector(() => new  Implx.ImpleumMain(), () => null, () => null);
             }
         }
+        public static NetworksSelector Mol
+        {
+            get
+            {
+                return new NetworksSelector(() => new  Mol.MolieMain(), () => null, () => null);
+            }
+        }
     }
 }
