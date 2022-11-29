@@ -286,7 +286,7 @@
         if (swap.CoinSeller.SenderPubkey != mypubkey)
             throw new Exception("seller pubkey was changed");
 
-        BuildSideSwap(swap.CoinSeller, DateTime.UtcNow.AddMinutes(1));// DateTime.UtcNow.AddHours(48));
+        BuildSideSwap(swap.CoinSeller, DateTime.UtcNow.AddHours(48));
 
         await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
 
@@ -300,7 +300,7 @@
         if (swap.CoinBuyer.SenderPubkey != mypubkey)
             throw new Exception("buyer pubkey was changed");
 
-        BuildSideSwap(swap.CoinBuyer, DateTime.UtcNow.AddMinutes(1));// swap.CoinSeller.RecoveryLockTime.Value.AddHours(-24));
+        BuildSideSwap(swap.CoinBuyer, swap.CoinSeller.RecoveryLockTime.Value.AddHours(-24));
 
         await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
 
