@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Clien
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Shared", "Blockcore.AtomicSwaps\Shared\Blockcore.AtomicSwaps.Shared.csproj", "{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore", "..\..\blockcore\src\Blockcore\Blockcore.csproj", "{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Test", "Blockcore.AtomicSwaps.Test\Blockcore.AtomicSwaps.Test.csproj", "{172554B5-8EB3-44E7-A1A3-E307F9362F5E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.MetaMask", "Blockcore.AtomicSwaps.MetaMask\Blockcore.AtomicSwaps.MetaMask.csproj", "{683B5575-64A0-4C52-88E7-E95E5E517E05}"
@@ -19,10 +17,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Block
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.BlockcoreDns", "Blockcore.AtomicSwaps.BlockcoreDns\Blockcore.AtomicSwaps.BlockcoreDns.csproj", "{39D1BF25-6D80-4D08-99EA-D4BF59A74AE6}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D082DC64-1820-4329-A4EF-981463CA0211}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AtomicSwaps", "AtomicSwaps", "{0E08E290-C1B0-411D-AD3B-16DEFEF025F1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Website", "Website", "{0A816951-74B1-4F83-8D1D-1CBCE4EC8A42}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Website", "Blockcore.AtomicSwaps.Website\Blockcore.AtomicSwaps.Website.csproj", "{420B3FE1-EEC7-4EC7-B7F3-29507E794C2A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.TradingView", "Blockcore.AtomicSwaps.TradingView\Blockcore.AtomicSwaps.TradingView.csproj", "{7FC4400E-7E3E-40EC-8263-DBF38495D2D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,10 +43,6 @@ Global
 		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C80B5E54-E392-4ECA-B922-7DD1D36A82E0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -62,9 +59,28 @@ Global
 		{39D1BF25-6D80-4D08-99EA-D4BF59A74AE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39D1BF25-6D80-4D08-99EA-D4BF59A74AE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39D1BF25-6D80-4D08-99EA-D4BF59A74AE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{420B3FE1-EEC7-4EC7-B7F3-29507E794C2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{420B3FE1-EEC7-4EC7-B7F3-29507E794C2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{420B3FE1-EEC7-4EC7-B7F3-29507E794C2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{420B3FE1-EEC7-4EC7-B7F3-29507E794C2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FC4400E-7E3E-40EC-8263-DBF38495D2D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FC4400E-7E3E-40EC-8263-DBF38495D2D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FC4400E-7E3E-40EC-8263-DBF38495D2D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FC4400E-7E3E-40EC-8263-DBF38495D2D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1C19E7EC-4EC5-406F-BB09-D3EFB66EF464} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{A384A61A-E30C-4C04-96DB-5148455D6FCD} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{172554B5-8EB3-44E7-A1A3-E307F9362F5E} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{683B5575-64A0-4C52-88E7-E95E5E517E05} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{907FFB78-FBB2-4B3B-B9A2-8F45B3F3F259} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{39D1BF25-6D80-4D08-99EA-D4BF59A74AE6} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{420B3FE1-EEC7-4EC7-B7F3-29507E794C2A} = {0A816951-74B1-4F83-8D1D-1CBCE4EC8A42}
+		{7FC4400E-7E3E-40EC-8263-DBF38495D2D9} = {0A816951-74B1-4F83-8D1D-1CBCE4EC8A42}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E63BB75-3610-454D-985B-F494BC626257}

@@ -1,0 +1,45 @@
+@inherits LayoutComponentBase
+@layout MasterInit
+@using Layout._Helpers
+@inject IJSRuntime JS
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+
+<!--begin::Root-->
+<div class="d-flex flex-column flex-root" id="dex_app_root">
+    <!--begin::Wrapper-->
+    <div class="d-flex flex-column flex-center flex-column-fluid">    
+        <!--begin::Content-->
+        <div class="d-flex flex-column flex-center text-center p-10">        
+            <!--begin::Card-->
+            <div class="card card-flush w-lg-650px py-5">
+                <!--begin::Card body-->
+                <div class="card-body py-15 py-lg-20">
+                    @Body
+                </div>
+                <!--end::Card body-->
+            </div>
+            <!--end::Card-->        
+        </div>
+        <!--end::Content-->    
+    </div>
+    <!--end::Wrapper-->
+</div>
+<!--end::Root-->
+
+@code {
+    private IThemeHelpers _helper;
+	
+    protected override void OnAfterRender(bool firstRender){
+        _helper = new ThemeHelpers(JS);
+
+        //Initialize classes and attributes for layout with dark header
+        _helper.addBodyClass("app-black bgi-size-cover bgi-position-center bgi-no-repeat");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await Task.Delay(300);
+		await JS.InvokeVoidAsync("document.body.removeAttribute", "data-dex-app-reset-transition");
+		await JS.InvokeVoidAsync("document.body.removeAttribute", "data-dex-app-page-loading");
+    }
+}

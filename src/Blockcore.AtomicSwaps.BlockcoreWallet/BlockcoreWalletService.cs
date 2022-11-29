@@ -29,7 +29,7 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 
         public ValueTask<IJSObjectReference> LoadScripts(IJSRuntime jsRuntime)
         {
-            return jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Blockcore.AtomicSwaps.BlockcoreWallet/blockcoreWalletJsInterop.js");
+            return jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Blockcore.AtomicSwaps.BlockcoreWallet/blockcoreWallet.js");
         }
 
         public async ValueTask ConnectBlockcoreWallet()
