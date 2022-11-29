@@ -10,6 +10,7 @@ public class SwapSessionCoin
     public string? SwapRedeemScriptHex { get; set; }
     public string? SwapTransactionHash { get; set; }
     public string? SenderRecoveryTransactionHex { get; set; }
+    public string? SenderRecoveryTransactionHash { get; set; }
     public string? ReceiverExchangeTransactionHex { get; set; }
     public string? ReceiverExchangeTransactionHash { get; set; }
     public DateTime? RecoveryLockTime { get; set; }
