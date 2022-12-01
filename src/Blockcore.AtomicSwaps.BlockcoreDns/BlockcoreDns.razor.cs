@@ -1,9 +1,10 @@
-﻿using Blockcore.AtomicSwaps.BlockcoreDns;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Blockcore.AtomicSwaps.BlockcoreDns.Models;
 using Microsoft.AspNetCore.Components;
 
-
-namespace Blockcore.AtomicSwaps.Client.Pages
+namespace Blockcore.AtomicSwaps.BlockcoreDns
 {
     public partial class BlockcoreDns : IDisposable
     {
