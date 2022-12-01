@@ -1,14 +1,17 @@
-﻿using Blockcore.AtomicSwaps.MetaMask.Exceptions;
-using Blockcore.AtomicSwaps.MetaMask;
+﻿using System;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Threading.Tasks;
+using Blockcore.AtomicSwaps.MetaMask.Enums;
+using Blockcore.AtomicSwaps.MetaMask.Exceptions;
+using Blockcore.AtomicSwaps.MetaMask.Models;
 using Microsoft.AspNetCore.Components;
 using Nethereum.ABI.FunctionEncoding;
 using Nethereum.ABI.Model;
-using Blockcore.AtomicSwaps.MetaMask.Enums;
-using System.Numerics;
-using Blockcore.AtomicSwaps.Client.Models;
 using Nethereum.Web3;
+using Domain = Nethereum.ABI.EIP712.Domain;
 
-namespace Blockcore.AtomicSwaps.Client.Pages
+namespace Blockcore.AtomicSwaps.MetaMask
 {
 
     public partial class Metamask : IDisposable
@@ -109,7 +112,7 @@ namespace Blockcore.AtomicSwaps.Client.Pages
 
                 var data = new TypedDataPayload<Models.Message>
                 {
-                    Domain = new Domain
+                    Domain = new Models.Domain
                     {
                         Name = "AAA",
                         Version = "1",

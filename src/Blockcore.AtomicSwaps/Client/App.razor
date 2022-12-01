@@ -1,6 +1,7 @@
 ﻿<Router AppAssembly="@typeof(App).Assembly" AdditionalAssemblies="new[] 
 {
-    typeof(Blockcore.AtomicSwaps.BlockcoreWallet.BlockcoreWallet).Assembly 
+    typeof(Blockcore.AtomicSwaps.BlockcoreWallet.BlockcoreWallet).Assembly,
+    typeof(Blockcore.AtomicSwaps.MetaMask.Metamask).Assembly
 }">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />

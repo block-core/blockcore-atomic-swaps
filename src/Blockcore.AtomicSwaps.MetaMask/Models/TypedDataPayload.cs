@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
-namespace Blockcore.AtomicSwaps.Client.Models
+namespace Blockcore.AtomicSwaps.MetaMask.Models
 {
     public record struct Message(string contents);
 
