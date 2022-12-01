@@ -1,9 +1,11 @@
-﻿using Blockcore.AtomicSwaps.BlockcoreWallet;
+﻿using System;
+using System.Threading.Tasks;
+using Blockcore.AtomicSwaps.BlockcoreWallet;
 using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions;
 using Microsoft.AspNetCore.Components;
 
 
-namespace Blockcore.AtomicSwaps.Client.Pages
+namespace Blockcore.AtomicSwaps.BlockcoreWallet
 {
 
     public partial class BlockcoreWallet : IDisposable
