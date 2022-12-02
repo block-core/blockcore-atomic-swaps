@@ -17,6 +17,7 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		public bool HasBlockcoreWallet { get; set; }
 		public string? SignedMessage { get; set; }
 		public string? SignedMessageAnyAccount { get; set; }
+		public string? SignedMessageAnyAccountJson { get; set; }
 
 		protected override async Task OnInitializedAsync()
 		{
@@ -27,6 +28,12 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		{
 			var result = await blockcoreWalletService.SignMessageAnyAccount(value);
 			SignedMessageAnyAccount = $"Signed: {result}";
+		}
+
+		public async Task SignMessageAnyAccountJson(string value)
+		{
+			var result = await blockcoreWalletService.SignMessageAnyAccountJson(value);
+			SignedMessageAnyAccountJson = $"Signed: {result}";
 		}
 
 		public async Task SignMessage(string message)

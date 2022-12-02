@@ -88,6 +88,20 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			}
 		}
 
+		public async ValueTask<string> SignMessageAnyAccountJson(string value)
+		{
+			var module = await moduleTask.Value;
+			try
+			{
+				return await module.InvokeAsync<string>("signMessageAnyAccountJson", value);
+			}
+			catch (Exception ex)
+			{
+				HandleExceptions(ex);
+				throw;
+			}
+		}
+
 		public async ValueTask<string> SignMessage(string msg)
 		{
 			var module = await moduleTask.Value;
@@ -101,7 +115,6 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 				throw;
 			}
 		}
-
 
 		public async ValueTask DisposeAsync()
 		{
