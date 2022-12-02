@@ -1,40 +1,112 @@
 ﻿@page "/"
 
+@using Blockcore.AtomicSwaps.Shared
+@using Blockcore.Consensus.BlockInfo
+@using Blockcore.AtomicSwaps.Server.Controllers
+@using NBitcoin
+@using NBitcoin.Crypto
+@inject HttpClient Http
+@inject Storage storage;
+@inject GlobalData globalData;
+@inject NavigationManager NavigationManager;
+@inject ILogger<Index> Logger;
+
 <PageTitle>Blockcore Atomic Swaps</PageTitle>
 
 <h1>Blockcore Atomic Swaps</h1>
 
-Welcome to your new app. <br/><br/>
-
-@*<SurveyPrompt Title="How is Blazor working for you?" />*@
-
-<p role="status"> @address</p>
-<p role="status"> @address1</p>
-<p role="status"> @address2</p>
-<p role="status"> @address3</p>
 
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click to generate addresses</button>
+<p>This component demonstrates swaps data from the server.</p>
+
+<p>Swap.</p>
+
+<button class="btn btn-primary" @onclick="Fetch">Fetch Swaps</button>
+
+<p class="alert-danger">@error</p>
+
+@if (swaps != null)
+{
+
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th>Swap Id</th>
+				<th>Seller</th>
+				<th>Buyer</th>
+				<th>Date</th>
+				<th>Is Mine</th>
+				<th>Status</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var swap in swaps)
+			{
+				<tr>
+					<td>@swap.SwapSessionId</td>
+					<td>@Money.Satoshis(swap.CoinSeller.Amount) - @swap.CoinSeller.CoinSymbol</td>
+					<td>@Money.Satoshis(swap.CoinBuyer.Amount) - @swap.CoinBuyer.CoinSymbol</td>
+					<td>@swap.Created </td>
+					<td>@(swap.CoinSeller.SenderPubkey == mypubkey ? "I am seller" : swap.CoinBuyer.SenderPubkey == mypubkey ? "I am buyer" : "not my swap")</td>
+					<td>@swap.Status </td>
+					<td><button class="btn btn-info" @onclick="() => this.ViewSwap(swap.SwapSessionId)">Details</button> </td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
 
 @code {
-    private string address = "";
-    private string address1 = "";
-    private string address2 = "";
-    private string address3 = "";
-    private void IncrementCount()
-    {
-        var netwrok = Blockcore.Networks.Networks.Strax.Mainnet();
-        var netwrok1 = Blockcore.Networks.Networks.Bitcoin.Mainnet();
-        var netwrok2 = Blockcore.Networks.Networks.City.Mainnet();
-        var netwrok3 = Blockcore.Networks.Networks.Implx.Mainnet();
+	private List<SwapSession> swaps;
+	Networks.Network network;
+	List<string> NetworkList;
 
-        var key = new NBitcoin.Key();
-        address = netwrok.Name + " : " + key.PubKey.GetSegwitAddress(netwrok).ToString() + " - " + key.PubKey.GetAddress(netwrok).ToString();
-        address1 = netwrok1.Name + " : " + key.PubKey.GetSegwitAddress(netwrok1).ToString() + " - " + key.PubKey.GetAddress(netwrok1).ToString();
-        address2 = netwrok2.Name + " : " + key.PubKey.GetSegwitAddress(netwrok2).ToString() + " - " + key.PubKey.GetAddress(netwrok2).ToString();
-        address3 = netwrok3.Name + " : " + key.PubKey.GetSegwitAddress(netwrok3).ToString() + " - " + key.PubKey.GetAddress(netwrok3).ToString();
+	string error;
 
+	string SwapFrom = "STRAX";
+	string SwapTo = "CITY";
 
+	long amountToSell = 1;
+	long amountToBuy = 10;
 
-    }
+	string mypubkey;
+	private async Task Fetch()
+	{
+		mypubkey = storage.GetWalletPubkey();
+
+		this.swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
+
+		// sync my swaps with the server swaps
+
+	    var myswaps = storage.GetSwaps();
+
+	    if (myswaps != null && this.swaps != null)
+	    {
+	        foreach (var mySwap in myswaps)
+	        {
+	            if (this.swaps.All(a => a.SwapSessionId != mySwap.SwapSessionId))
+	            {
+	                await Http.PostAsJsonAsync($"api/SwapCoordinator/update", mySwap);
+
+	                this.swaps.Add(mySwap);
+
+	                Logger.LogInformation($"Updated server with swap {mySwap.SwapSessionId}");
+
+	            }
+	        }
+	    }
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		NetworkList = globalData.Networks.Keys.ToList();
+
+		await this.Fetch();
+	}
+
+	protected async Task ViewSwap(string session)
+	{
+		NavigationManager.NavigateTo($"viewswap/{session}");
+	}
+
 }
