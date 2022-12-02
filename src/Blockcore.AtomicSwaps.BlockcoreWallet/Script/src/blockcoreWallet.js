@@ -1,8 +1,26 @@
 import { BlockcoreDns } from '@blockcore/dns';
 import { WebProvider } from '@blockcore/provider';
 
+const network = 'BTC';
+
 export async function hasBlockcoreWallet() {
     return (globalThis.blockcore != undefined);
+}
+
+export async function signMessageAnyAccount(value) {
+    const provider = await WebProvider.Create();
+    provider.setNetwork(network);
+
+    const result = await provider.request({
+        method: 'signMessage',
+        params: [{ message: value, network: provider.indexer.network }],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result);
+    //var key = result.key;
+    //var signature = result.signature;
+    //var network = result.network;
+    //var verify = bitcoinMessage.verify(value, result.key, result.signature);
 }
 
 export async function signMessage(msg) {
@@ -18,4 +36,8 @@ export async function signMessage(msg) {
         throw "UserDenied";
     }
 }
+
+
+
+
 

@@ -74,6 +74,19 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			}
 		}
 
+		public async ValueTask<string> SignMessageAnyAccount(string value)
+		{
+			var module = await moduleTask.Value;
+			try
+			{
+				return await module.InvokeAsync<string>("signMessageAnyAccount", value);
+			}
+			catch (Exception ex)
+			{
+				HandleExceptions(ex);
+				throw;
+			}
+		}
 
 		public async ValueTask<string> SignMessage(string msg)
 		{
@@ -109,5 +122,7 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 					throw new UserDeniedException();
 			}
 		}
+
+
 	}
 }

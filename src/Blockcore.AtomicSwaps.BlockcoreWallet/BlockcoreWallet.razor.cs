@@ -16,10 +16,17 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		public IBlockcoreWalletService blockcoreWalletService { get; set; } = default!;
 		public bool HasBlockcoreWallet { get; set; }
 		public string? SignedMessage { get; set; }
+		public string? SignedMessageAnyAccount { get; set; }
 
 		protected override async Task OnInitializedAsync()
 		{
 			HasBlockcoreWallet = await blockcoreWalletService.HasBlockcoreWallet();
+		}
+
+		public async Task SignMessageAnyAccount(string value)
+		{
+			var result = await blockcoreWalletService.SignMessageAnyAccount(value);
+			SignedMessageAnyAccount = $"Signed: {result}";
 		}
 
 		public async Task SignMessage(string message)
