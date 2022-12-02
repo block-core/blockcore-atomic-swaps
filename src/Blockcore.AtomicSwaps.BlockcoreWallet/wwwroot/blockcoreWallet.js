@@ -70,6 +70,24 @@ export async function paymentRequest(network, amount) {
     }
 }
 
+async function request(method, params) {
+    if (!params) {
+        params = [];
+    }
+    const provider = await WebProvider.Create();
+    const result = await provider.request({
+        method: method,
+        params: params,
+    });
+    console.log('Result:', result);
+
+    return result;
+}
+
+export async function didSupportedMethods() {
+    const result = await request('did.supportedMethods');
+    return JSON.stringify(result.response);
+}
 
 export async function signMessage(msg) {
     const provider = await WebProvider.Create();

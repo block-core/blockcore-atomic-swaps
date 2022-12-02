@@ -15,6 +15,7 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		ValueTask<string> SignMessageAnyAccount(string value);
 		ValueTask<string> SignMessageAnyAccountJson(string value);
 		ValueTask<string> PaymentRequest(string network, string amount);
+		ValueTask<string> DIDSupportedMethods();
 		ValueTask<string> SignMessage(string msg);
 
 	}

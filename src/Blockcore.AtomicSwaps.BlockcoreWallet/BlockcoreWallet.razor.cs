@@ -19,6 +19,7 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		public string? SignedMessageAnyAccount { get; set; }
 		public string? SignedMessageAnyAccountJson { get; set; }
 		public string? PaymentRequestResult { get; set; }
+		public string? DIDSupportedMethodsResult { get; set; }
 		protected override async Task OnInitializedAsync()
 		{
 			HasBlockcoreWallet = await blockcoreWalletService.HasBlockcoreWallet();
@@ -41,6 +42,13 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			var result = await blockcoreWalletService.PaymentRequest(network, amount);
 			PaymentRequestResult = $"{result}";
 		}
+
+		public async Task DIDSupportedMethods()
+		{
+			var result = await blockcoreWalletService.DIDSupportedMethods();
+			DIDSupportedMethodsResult = $"{result}";
+		}
+
 
 		public async Task SignMessage(string message)
 		{
