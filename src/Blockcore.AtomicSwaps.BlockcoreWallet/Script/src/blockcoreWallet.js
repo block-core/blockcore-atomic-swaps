@@ -44,6 +44,33 @@ export async function signMessageAnyAccountJson(value) {
     //this.signedJsonValidSignature = bitcoinMessage.verify(preparedMessage, result.key, result.signature);
 }
 
+export async function paymentRequest(network, amount) {
+    try {
+        const provider = await WebProvider.Create();
+
+        var result = await provider.request({
+            method: 'payment',
+            params: [
+                {
+                    network: network.toLowerCase(),
+                    amount: amount,
+                    address: 'Ccoquhaae7u6ASqQ5BiYueASz8EavUXrKn',
+                    label: 'Your Local Info',
+                    message: 'Invoice Number 5',
+                    data: 'MzExMzUzNDIzNDY',
+                    id: '4324',
+                },
+            ],
+        });
+
+        console.log('Result:', result);
+        return JSON.stringify(result);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+
 export async function signMessage(msg) {
     const provider = await WebProvider.Create();
     let signature;

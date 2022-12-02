@@ -102,6 +102,20 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			}
 		}
 
+		public async ValueTask<string> PaymentRequest(string network, string amount)
+		{
+			var module = await moduleTask.Value;
+			try
+			{
+				return await module.InvokeAsync<string>("paymentRequest", network, amount);
+			}
+			catch (Exception ex)
+			{
+				HandleExceptions(ex);
+				throw;
+			}
+		}
+
 		public async ValueTask<string> SignMessage(string msg)
 		{
 			var module = await moduleTask.Value;
@@ -135,7 +149,6 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 					throw new UserDeniedException();
 			}
 		}
-
 
 	}
 }

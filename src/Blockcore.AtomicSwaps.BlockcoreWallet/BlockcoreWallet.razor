@@ -33,6 +33,13 @@ else
 		<p>@SignedMessageAnyAccountJson</p>
 	</div>
 
+	<hr />
+
+	<button class="btn btn-primary" @onclick="@(() => PaymentRequest("BTC","2"))">Payment Request</button>
+	<br />
+	<div class="form-control mt-3 p-3">
+		<p>@PaymentRequestResult</p>
+	</div>
 
 
 
