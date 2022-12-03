@@ -19,7 +19,7 @@ namespace Blockcore.AtomicSwaps.Server.Services
 	public interface IStorageService
 	{
 		Task<IEnumerable<SwapsData>> Get();
-		Task<IEnumerable<SwapsData>> Get(string session);
+		Task<SwapsData> Get(string session);
 		Task Add(SwapsData swap);
 		Task Complete(SwapsData swap);
 	}
@@ -73,34 +73,35 @@ namespace Blockcore.AtomicSwaps.Server.Services
 		{
 			await using var connection = this.GetDbConnection();
 
-			return await connection.QueryAsync<SwapsData>("SELECT * FROM Swaps;");
+			return await connection.QueryAsync<SwapsData>("SELECT * FROM Swaps WHERE Active = 1;");
 		}
 
-		public async Task<IEnumerable<SwapsData>> Get(string session)
+		public async Task<SwapsData> Get(string session)
 		{
 			await using var connection = this.GetDbConnection();
 
-			return await connection.QueryAsync<SwapsData>("SELECT * FROM Swaps WHERE Session = '@Session';", session);
+			return await connection.QuerySingleOrDefaultAsync<SwapsData>("SELECT * FROM Swaps WHERE Session = @session AND Active = 1;", new { session });
 		}
 
 		public async Task Add(SwapsData swap)
 		{
 			await using var connection = this.GetDbConnection();
 
-			var swaps = await this.Get(swap.Session);
-			var lastSwap = swaps.MaxBy(o => o.Version);
+			var lastSwap = await this.Get(swap.Session);
 
 			// increment the version
 			if (lastSwap != null)
+			{
 				swap.Version = lastSwap.Version + 1;
 
-			// mark all previous versions as complete
-			await this.Complete(swap);
+				// mark all previous versions as complete
+				await this.Complete(lastSwap);
+			}
 
 			swap.Active = true;
 
 			// create new version
-			await connection.ExecuteAsync("INSERT INTO Swaps (Session, Version, Data)" +
+			await connection.ExecuteAsync("INSERT INTO Swaps (Session, Version, Data, Active)" +
 			                              "VALUES (@Session, @Version, @Data, @Active);", swap);
 		}
 

@@ -206,7 +206,13 @@
 
 		await Http.PostAsJsonAsync($"api/SwapCoordinator/create", postBody);
 
-		var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{postBody.SwapSessionId}");
+		var swap = await Http.GetFromJsonAsync<SwapSession?>($"api/SwapCoordinator/session/{postBody.SwapSessionId}");
+
+		if(swap ==null)
+		{
+		    error = $"swap not created correctly session = {postBody.SwapSessionId}";
+		    return;
+		}
 
 		myswaps.Add(swap);
 

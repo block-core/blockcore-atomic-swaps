@@ -1,4 +1,5 @@
-﻿using Blockcore.Networks;
+﻿using System.Reflection;
+using Blockcore.Networks;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
 using System.Runtime.InteropServices;
@@ -28,7 +29,8 @@ namespace Blockcore.AtomicSwaps.Server
 			}
 			else
 			{
-				options.Value.DirectoryPath = Path.Combine(Directory.GetCurrentDirectory());//, "AtomicSwaps") ;
+				options.Value.DirectoryPath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) 
+				                              ?? Path.Combine(Directory.GetCurrentDirectory());
 			}
 		}
 

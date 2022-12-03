@@ -86,7 +86,7 @@
 	        {
 	            if (this.swaps.All(a => a.SwapSessionId != mySwap.SwapSessionId))
 	            {
-	                await Http.PostAsJsonAsync($"api/SwapCoordinator/update", mySwap);
+	               // await Http.PostAsJsonAsync($"api/SwapCoordinator/update", mySwap);
 
 	                this.swaps.Add(mySwap);
 
