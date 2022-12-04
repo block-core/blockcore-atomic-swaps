@@ -15,11 +15,15 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		[Inject]
 		public IBlockcoreWalletService blockcoreWalletService { get; set; } = default!;
 		public bool HasBlockcoreWallet { get; set; }
+		string[] arr = new string[] { };
+
 		public string? SignedMessage { get; set; }
 		public string? SignedMessageAnyAccount { get; set; }
 		public string? SignedMessageAnyAccountJson { get; set; }
 		public string? PaymentRequestResult { get; set; }
 		public string? DIDSupportedMethodsResult { get; set; }
+		public string? DIDRequestResult { get; set; }
+
 		protected override async Task OnInitializedAsync()
 		{
 			HasBlockcoreWallet = await blockcoreWalletService.HasBlockcoreWallet();
@@ -49,6 +53,11 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			DIDSupportedMethodsResult = $"{result}";
 		}
 
+		public async Task DIDRequest(string[] methods)
+		{
+			var result = await blockcoreWalletService.DIDRequest(methods);
+			DIDRequestResult = $"{result}";
+		}
 
 		public async Task SignMessage(string message)
 		{

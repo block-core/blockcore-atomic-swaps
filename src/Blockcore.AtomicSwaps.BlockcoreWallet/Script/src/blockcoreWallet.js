@@ -89,6 +89,18 @@ export async function didSupportedMethods() {
     return JSON.stringify(result.response);
 }
 
+export async function didRequest(methods) {
+    const result = await request('did.request', [
+        {
+            challenge: 'fc0949c4-fd9c-4825-b18d-79348e358156',
+            methods: methods,
+            reason: 'Sample app need access to any of your DIDs.',
+        },
+    ]);
+
+    return JSON.stringify(result.response);
+}
+
 export async function signMessage(msg) {
     const provider = await WebProvider.Create();
     let signature;

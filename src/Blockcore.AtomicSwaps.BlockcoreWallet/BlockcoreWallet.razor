@@ -49,4 +49,15 @@ else
 		<p>@DIDSupportedMethodsResult</p>
 	</div>
 	
+	<hr />
+
+	<button class="btn btn-primary" @onclick="@(() => DIDRequest(@arr))">Select DID Request</button>
+	<br />
+	<div class="form-control mt-3 p-3">
+		<p>@DIDRequestResult</p>
+	</div>
+	
+
+
+	
 }
