@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:7.0-buster-slim
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /usr/local/app/
 
 RUN apt-get update \
@@ -6,7 +6,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -Ls https://github.com/block-core/blockcore-atomicswaps/releases/download/#{VERSION}#/Blockcore.AtomicSwaps-#{VERSION}#-linux-x64.tar.gz \
+RUN curl -Ls https://github.com/block-core/blockcore-atomic-swaps/releases/download/#{VERSION}#/Blockcore.AtomicSwaps-#{VERSION}#-linux-x64.tar.gz \
     | tar -xvz -C .
 
 EXPOSE 5500
