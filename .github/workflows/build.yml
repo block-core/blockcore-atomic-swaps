@@ -66,7 +66,7 @@ jobs:
     #     dotnet-version: ${{ matrix.dotnet_version }}
 
     - name: Workload
-      run: dotnet workload restore
+      run: dotnet workload restore ${{env.SOLUTION_PATH}}
 
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
