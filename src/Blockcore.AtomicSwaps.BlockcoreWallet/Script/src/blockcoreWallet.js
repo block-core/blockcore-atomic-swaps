@@ -1,5 +1,5 @@
-import { BlockcoreDns } from './_snowpack/pkg/@blockcore/dns.js';
-import { WebProvider } from './_snowpack/pkg/@blockcore/provider.js';
+import { BlockcoreDns } from '@blockcore/dns';
+import { WebProvider } from '@blockcore/provider';
 
 const network = 'BTC';
 

@@ -8,7 +8,44 @@
 		<IncludeSymbols>True</IncludeSymbols>
 		<Authors>Blockcore</Authors>
 		<Version>1.0.0</Version>
+		<ScriptRoot>Script\</ScriptRoot>
+		<DefaultItemExcludes>$(DefaultItemExcludes);$(ScriptRoot)node_modules\**</DefaultItemExcludes>
+		<TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+		<TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Remove="$(ScriptRoot)**" />
+		<None Remove="$(ScriptRoot)**" />
+		<None Include="$(ScriptRoot)**" Exclude="$(ScriptRoot)node_modules\**" />
+	</ItemGroup>
+
+	<Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(ScriptRoot)node_modules') ">
+		<!-- Ensure Node.js is installed -->
+		<Exec Command="node --version" ContinueOnError="true">
+			<Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+		</Exec>
+		<Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+		<Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
+		<Exec WorkingDirectory="$(ScriptRoot)" Command="npm install" />
+		<Exec WorkingDirectory="$(ScriptRoot)" Command="npm run build" />
+	</Target>
+
+	<Target Name="PublishRunSnowpack" AfterTargets="ComputeFilesToPublish">
+		<!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
+		<Exec WorkingDirectory="$(ScriptRoot)" Command="npm install" />
+		<Exec WorkingDirectory="$(ScriptRoot)" Command="npm run build" />
+	</Target>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec WorkingDirectory="$(ScriptRoot)" Command="npm install" />
+		<Exec WorkingDirectory="$(ScriptRoot)" Command="npm run build" />
+	</Target>
+
+	<ItemGroup>
+		<Content Remove="Script\package-lock.json" />
+		<Content Remove="Script\package.json" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<SupportedPlatform Include="browser" />
@@ -17,7 +54,15 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.0" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<None Include="Script\package-lock.json" />
+		<None Include="Script\package.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="wwwroot\" />
 	</ItemGroup>
 
 </Project>

@@ -4,7 +4,7 @@
     "description": "atomic swaps between blockcore networks",
     "main": "index.js",
     "scripts": {
-        "build": "webpack ./src/index.js --output-path ../wwwroot/js --output-filename index.bundle.js --mode production"
+        "build": "snowpack build --polyfill-node"
     },
     "keywords": [
         "blockcore",
@@ -13,11 +13,10 @@
     "author": "blockcore",
     "license": "",
     "devDependencies": {
-        "webpack": "^5.74.0",
-        "webpack-cli": "^4.10.0"
+        "snowpack": "^3.8.8"
     },
     "dependencies": {
-        "@blockcore/dns": "^0.0.9",
-        "@blockcore/provider": "0.0.11"
+        "@blockcore/dns": "^0.0.11",
+        "@blockcore/provider": "0.0.13"
     }
 }
