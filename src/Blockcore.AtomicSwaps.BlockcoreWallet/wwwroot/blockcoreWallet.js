@@ -1,19 +1,13 @@
-import { BlockcoreDns } from './_snowpack/pkg/@blockcore/dns.js';
-import { WebProvider } from './_snowpack/pkg/@blockcore/provider.js';
-
-const network = 'BTC';
-
 export async function hasBlockcoreWallet() {
     return (globalThis.blockcore != undefined);
 }
 
 export async function signMessageAnyAccount(value) {
-    const provider = await WebProvider.Create();
-    provider.setNetwork(network);
+    const provider = globalThis.blockcore;
 
     const result = await provider.request({
         method: 'signMessage',
-        params: [{ message: value, network: provider.indexer.network }],
+        params: [{ message: value }],
     });
     console.log('Result:', result);
     return JSON.stringify(result);
@@ -27,11 +21,11 @@ export async function signMessageAnyAccount(value) {
 export async function signMessageAnyAccountJson(value) {
     const message = JSON.parse(value);
 
-    const provider = await WebProvider.Create();
+    const provider = globalThis.blockcore;
 
     const result = await provider.request({
         method: 'signMessage',
-        params: [{ message: message, network: provider?.indexer.network }],
+        params: [{ message: message }],
     });
 
     console.log('Result:', result);
@@ -46,7 +40,7 @@ export async function signMessageAnyAccountJson(value) {
 
 export async function paymentRequest(network, amount) {
     try {
-        const provider = await WebProvider.Create();
+        const provider = globalThis.blockcore;
 
         var result = await provider.request({
             method: 'payment',
@@ -74,7 +68,7 @@ async function request(method, params) {
     if (!params) {
         params = [];
     }
-    const provider = await WebProvider.Create();
+    const provider = globalThis.blockcore;
     const result = await provider.request({
         method: method,
         params: params,
@@ -102,7 +96,7 @@ export async function didRequest(methods) {
 }
 
 export async function signMessage(msg) {
-    const provider = await WebProvider.Create();
+    const provider = globalThis.blockcore;
     let signature;
     try {
         signature = await provider.request({ method: "signMessage", params: [{ scheme: "schnorr", message: msg }] });
