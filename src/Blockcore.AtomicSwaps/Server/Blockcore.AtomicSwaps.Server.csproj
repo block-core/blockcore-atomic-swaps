@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<PackageReference Include="Blockcore.Core" Version="1.1.37" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 		<PackageReference Include="Telegram.Bot" Version="18.0.0" />
 

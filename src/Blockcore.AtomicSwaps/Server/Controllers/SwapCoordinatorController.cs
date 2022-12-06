@@ -22,33 +22,14 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         [HttpGet]
         public async Task<IEnumerable<SwapSession>> Get()
         {
-	        var swaps = await _storageService.Get();
-
-	        List<SwapSession> swapList = new();
-
-	        foreach (var swap in swaps)
-	        {
-		        var swapItem = System.Text.Json.JsonSerializer.Deserialize<SwapSession>(swap.Data);
-
-		        Guard.NotNull(swapItem, nameof(swapItem));
-
-				swapList.Add(swapItem);
-
-			}
-
-	        return swapList;
-
+	        return await _storageService.Get();
         }
 
         [HttpGet]
         [Route("session/{swapSessionId}")]
         public async Task<SwapSession?> GetBySession(string swapSessionId)
         {
-			var swap = await _storageService.Get(swapSessionId);
-
-			var swapData = System.Text.Json.JsonSerializer.Deserialize<SwapSession>(swap.Data);
-		
-			return swapData;
+	        return await _storageService.Get(swapSessionId);
         }
 
         [HttpPost]
@@ -59,19 +40,13 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
             {
                 SwapSessionId = data.SwapSessionId,
                 Created = DateTime.UtcNow,
-                Status = "Available",
+                Status = SwapsDataStatus.Available,
                 SharedSecretHash = data.SharedSecretHash,
                 CoinSeller = new SwapSessionCoin { CoinSymbol = data.FromCoinSymbol, Amount = data.AmountToSell, SenderPubkey = data.SenderPubkey },
                 CoinBuyer = new SwapSessionCoin { CoinSymbol = data.ToCoinSymbol, Amount = data.AmountToBuy, ReceiverPubkey = data.SenderPubkey }
             };
 
-            SwapsData swapsData = new SwapsData
-            {
-	            Session = data.SwapSessionId,
-	            Data = System.Text.Json.JsonSerializer.Serialize(session)
-            };
-
-            await _storageService.Add(swapsData);
+            await _storageService.Add(session);
         }
 
 
@@ -92,13 +67,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 	        if (swapSession.CoinBuyer.SenderPubkey != null && data.CoinBuyer.SenderPubkey != swapSession.CoinBuyer.SenderPubkey)
 		        throw new Exception("Invalid CoinBuyer owner");
 
-	        SwapsData swapsData = new SwapsData
-	        {
-		        Session = data.SwapSessionId,
-		        Data = System.Text.Json.JsonSerializer.Serialize(data)
-	        };
-
-	        await _storageService.Add(swapsData);
+	        await _storageService.Update(data);
 
 	        return Ok();
         }
@@ -108,8 +77,10 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         public async Task DeleteSession(string swapSessionId)
         {
 	        var swap = await _storageService.Get(swapSessionId);
-
-			await _storageService.Complete(swap);
-		}
+	        if (swap != null)
+	        {
+		        await _storageService.Complete(swap);
+	        }
+        }
 	}
 }

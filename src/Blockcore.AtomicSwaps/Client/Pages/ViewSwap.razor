@@ -1,17 +1,13 @@
 ﻿@page "/viewswap/{swapsession}"
 @using Blockcore.AtomicSwaps.Shared
-@using Blockcore.Consensus.BlockInfo
 @using Blockcore.AtomicSwaps.Server.Controllers
 @using Blockcore.Consensus.ScriptInfo
-@using Blockcore.Consensus.TransactionInfo
 @using Blockcore.Features.Wallet.Helpers
-@using DBreeze.Utils
 @using NBitcoin
-@using NBitcoin.Crypto
-@using Newtonsoft.Json
 @using System.Net
-@using Blockcore.Networks.Bitcoin
+@using System.Text.Json
 @using Blockcore.Utilities
+@using JsonSerializer = System.Text.Json.JsonSerializer
 @inject HttpClient Http
 @inject Storage storage;
 @inject GlobalData globalData;
@@ -45,7 +41,7 @@
     <h3>Seller - sends @Money.Satoshis(swap.CoinSeller.Amount) @swap.CoinSeller.CoinSymbol to Buyer</h3>
     <p>Seller Pubkey @swap.CoinSeller.SenderPubkey</p>
     <p>Buyer Pubkey @swap.CoinSeller.ReceiverPubkey</p>
-
+    
     @if (!string.IsNullOrEmpty(swap.CoinSeller.SwapAddress))
     {
         <p>Swap address:</p>
@@ -76,6 +72,7 @@
                 <button class="btn btn-success" @onclick="SellerExchangeFunds">Claim Seller Swap Transaction</button>
             }
 
+            <p>Seller Exchange trx hash : @swap?.CoinBuyer.ReceiverExchangeTransactionHash</p>
             <p>Seller Exchange trx Confirmations : @SellerExchangeTransactionConfirmations</p>  
         }
 
@@ -92,7 +89,7 @@
         <p>Confirmation : @SellerTransactionConfirmations</p>
         @if (swap.CoinBuyer.RecoveryLockTime.HasValue)
         {
-            <p>Locked until : @swap.CoinSeller.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinSeller.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
+            <p>InProgress until : @swap.CoinSeller.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinSeller.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
         }
         <p>ScriptHash :</p>
         <div class="alert alert-info" role="alert">
@@ -102,7 +99,7 @@
     
     @if (swap.CoinBuyer.ReceiverExchangeTransactionHex != null)
     {
-        <P>SELLER EXCHANGE SUCCESS</P>
+        <P class="text-success">SELLER EXCHANGE SUCCESS</P>
 
         <p>Exchange trx Confirmations : @SellerExchangeTransactionConfirmations</p>  
     }
@@ -151,6 +148,7 @@
                 <button class="btn btn-success" @onclick="BuyerExchangeFunds">Claim Buyer Swap Transaction</button>
             }
 
+            <p>Buyer Exchange trx Hash : @swap.CoinSeller.ReceiverExchangeTransactionHash</p>
             <p>Buyer Exchange trx Confirmations : @BuyerExchangeTransactionConfirmations</p>  
         }
 
@@ -166,7 +164,7 @@
         <p>Confirmation : @BuyerTransactionConfirmations</p>  
         @if (swap.CoinBuyer.RecoveryLockTime.HasValue)
         {
-            <p>Locked until : @swap.CoinBuyer.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinBuyer.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
+            <p>InProgress until : @swap.CoinBuyer.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinBuyer.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
         }    
         <p>ScriptHash :</p>
         <div class="alert alert-info" role="alert">
@@ -181,7 +179,7 @@
 
     @if (swap.CoinSeller.ReceiverExchangeTransactionHex != null)
     {
-        <P>BUYER EXCHANGE SUCCESS</P>
+        <P class="text-success">BUYER EXCHANGE SUCCESS</P>
 
         <p>Exchange trx Confirmations : @BuyerExchangeTransactionConfirmations</p>  
     }
@@ -189,10 +187,10 @@
 }
 
 @code {
-    private SwapSession swap;
+    private SwapSession? swap;
 
     string error;
-    
+
     [Parameter]
     public string swapSession { get; set; }
 
@@ -206,12 +204,32 @@
     int BuyerExchangeTransactionConfirmations;
     int SellerRecoveryTransactionConfirmations;
     int BuyerRecoveryTransactionConfirmations;
-
+    
     protected override async Task OnInitializedAsync()
     {
         mypubkey = storage.GetWalletPubkey();
 
-        swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{swapSession}");
+        string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
+
+        if (string.IsNullOrEmpty(swapRes))
+        {
+            error = $"Swap not found!";
+            return;
+        }
+        Console.WriteLine(swapRes);
+
+        swap = JsonSerializer.Deserialize<SwapSession>(swapRes, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        });
+
+        Console.WriteLine("swap is null = " + swap == null);
+
+        Console.WriteLine("swap.SwapSessionId= " + swap.SwapSessionId);
+        Console.WriteLine("swap.SwapSessionId= " + swap.SwapSessionId);
+
+        Console.WriteLine(JsonSerializer.Serialize(swap));
 
         await this.RefreshConfirmations();
     }
@@ -242,7 +260,7 @@
             }
         }
 
-        NavigationManager.NavigateTo($"fetchswaps");
+        NavigationManager.NavigateTo($"/");
     }
 
     private async Task BuyerTakeSwap()
@@ -262,7 +280,7 @@
         ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
         PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchIndex, false);
 
-        swap.Status = "Matched";
+        swap.Status = "InProgress";
         swap.CoinBuyer.SenderPubkey = mypubkey;
         swap.CoinSeller.ReceiverPubkey = mypubkey;
 
@@ -288,7 +306,7 @@
 
         BuildSideSwap(swap.CoinSeller, DateTime.UtcNow.AddHours(48));
 
-        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+        await PostSwap(swap);
 
         await this.RefreshSwap();
 
@@ -302,7 +320,7 @@
 
         BuildSideSwap(swap.CoinBuyer, swap.CoinSeller.RecoveryLockTime.Value.AddHours(-24));
 
-        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+        await PostSwap(swap);
 
         await this.RefreshSwap();
 
@@ -373,6 +391,20 @@
         }
     }
 
+    private async Task PostSwap(SwapSession swap)
+    {
+        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+
+        var myswaps = storage.GetSwaps();
+        var swapStore = myswaps.FirstOrDefault(s => s.SwapSessionId == swap.SwapSessionId);
+        if (swapStore != null)
+        {
+            myswaps.Remove(swapStore);
+            myswaps.Add(swap);
+            storage.SetSwaps(myswaps);
+        }
+    }
+
     private async Task Broadcast(string coinSymbol, string trxHex)
     {
         var indexer = globalData.Indexers.First(f => f.Symbol == coinSymbol);
@@ -388,7 +420,7 @@
 
     private async Task RefreshConfirmations()
     {
-        if (swap.CoinSeller.SwapTransactionHash != null)
+        if (swap?.CoinSeller.SwapTransactionHash != null)
         {
             var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinSeller.CoinSymbol);
             var url = $"/query/transaction/{swap.CoinSeller.SwapTransactionHash}";
@@ -396,7 +428,7 @@
             SellerTransactionConfirmations = res?.confirmations ?? 0;
         }
 
-        if (swap.CoinBuyer.SwapTransactionHash != null)
+        if (swap?.CoinBuyer.SwapTransactionHash != null)
         {
             var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinBuyer.CoinSymbol);
             var url = $"/query/transaction/{swap.CoinBuyer.SwapTransactionHash}";
@@ -404,7 +436,7 @@
             BuyerTransactionConfirmations = res?.confirmations ?? 0;
         }
 
-        if (swap.CoinBuyer.ReceiverExchangeTransactionHex != null)
+        if (swap?.CoinBuyer.ReceiverExchangeTransactionHex != null)
         {
             var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinBuyer.CoinSymbol);
             var url = $"/query/transaction/{swap.CoinBuyer.ReceiverExchangeTransactionHash}";
@@ -412,7 +444,7 @@
             SellerExchangeTransactionConfirmations = res?.confirmations ?? 0;
         }
 
-        if (swap.CoinSeller.ReceiverExchangeTransactionHex != null)
+        if (swap?.CoinSeller.ReceiverExchangeTransactionHex != null)
         {
             var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinSeller.CoinSymbol);
             var url = $"/query/transaction/{swap.CoinSeller.ReceiverExchangeTransactionHash}";
@@ -436,7 +468,7 @@
 
         ExchangeSwapFund(swap.CoinBuyer, sharedSecret, extendedKey.PrivateKey);
 
-        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+        await PostSwap(swap);
 
         await this.RefreshSwap();
 
@@ -459,7 +491,9 @@
 
         ExchangeSwapFund(swap.CoinSeller, new uint256(this.SharedSecret), extendedKey.PrivateKey);
 
-        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+        swap.Status = SwapsDataStatus.Complete;
+
+        await PostSwap(swap);
 
         await this.RefreshSwap();
 
@@ -549,7 +583,7 @@
 
         RecoverFunds(swap.CoinSeller, extendedKey.PrivateKey);
 
-        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+        await PostSwap(swap);
 
         await this.RefreshSwap();
 
@@ -569,7 +603,7 @@
 
         RecoverFunds(swap.CoinBuyer, extendedKey.PrivateKey);
 
-        await Http.PostAsJsonAsync($"api/SwapCoordinator/update", swap);
+        await PostSwap(swap);
 
         await this.RefreshSwap();
 

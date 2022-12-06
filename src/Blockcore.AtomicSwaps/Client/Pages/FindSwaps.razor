@@ -1,36 +1,26 @@
-﻿@page "/"
+﻿@page "/findswaps"
 
-@using Blockcore.AtomicSwaps.Shared
-@using Blockcore.Consensus.BlockInfo
 @using Blockcore.AtomicSwaps.Server.Controllers
 @using NBitcoin
-@using NBitcoin.Crypto
 @inject HttpClient Http
 @inject Storage storage;
 @inject GlobalData globalData;
 @inject NavigationManager NavigationManager;
 @inject ILogger<Index> Logger;
 
-<PageTitle>Blockcore Atomic Swaps</PageTitle>
+<PageTitle>Find Atomic Swaps</PageTitle>
 
-<h1>Blockcore Atomic Swaps</h1>
+<h1>Find Atomic Swaps</h1>
 
-<p>This component demonstrates swaps data from the server.</p>
+<p>This component helps find available swaps.</p>
 
-<h2>My Swaps.</h2>
+<button class="btn btn-primary" @onclick="Fetch">Fetch Swaps</button>
 
-@*<button class="btn btn-primary" @onclick="Fetch">Fetch Swaps</button>
-*@
 <p class="alert-danger">@error</p>
 
-@if (hasWallet == false)
+@if (swaps != null)
 {
-    <p><strong>No Wallet Found, to start swapping coins go to the wallet tab </strong></p>
-}
-   
 
-@if (myswaps != null)
-{
 	<table class="table table-bordered">
 		<thead>
 			<tr>
@@ -43,7 +33,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			@foreach (var swap in myswaps)
+			@foreach (var swap in swaps)
 			{
 				<tr>
 					<td>@swap.SwapSessionId</td>
@@ -60,10 +50,9 @@
 }
 
 @code {
-	private List<SwapSession> myswaps;
+	private List<SwapSession> swaps;
 	Networks.Network network;
 	List<string> NetworkList;
-    private bool hasWallet;
 
 	string error;
 
@@ -78,35 +67,12 @@
 	{
 		mypubkey = storage.GetWalletPubkey();
 
-	    myswaps = storage.GetSwaps();
-
-	    if (myswaps != null)
-	    {
-	        foreach (var myswap in myswaps.ToList())
-	        {
-	            if (myswap.Status is SwapsDataStatus.Available or SwapsDataStatus.InProgress)
-	            {
-	                var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{myswap.SwapSessionId}");
-
-	                if (myswap.Status != swap.Status)
-	                {
-	                    myswaps.Remove(myswap);
-	                    myswaps.Add(swap);
-	                    storage.SetSwaps(myswaps);
-	                }
-	            }
-	        }
-	    }
+		this.swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
 	}
-	
+
 	protected override async Task OnInitializedAsync()
 	{
 		NetworkList = globalData.Networks.Keys.ToList();
-
-	    if (storage.GetWalletWords() != null)
-	    {
-	        hasWallet = true;
-	    }
 
 		await this.Fetch();
 	}

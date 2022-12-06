@@ -21,8 +21,8 @@ public class SwapSession
 {
     public string SwapSessionId { get; set; }
     public DateTime Created { get; set; }
-    public SwapSessionCoin CoinSeller { get; set; }
-    public SwapSessionCoin CoinBuyer { get; set; }
+    public SwapSessionCoin CoinSeller { get; set; } = new();
+    public SwapSessionCoin CoinBuyer { get; set; } = new();
     public decimal ExchangeRate { get; set; }
     public string? SharedSecretHash { get; set; }
     public string? SharedSecret { get; set; }
@@ -84,7 +84,7 @@ public class UtxoData
     public int blockIndex { get; set; }
     public bool coinBase { get; set; }
     public bool coinStake { get; set; }
-    public string HdPath { get; set; }
+    public string hdPath { get; set; }
 }
 
 public class Input

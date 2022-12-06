@@ -185,7 +185,7 @@
                 var adddress = pubkey.GetAddress(network).ToString();
                 var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, false, scanIndex);
                 var result = await FetchUtxos(indexer, adddress);
-                foreach (var utxoData in result.data) utxoData.HdPath = path;
+                foreach (var utxoData in result.data) utxoData.hdPath = path;
                 accountInfo.UtxoItems.Remove(adddress);
                 accountInfo.UtxoItems.Add(adddress, result.data);
                 accountInfo.TotalBalance += result.data.Sum(s => s.value);
@@ -211,7 +211,7 @@
                 var adddressChange = pubkeyChange.GetAddress(network).ToString();
                 var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, true, scanIndex);
                 var resulChange = await FetchUtxos(indexer, adddressChange);
-                foreach (var utxoData in resulChange.data) utxoData.HdPath = path;
+                foreach (var utxoData in resulChange.data) utxoData.hdPath = path;
                 accountInfo.UtxoChangeItems.Remove(adddressChange);
                 accountInfo.UtxoChangeItems.Add(adddressChange, resulChange.data);
                 accountInfo.TotalBalance += resulChange.data.Sum(s => s.value);

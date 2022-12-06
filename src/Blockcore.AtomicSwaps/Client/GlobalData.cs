@@ -87,7 +87,7 @@ namespace Blockcore.AtomicSwaps.Client
             {
                 Amount = s.value,
                 OutPoint = new OutPoint(new uint256(s.outpoint.transactionId), s.outpoint.outputIndex),
-                PrivateKey = HdOperations.GetExtendedPrivateKey(extendedKey.PrivateKey, extendedKey.ChainCode, s.HdPath, network).PrivateKey,
+                PrivateKey = HdOperations.GetExtendedPrivateKey(extendedKey.PrivateKey, extendedKey.ChainCode, s.hdPath, network).PrivateKey,
                 Script = Script.FromHex(s.scriptHex)
             }).ToList();
 
