@@ -280,7 +280,7 @@
         ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
         PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchIndex, false);
 
-        swap.Status = "InProgress";
+        swap.Status = SwapsDataStatus.InProgress;
         swap.CoinBuyer.SenderPubkey = mypubkey;
         swap.CoinSeller.ReceiverPubkey = mypubkey;
 
