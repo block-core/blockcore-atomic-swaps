@@ -1,6 +1,0 @@
-{
-  "imports": {
-    "@blockcore/dns": "./@blockcore/dns.js",
-    "@blockcore/provider": "./@blockcore/provider.js"
-  }
-}
