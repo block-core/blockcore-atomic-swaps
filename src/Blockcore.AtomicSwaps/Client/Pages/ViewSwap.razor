@@ -216,20 +216,12 @@
             error = $"Swap not found!";
             return;
         }
-        Console.WriteLine(swapRes);
 
         swap = JsonSerializer.Deserialize<SwapSession>(swapRes, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true
         });
-
-        Console.WriteLine("swap is null = " + swap == null);
-
-        Console.WriteLine("swap.SwapSessionId= " + swap.SwapSessionId);
-        Console.WriteLine("swap.SwapSessionId= " + swap.SwapSessionId);
-
-        Console.WriteLine(JsonSerializer.Serialize(swap));
 
         await this.RefreshConfirmations();
     }
