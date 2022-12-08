@@ -24,24 +24,123 @@
 
 @if (swap != null)
 {
+    @*=========================Swap info========================*@
+
+    <h2>Swap Info</h2>
     <button class="btn btn-primary" @onclick="RefreshSwap">Refresh Swap</button>
 
     @if (swap.CoinSeller.SwapTransactionHash != null || swap.CoinBuyer.SwapTransactionHash != null)
     {
-        <button class="btn btn-primary" @onclick="RefreshConfirmations">Refresh confirmations</button>
+        <button style="padding-left: 2px" class="btn btn-primary" @onclick="RefreshConfirmations">Refresh confirmations</button>
     }
 
-    <p>@swap.SwapSessionId</p>
+    <p>Session - @swap.SwapSessionId</p>
 
-    <p>@swap.Created</p>
-    <p>@swap.Status</p>
+    <p>Created - @swap.Created</p>
+    <p>Status - @swap.Status</p>
+
+    <p>Seller Pubkey - @swap.CoinSeller.SenderPubkey</p>
+    <p>Buyer Pubkey - @swap.CoinBuyer.SenderPubkey</p>
+
+    <h4>Seller - sends @Money.Satoshis(swap.CoinSeller.Amount) @swap.CoinSeller.CoinSymbol to Buyer</h4>
+    <h4>Buyer - sends @Money.Satoshis(swap.CoinBuyer.Amount) @swap.CoinBuyer.CoinSymbol to Seller</h4>
+
+    @if (swap.CoinSeller.SenderPubkey == mypubkey){<p><strong> I am the seller</strong></p>}
+    else if (swap.CoinBuyer.SenderPubkey == mypubkey){<p><strong>I am the buyer</strong></p>}
+    else{<p><strong>Not my swap</strong></p>}
+
+    <hr/>
+
+    @*=========================Step1 - swap created by seller ========================*@
+
+    <h3>Step 1 - swap created by the seller</h3>
+
+    <button class="btn btn-danger" disabled=@(step != "step1") @onclick="DeleteSwap">Delete Swap</button>
+
+    <hr/>
+
+    @*=========================Step2 - swap locked by buyer ========================*@
+
+    <h3>Step 2 - swap locked by buyer</h3>
+
+     <button class="btn btn-success" disabled=@(step != "step2") @onclick="BuyerTakeSwap">Take Swap</button>
+
+    <hr />
+
+    @*=========================Step3 - seller creates swap trx ========================*@
+
+    <h3>Step3 - seller creates swap trx</h3>
+
+    @if (swap.CoinSeller.SwapTransactionHash != null)
+    {
+        <p>seller swap trx id - @swap.CoinSeller.SwapTransactionHash</p>
+        <p>seller swap trx confirmations - @SellerTransactionConfirmations</p>
+        @if (swap.CoinSeller.RecoveryLockTime.HasValue)
+        {
+            <p>InProgress until : @swap.CoinSeller.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinSeller.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
+        }
+        <p>ScriptHash :</p>
+        <div class="alert alert-info" role="alert">
+            @Script.FromHex(@swap.CoinSeller.SwapRedeemScriptHex).ToString()
+        </div>
+    }
+
+    <button class="btn btn-info" disabled=@(step != "step3") @onclick="BuildSellerSwap">Build Seller Swap Transaction</button>
+
+    <hr />
+
+    @*=========================Step4 - buyer creates swap trx ========================*@
+
+    <h3>Step4 - buyer creates swap trx</h3>
+
+    @if (swap.CoinBuyer.SwapTransactionHash != null)
+    {
+        <p>buyer swap trx id - @swap.CoinBuyer.SwapTransactionHash</p>
+        <p>buyer swap trx id confirmations : @BuyerTransactionConfirmations</p>  
+        @if (swap.CoinBuyer.RecoveryLockTime.HasValue)
+        {
+            <p>InProgress until : @swap.CoinBuyer.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinBuyer.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
+        }    
+        <p>ScriptHash :</p>
+        <div class="alert alert-info" role="alert">
+            @Script.FromHex(@swap.CoinBuyer.SwapRedeemScriptHex).ToString()
+        </div>
+    }
+
+    <button class="btn btn-info" disabled=@(step != "step4") @onclick="BuildBuyerSwap">Build Buyer Swap Transaction</button>
+
+    <hr />
+
+    @*=========================Step5 - seller creates exchange trx (reveal secret) ========================*@
+
+    <h3>Step5 - seller creates exchange trx (reveal secret)</h3>
+
+    <hr />
+
+    @*=========================Step6 - buyer creates exchange trx (discover secret) ========================*@
+
+    <h3>Step6 - buyer creates exchange trx (discover secret)</h3>
+
+    <hr />
+
+    @*=========================Step7 - buyer claims recover trx (timeout) ========================*@
+
+    <h3>Step7 - buyer claims recover trx (timeout)</h3>
+
+    <hr />
+
+    @*=========================Step8 - seller claims recover trx (timeout) ========================*@
+
+    <h3>Step8 - seller claims recover trx (timeout)</h3>
+    
+    <hr />
 
     @*=========================Seller========================*@
 
-    <h3>Seller - sends @Money.Satoshis(swap.CoinSeller.Amount) @swap.CoinSeller.CoinSymbol to Buyer</h3>
-    <p>Seller Pubkey @swap.CoinSeller.SenderPubkey</p>
-    <p>Buyer Pubkey @swap.CoinSeller.ReceiverPubkey</p>
-    
+    <h3>Step4 - buyer creates swap trx</h3>
+
+    <hr />
+
     @if (!string.IsNullOrEmpty(swap.CoinSeller.SwapAddress))
     {
         <p>Swap address:</p>
@@ -52,18 +151,7 @@
 
     @if (swap.CoinSeller.SenderPubkey == mypubkey)
     {
-        <p><strong> I am the seller</strong></p>
-
-        @if (swap.CoinBuyer.SenderPubkey == null)
-        {
-            <button class="btn btn-danger" @onclick="DeleteSwap">Delete Swap</button>
-        }
-
-        @if (swap.CoinBuyer.SenderPubkey != null && swap.CoinSeller.SwapTransactionHex == null)
-        {
-            <button class="btn btn-info" @onclick="BuildSellerSwap">Build Seller Swap Transaction</button>
-        }
-
+        
         @if (BuyerTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHex != null && 
              SellerTransactionConfirmations > 0 && swap.CoinSeller.SwapTransactionHex != null)
         {
@@ -82,20 +170,6 @@
 
         }
     }
-
-    @if (swap.CoinSeller.SwapTransactionHash != null)
-    {
-        <p>Hash : @swap.CoinSeller.SwapTransactionHash</p>
-        <p>Confirmation : @SellerTransactionConfirmations</p>
-        @if (swap.CoinBuyer.RecoveryLockTime.HasValue)
-        {
-            <p>InProgress until : @swap.CoinSeller.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinSeller.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
-        }
-        <p>ScriptHash :</p>
-        <div class="alert alert-info" role="alert">
-            @Script.FromHex(@swap.CoinSeller.SwapRedeemScriptHex).ToString()
-        </div>
-    }
     
     @if (swap.CoinBuyer.ReceiverExchangeTransactionHex != null)
     {
@@ -108,10 +182,6 @@
 
     @*=========================BUYER========================*@
 
-    <h3>Buyer - sends @Money.Satoshis(swap.CoinBuyer.Amount) @swap.CoinBuyer.CoinSymbol to Seller</h3>
-    <p>Seller Pubkey @swap.CoinBuyer.SenderPubkey</p>
-    <p>Buyer Pubkey @swap.CoinBuyer.ReceiverPubkey</p>
-
     @if (!string.IsNullOrEmpty(swap.CoinBuyer.SwapAddress))
     {
         <p>Swap address:</p>
@@ -122,16 +192,6 @@
 
     @if (swap.CoinBuyer.SenderPubkey == mypubkey)
     {
-        <p><strong>I am the buyer</strong></p>
-
-        @if (swap.CoinSeller.SwapTransactionHash != null)
-        {
-            @if (SellerTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHash == null)
-            {
-                <button class="btn btn-info" @onclick="BuildBuyerSwap">Build Buyer Swap Transaction</button>
-            }
-        }
-
         @if (BuyerTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHex != null && 
              SellerTransactionConfirmations > 0 && swap.CoinSeller.SwapTransactionHex != null)
         {
@@ -157,26 +217,7 @@
             <button class="btn btn-danger" @onclick="BuyerRecoverFunds">Recover Buyer Funds</button>
         }
     }
-
-    @if (swap.CoinBuyer.SwapTransactionHash != null)
-    {
-        <p>Hash : @swap.CoinBuyer.SwapTransactionHash</p>
-        <p>Confirmation : @BuyerTransactionConfirmations</p>  
-        @if (swap.CoinBuyer.RecoveryLockTime.HasValue)
-        {
-            <p>InProgress until : @swap.CoinBuyer.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinBuyer.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
-        }    
-        <p>ScriptHash :</p>
-        <div class="alert alert-info" role="alert">
-            @Script.FromHex(@swap.CoinBuyer.SwapRedeemScriptHex).ToString()
-        </div>
-    }
-
-    @if (swap.CoinSeller.SenderPubkey != mypubkey && swap.CoinBuyer.SenderPubkey == null)
-    {
-        <button class="btn btn-success" @onclick="BuyerTakeSwap">Take Swap</button>
-    }
-
+    
     @if (swap.CoinSeller.ReceiverExchangeTransactionHex != null)
     {
         <P class="text-success">BUYER EXCHANGE SUCCESS</P>
@@ -204,7 +245,48 @@
     int BuyerExchangeTransactionConfirmations;
     int SellerRecoveryTransactionConfirmations;
     int BuyerRecoveryTransactionConfirmations;
-    
+
+    string step;
+
+    private void DetermineStep()
+    {
+        if(swap == null)
+            return;
+        
+        if (swap.CoinSeller.SenderPubkey == mypubkey && swap.CoinBuyer.SenderPubkey == null)
+        {
+            step = "step1";
+            return;
+        }
+
+        if (swap.CoinSeller.SenderPubkey != mypubkey && swap.CoinBuyer.SenderPubkey == null)
+        {
+            step = "step2";
+            return;
+        }
+
+        if (swap.CoinSeller.SenderPubkey == mypubkey)
+        {
+            if (swap.CoinBuyer.SenderPubkey != null && swap.CoinSeller.SwapTransactionHash == null)
+            {
+                step = "step3";
+                return;
+            }
+        }
+
+        if (swap.CoinBuyer.SenderPubkey == mypubkey)
+        {
+            @if (swap.CoinSeller.SwapTransactionHash != null)
+            {
+                @if (SellerTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHash == null)
+                {
+                    step = "step4";
+                    return;
+                }
+            }
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         mypubkey = storage.GetWalletPubkey();
@@ -414,34 +496,77 @@
     {
         if (swap?.CoinSeller.SwapTransactionHash != null)
         {
-            var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinSeller.CoinSymbol);
-            var url = $"/query/transaction/{swap.CoinSeller.SwapTransactionHash}";
-            var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
-            SellerTransactionConfirmations = res?.confirmations ?? 0;
+            try
+            {
+                var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinSeller.CoinSymbol);
+                var url = $"/query/transaction/{swap.CoinSeller.SwapTransactionHash}";
+                var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
+                SellerTransactionConfirmations = res?.confirmations ?? 0;
+
+            }
+            catch (System.Net.Http.HttpRequestException hre)
+            {
+                Logger.LogError(hre, $"Failed read trx {swap?.CoinSeller.SwapTransactionHash}");
+            
+                // rebroadcast
+                await Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.SwapTransactionHex);
+            }
         }
 
         if (swap?.CoinBuyer.SwapTransactionHash != null)
         {
-            var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinBuyer.CoinSymbol);
-            var url = $"/query/transaction/{swap.CoinBuyer.SwapTransactionHash}";
-            var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
-            BuyerTransactionConfirmations = res?.confirmations ?? 0;
+            try
+            {
+                var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinBuyer.CoinSymbol);
+                var url = $"/query/transaction/{swap.CoinBuyer.SwapTransactionHash}";
+                var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
+                BuyerTransactionConfirmations = res?.confirmations ?? 0;
+            }
+            catch (System.Net.Http.HttpRequestException hre)
+            {
+                Logger.LogError(hre, $"Failed read trx {swap?.CoinBuyer.SwapTransactionHash}");
+            
+                // rebroadcast
+                await Broadcast(swap.CoinBuyer.CoinSymbol, swap?.CoinBuyer.SwapTransactionHex);
+            }
         }
 
         if (swap?.CoinBuyer.ReceiverExchangeTransactionHex != null)
         {
-            var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinBuyer.CoinSymbol);
-            var url = $"/query/transaction/{swap.CoinBuyer.ReceiverExchangeTransactionHash}";
-            var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
-            SellerExchangeTransactionConfirmations = res?.confirmations ?? 0;
+            try
+            {
+                var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinBuyer.CoinSymbol);
+                var url = $"/query/transaction/{swap.CoinBuyer.ReceiverExchangeTransactionHash}";
+                var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
+                SellerExchangeTransactionConfirmations = res?.confirmations ?? 0;
+
+            }
+            catch (System.Net.Http.HttpRequestException hre)
+            {
+                Logger.LogError(hre, $"Failed read trx {swap?.CoinBuyer.ReceiverExchangeTransactionHex}");
+            
+                // rebroadcast
+                await Broadcast(swap.CoinBuyer.CoinSymbol, swap?.CoinBuyer.ReceiverExchangeTransactionHex);
+            }
         }
 
         if (swap?.CoinSeller.ReceiverExchangeTransactionHex != null)
         {
-            var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinSeller.CoinSymbol);
-            var url = $"/query/transaction/{swap.CoinSeller.ReceiverExchangeTransactionHash}";
-            var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
-            BuyerExchangeTransactionConfirmations = res?.confirmations ?? 0;
+            try
+            {
+                var indexer = globalData.Indexers.First(f => f.Symbol == swap.CoinSeller.CoinSymbol);
+                var url = $"/query/transaction/{swap.CoinSeller.ReceiverExchangeTransactionHash}";
+                var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
+                BuyerExchangeTransactionConfirmations = res?.confirmations ?? 0;
+
+            }
+            catch (System.Net.Http.HttpRequestException hre)
+            {
+                Logger.LogError(hre, $"Failed read trx {swap?.CoinSeller.ReceiverExchangeTransactionHex}");
+            
+                // rebroadcast
+                await Broadcast(swap.CoinSeller.CoinSymbol, swap?.CoinSeller.ReceiverExchangeTransactionHex);
+            }
         }
     }
 
