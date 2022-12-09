@@ -42,12 +42,12 @@
 }
 
 @code {
-	private bool busy = false;
-	private BlockData? blockData;
-	public string link { get; set; } = string.Empty;
-	public int blockheight;
-	public Block block;
-	Networks.Network network;
+    private bool busy = false;
+    private BlockData? blockData;
+    public string link { get; set; } = string.Empty;
+    public int blockheight;
+    public Consensus.BlockInfo.Block block;
+    Networks.Network network;
 
 	private async Task Fetch()
 	{
@@ -59,7 +59,7 @@
 
 			var blockhex = await Http.GetStringAsync(link + "api/query/block/" + blockData.blockHash + "/hex");
 
-			block = Block.Parse(blockhex, network.Consensus.ConsensusFactory);
+			block = Consensus.BlockInfo.Block.Parse(blockhex, network.Consensus.ConsensusFactory);
 		}
 		finally
 		{

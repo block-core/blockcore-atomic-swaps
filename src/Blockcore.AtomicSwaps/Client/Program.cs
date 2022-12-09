@@ -6,6 +6,7 @@ using Blockcore.AtomicSwaps.Client.Logging;
 using Blockcore.AtomicSwaps.MetaMask;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -18,7 +19,7 @@ builder.Services.AddLogging(configure =>
 {
     configure.AddWebApiLogger();
 });
-builder.Services.AddSingleton(sp => new GlobalData ());
+builder.Services.AddSingleton(sp => new GlobalData());
 
 builder.Services.AddScoped<Storage>();
 
@@ -26,8 +27,10 @@ builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddMetaMask();
 
-builder.Services.AddBlockcoreWallet(); 
+builder.Services.AddBlockcoreWallet();
 
 builder.Services.AddBlockcoreDns();
+
+builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();
