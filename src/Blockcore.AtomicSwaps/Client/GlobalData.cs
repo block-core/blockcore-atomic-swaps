@@ -7,6 +7,7 @@ using Blockcore.Networks;
 using Blockcore.Utilities;
 using NBitcoin;
 using NBitcoin.Crypto;
+using System.Reflection;
 
 namespace Blockcore.AtomicSwaps.Client
 {
@@ -29,6 +30,12 @@ namespace Blockcore.AtomicSwaps.Client
             { "BTC", Blockcore.Networks.Networks.Bitcoin.Mainnet() },
             { "IMPLX", Blockcore.Networks.Networks.Implx.Mainnet() },
         };
+
+        public static string GetVersion()
+        {
+            var ver = Assembly.GetExecutingAssembly().GetName().Version;
+            return ver != null ? $"{ver.Major}.{ver.Minor}.{ver.Build}" : string.Empty;
+        }
 
         public static uint256 GenerateSecret(Networks.Network network, Storage storage, string sessionsId)
         {

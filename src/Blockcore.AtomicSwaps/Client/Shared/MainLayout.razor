@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Reflection
+@inherits LayoutComponentBase
 
 <div class="page">
 	<div class="sidebar">
@@ -7,6 +8,7 @@
 
 	<main>
 		<div class="top-row px-4 d-flex">
+			<div class="w-100 text-info">version - @GlobalData.GetVersion()</div>
 			<div class="w-100 text-warning fw-bold">WARNING ALPHA SOFTWARE</div>
 			<div class="flex-shrink-1"><a href="https://github.com/block-core/blockcore-atomic-swaps" target="_blank">Github</a></div>
 		</div>

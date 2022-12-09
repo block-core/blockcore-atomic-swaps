@@ -35,6 +35,7 @@
     }
 
     <p>Session - @swap.SwapSessionId</p>
+    <p>Current step - @step</p>
 
     <p>Created - @swap.Created</p>
     <p>Status - @swap.Status</p>
@@ -79,6 +80,12 @@
         {
             <p>InProgress until : @swap.CoinSeller.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinSeller.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
         }
+
+        <p>Swap address:</p>
+        <div class="alert alert-secondary" role="alert">
+            @swap.CoinSeller.SwapAddress
+        </div>
+
         <p>ScriptHash :</p>
         <div class="alert alert-info" role="alert">
             @Script.FromHex(@swap.CoinSeller.SwapRedeemScriptHex).ToString()
@@ -101,6 +108,12 @@
         {
             <p>InProgress until : @swap.CoinBuyer.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.CoinBuyer.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
         }    
+
+        <p>Swap address:</p>
+        <div class="alert alert-secondary" role="alert">
+            @swap.CoinBuyer.SwapAddress
+        </div>
+
         <p>ScriptHash :</p>
         <div class="alert alert-info" role="alert">
             @Script.FromHex(@swap.CoinBuyer.SwapRedeemScriptHex).ToString()
@@ -140,15 +153,7 @@
     <h3>Step4 - buyer creates swap trx</h3>
 
     <hr />
-
-    @if (!string.IsNullOrEmpty(swap.CoinSeller.SwapAddress))
-    {
-        <p>Swap address:</p>
-        <div class="alert alert-secondary" role="alert">
-            @swap.CoinSeller.SwapAddress
-        </div>
-    }
-
+    
     @if (swap.CoinSeller.SenderPubkey == mypubkey)
     {
         
@@ -167,7 +172,6 @@
         if (swap.CoinSeller.SwapTransactionHash != null && swap.CoinSeller.RecoveryLockTime < DateTime.UtcNow)
         {
             <button class="btn btn-danger" @onclick="SellerRecoverFunds">Recover Seller Funds</button>
-
         }
     }
     
@@ -182,13 +186,6 @@
 
     @*=========================BUYER========================*@
 
-    @if (!string.IsNullOrEmpty(swap.CoinBuyer.SwapAddress))
-    {
-        <p>Swap address:</p>
-        <div class="alert alert-secondary" role="alert">
-            @swap.CoinBuyer.SwapAddress
-        </div>
-    }
 
     @if (swap.CoinBuyer.SenderPubkey == mypubkey)
     {
@@ -274,10 +271,18 @@
             }
         }
 
+        Console.WriteLine(swap.CoinBuyer.SenderPubkey);
+        Console.WriteLine(mypubkey);
         if (swap.CoinBuyer.SenderPubkey == mypubkey)
         {
+            Console.WriteLine(swap.CoinSeller.SwapTransactionHash);
+
             @if (swap.CoinSeller.SwapTransactionHash != null)
             {
+                Console.WriteLine(SellerTransactionConfirmations);
+
+                Console.WriteLine(swap.CoinBuyer.SwapTransactionHash);
+
                 @if (SellerTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHash == null)
                 {
                     step = "step4";
@@ -306,6 +311,9 @@
         });
 
         await this.RefreshConfirmations();
+
+        DetermineStep();
+        Logger.LogInformation($"Currently in step {step}");
     }
 
     private async Task DeleteSwap()
@@ -351,9 +359,6 @@
             return;
         }
 
-        ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, network);
-        PubKey pubkey = HdOperations.GeneratePublicKey(accountExtPubKey, accountInfo.LastFetchIndex, false);
-
         swap.Status = SwapsDataStatus.InProgress;
         swap.CoinBuyer.SenderPubkey = mypubkey;
         swap.CoinSeller.ReceiverPubkey = mypubkey;
@@ -370,7 +375,6 @@
 
         myswaps.Add(swap);
         storage.SetSwaps(myswaps);
-
     }
 
     private async Task BuildSellerSwap()
