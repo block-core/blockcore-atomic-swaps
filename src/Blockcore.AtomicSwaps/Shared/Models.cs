@@ -11,8 +11,8 @@ public class SwapSessionCoin
     public string? SwapTransactionHash { get; set; }
     public string? SenderRecoveryTransactionHex { get; set; }
     public string? SenderRecoveryTransactionHash { get; set; }
-    public string? ReceiverExchangeTransactionHex { get; set; }
-    public string? ReceiverExchangeTransactionHash { get; set; }
+    public string? ExchangeTransactionHex { get; set; }
+    public string? ExchangeTransactionHash { get; set; }
     public DateTime? RecoveryLockTime { get; set; }
     public string? SwapAddress { get; set; }
 }
