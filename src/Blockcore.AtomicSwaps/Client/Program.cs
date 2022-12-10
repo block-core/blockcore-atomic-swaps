@@ -7,6 +7,8 @@ using Blockcore.AtomicSwaps.MetaMask;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
+using Blockcore.AtomicSwaps.Client.Services.UserPreferences;
+using Blockcore.AtomicSwaps.Client.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -17,13 +19,17 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.Configure<WebApiLoggerOptions>(options => builder.Configuration.GetSection("WebApiLogger").Bind(options));
 builder.Services.AddLogging(configure =>
 {
-    configure.AddWebApiLogger();
+	configure.AddWebApiLogger();
 });
 builder.Services.AddSingleton(sp => new GlobalData());
 
 builder.Services.AddScoped<Storage>();
 
 builder.Services.AddBlazoredLocalStorage();
+
+builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
+
+builder.Services.AddScoped<LayoutService>();
 
 builder.Services.AddMetaMask();
 
