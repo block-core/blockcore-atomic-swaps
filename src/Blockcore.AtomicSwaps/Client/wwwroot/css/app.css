@@ -100,6 +100,26 @@ a, .btn-link {
         content: var(--blazor-load-percentage-text, "Loading");
     }
 
+.swap-logo {
+    width: 40px;
+    height: 40px;
+}
+
+.brand-text {
+    font-weight: 400;
+    font-family: 'Roboto';
+    margin-inline-start: 12px;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    margin-left: 5px;
+    color: #7767e0 !important;
+}
+    .brand-text :hover {
+        color: #5a47ff !important;
+    }
 .footer {
     position: fixed;
     bottom: 0;
