@@ -1,4 +1,6 @@
 ﻿using Blockcore.Networks.Bitcoin;
+using Blockcore.Networks.RoyalSportsCity.Networks;
+using Blockcore.Networks.SeniorBlockCoin.Networks;
 using Blockcore.Networks.Strax;
 
 namespace Blockcore.Networks
@@ -34,6 +36,21 @@ namespace Blockcore.Networks
             get
             {
                 return new NetworksSelector(() => new  Implx.ImpleumMain(), () => null, () => null);
+            }
+        }
+
+        public static NetworksSelector RSC
+        {
+            get
+            {
+                return new NetworksSelector(() => new RoyalSportsCityMain(), () => null, () => null);
+            }
+        }
+        public static NetworksSelector SBC
+        {
+            get
+            {
+                return new NetworksSelector(() => new SeniorBlockCoinMain(), () => null, () => null);
             }
         }
     }

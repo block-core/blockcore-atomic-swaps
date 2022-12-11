@@ -21,6 +21,8 @@ namespace Blockcore.AtomicSwaps.Client
             new IndexerUrl { Symbol = "STRAX", Url = "https://strax.indexer.blockcore.net/api" },
             new IndexerUrl { Symbol = "CITY", Url = "https://city.indexer.blockcore.net/api" },
             new IndexerUrl { Symbol = "IMPLX", Url = "https://implx.indexer.blockcore.net/api" },
+            new IndexerUrl { Symbol = "RSC", Url = "https://rsc.indexer.blockcore.net/api" },
+            new IndexerUrl { Symbol = "SBC", Url = "https://sbc.indexer.blockcore.net/api" },
         };
 
         public Dictionary<string, Network> Networks { get; } = new()
@@ -29,6 +31,8 @@ namespace Blockcore.AtomicSwaps.Client
             { "CITY", Blockcore.Networks.Networks.City.Mainnet() },
             { "BTC", Blockcore.Networks.Networks.Bitcoin.Mainnet() },
             { "IMPLX", Blockcore.Networks.Networks.Implx.Mainnet() },
+            { "RSC", Blockcore.Networks.Networks.RSC.Mainnet() },
+            { "SBC", Blockcore.Networks.Networks.SBC.Mainnet() },
         };
 
         public static string GetVersion()
