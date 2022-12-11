@@ -3,7 +3,6 @@ using Blockcore.AtomicSwaps.BlockcoreWallet;
 using Blockcore.AtomicSwaps.BlockcoreDns;
 using Blockcore.AtomicSwaps.Client;
 using Blockcore.AtomicSwaps.Client.Logging;
-using Blockcore.AtomicSwaps.MetaMask;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
@@ -30,8 +29,6 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
 
 builder.Services.AddScoped<LayoutService>();
-
-builder.Services.AddMetaMask();
 
 builder.Services.AddBlockcoreWallet();
 
