@@ -20,92 +20,89 @@
 
 <p>Create Swap.</p>
 
+@if (!hasWallet)
+{
+	<p>Wallet not connected, navigate to the <a href="/walletconnect">wallet</a> tab to create a wallet</p>
+}
+else
+{
+    <div class="row g-3 align-items-center mb-2">
+        <div class="col-2">
+            <label for="SwapFrom" class="col-form-label">From</label>
+        </div>
+        <div class="col-4">
+            <select class="form-select" @bind="SwapFrom" type="text">
+                <option value="" selected disabled>Please select</option>
+                @{
+                    @foreach (var prp in NetworkList)
+                    {
+                        <option value="@prp">@prp</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <span class="form-text">
+                seller
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-3 align-items-center mb-2 mt-2">
+        <div class="col-2">
+            <label for="Amount" class="col-form-label">Amount</label>
+        </div>
+        <div class="col-4">
+            <input class="form-control" @bind="amountToSell"/>
+        </div>
+        <div class="col-auto">
+            <span class="form-text">
+                @SwapFrom
+            </span>
+        </div>
+    </div>
+
+    <hr/>
+
+    <div class="row g-3 align-items-center mb-2">
+        <div class="col-2">
+            <label for="SwapTo" class="col-form-label">To</label>
+        </div>
+        <div class="col-4">
+            <select class="form-select" @bind="SwapTo" type="text">
+                <option value="" selected disabled>Please select</option>
+                @{
+                    @foreach (var prp in NetworkList)
+                    {
+                        <option value="@prp">@prp</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <span class="form-text">
+                Buyer
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-3 align-items-center mb-5 mt-2">
+        <div class="col-2">
+            <label for="Amount" class="col-form-label">Amount</label>
+        </div>
+        <div class="col-4">
+            <input class="form-control" @bind="amountToBuy"/>
+        </div>
+        <div class="col-auto">
+            <span class="form-text">
+                @SwapTo
+            </span>
+        </div>
+    </div>
 
 
-<div class="row g-3 align-items-center mb-2">
-	<div class="col-2">
-		<label for="SwapFrom" class="col-form-label">From</label>
-	</div>
-	<div class="col-4">
-		<select class="form-select" @bind="SwapFrom" type="text">
-			<option value="" selected disabled>Please select</option>
-			@{
-				@foreach (var prp in NetworkList)
-				{
-					<option value="@prp">@prp</option>
-				}
-			}
-		</select>
-	</div>
-	<div class="col-auto">
-		<span class="form-text">
-			seller
-		</span>
-	</div>
-</div>
-
-
-<div class="row g-3 align-items-center mb-2 mt-2">
-	<div class="col-2">
-		<label for="Amount" class="col-form-label">Amount</label>
-	</div>
-	<div class="col-4">
-		<input class="form-control" @bind="amountToSell" />
-	</div>
-	<div class="col-auto">
-		<span  class="form-text">
-			@SwapFrom
-		</span>
-	</div>
-</div>
-
-<hr />
-
-
-
-<div class="row g-3 align-items-center mb-2">
-	<div class="col-2">
-			<label for="SwapTo" class="col-form-label">To</label>
-	</div>
-	<div class="col-4">
-			<select class="form-select" @bind="SwapTo" type="text">
-				<option value="" selected disabled>Please select</option>
-				@{
-					@foreach (var prp in NetworkList)
-					{
-						<option value="@prp">@prp</option>
-					}
-				}
-			</select>
-	</div>
-	<div class="col-auto">
-		<span  class="form-text">
-			Buyer
-		</span>
-	</div>
-</div>
-
-
-
- 
-<div class="row g-3 align-items-center mb-5 mt-2">
-	<div class="col-2">
-		<label for="Amount" class="col-form-label">Amount</label>
-	</div>
-	<div class="col-4">
-		<input class="form-control" @bind="amountToBuy" />
-	</div>
-	<div class="col-auto">
-		<span class="form-text">
-			@SwapTo
-		</span>
-	</div>
-</div>
-
-
-<button class="btn btn-primary" @onclick="CreateNewSwap">Create Swap</button>
-
-
+    <button class="btn btn-primary" @onclick="CreateNewSwap">Create Swap</button>
+}
 
 <p class="alert-danger">@error</p>
 
@@ -123,10 +120,23 @@
 	long amountToBuy = 2;
 
 	string mypubkey;
+    WalletAccounts? _walletAccounts;
+
+    private bool hasWallet;
 
 	protected override async Task OnInitializedAsync()
 	{
-		NetworkList = globalData.Networks.Keys.ToList();
+	    _walletAccounts = storage.Get<WalletAccounts?>();
+
+		if (_walletAccounts == null)
+	    {
+	        hasWallet = false;
+	        return;
+	    }
+
+	    hasWallet = true;
+
+	    NetworkList = _walletAccounts.Account.Keys.ToList();
 	}
 
 	protected async Task CreateNewSwap()

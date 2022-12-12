@@ -247,9 +247,22 @@
     int BuyerExchangeTransactionConfirmations;
     int SellerRecoveryTransactionConfirmations;
     int BuyerRecoveryTransactionConfirmations;
-    
+   
+    WalletAccounts? _walletAccounts;
+
+    private bool hasWallet;
+
     protected override async Task OnInitializedAsync()
     {
+        _walletAccounts = storage.Get<WalletAccounts?>();
+
+        if (_walletAccounts == null)
+        {
+            hasWallet = false;
+        }
+        
+        hasWallet = true;
+
         mypubkey = storage.GetWalletPubkey();
 
         string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
