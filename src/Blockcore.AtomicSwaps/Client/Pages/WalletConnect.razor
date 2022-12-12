@@ -1,0 +1,151 @@
+﻿@page "/walletconnect"
+@using Blockcore.AtomicSwaps.Shared
+@using Blockcore.Consensus.BlockInfo
+@using Blockcore.AtomicSwaps.Server.Controllers
+@using Blockcore.Features.Wallet.Helpers
+@using NBitcoin
+@using Blockcore.AtomicSwaps.BlockcoreWallet
+@using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions
+@using Blockcore.Utilities
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject Storage storage;
+@inject GlobalData globalData;
+@inject ILogger<WalletData> Logger;
+@inject IBlockcoreWalletService WalletService
+
+<PageTitle>Wallet and balances</PageTitle>
+
+<h1>Connected Wallets</h1>
+
+@if(!hasWallet)
+{
+    <p>Not wallet found please install the wallet at blockcore.net</p>
+}
+else
+{
+    <p class="alert-danger">@error</p>
+
+    <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">Add account</button>
+
+    @if (_walletAccounts != null && _walletAccounts.Account.Any())
+    {
+
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Coin</th>
+                <th>Pubkey</th>
+                <th>Balance</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            @foreach (var walletAccount in _walletAccounts.Account)
+            {
+                <tr>
+                    <td>@walletAccount.Key</td>
+                    <td>@walletAccount.Value.Pubkey</td>
+                    <td>@Money.Satoshis(walletAccount.Value.Balance).ToUnit(MoneyUnit.BTC) @walletAccount.Key</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>Please add accounts</p>
+    }
+}
+
+<br/>
+<p>@loadingStatus</p>
+
+@code {
+    private bool busy = false;
+    private bool hasWallet;
+    string error;
+
+    string loadingStatus = string.Empty;
+
+    WalletAccounts? _walletAccounts;
+    List<string> NetworkList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (await WalletService.HasBlockcoreWallet() == false)
+        {
+            hasWallet = false;
+            return;
+        }
+
+        hasWallet = true;
+
+        NetworkList = globalData.Networks.Keys.ToList();
+
+
+        _walletAccounts = storage.Get<WalletAccounts?>();
+
+        if(_walletAccounts == null)
+        {
+            _walletAccounts = new WalletAccounts();
+            storage.Set<WalletAccounts?>(_walletAccounts);
+        }
+    }
+
+    private async Task ConnectWallet()
+    {
+        Guard.NotNull(_walletAccounts, nameof(_walletAccounts));
+
+        try
+        {
+            var res = await WalletService.SignMessageAnyAccount("login");
+            var data = System.Text.Json.JsonSerializer.Deserialize<WalletApiSignMessageAnyAccount>(res);
+
+            // todo validate the signature is correct.
+
+            if (!NetworkList.Contains(data.network))
+            {
+                error = $"The network {data.network} is not supported";
+                return;
+            }
+
+            var key = PubKey.RecoverFromMessage(data.content, data.signature);
+            if (!key.VerifyMessage(data.content, data.signature))
+            {
+                error = $"Failed to verify the signature";
+                return;
+            }
+
+            if (!_walletAccounts.Account.TryGetValue(data.network, out WalletAccount account))
+            {
+                WalletAccount newAccount = new WalletAccount
+                {
+                    Pubkey = key.ToHex(),
+                    Address = data.key,
+                    CoinSymbole = data.network
+                };
+
+                _walletAccounts.Account.Add(newAccount.CoinSymbole, newAccount);
+
+                account = newAccount;
+            }
+
+            // update balance
+
+            storage.Set<WalletAccounts?>(_walletAccounts);
+        }
+        catch (NoBlockcoreWalletException nbwe)
+        {
+            error = "Not wallet found please install the wallet at blockcore.net";
+            return;
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+            Console.WriteLine(e);
+        }
+
+    }
+
+}

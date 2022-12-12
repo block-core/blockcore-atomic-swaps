@@ -60,5 +60,15 @@ namespace Blockcore.AtomicSwaps.Client
         {
             return _storage.GetItem<List<SwapSession>>($"swaps");
         }
+
+        public void Set<T>(T item) where T : class
+        {
+            _storage.SetItem(typeof(T).Name, item);
+        }
+
+        public T Get<T>() where T : class
+        {
+            return _storage.GetItem<T>(typeof(T).Name);
+        }
     }
 }

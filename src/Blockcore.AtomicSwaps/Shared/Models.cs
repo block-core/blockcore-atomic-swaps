@@ -133,3 +133,28 @@ public class TransactionData
     public List<Output> outputs { get; set; }
 }
 
+public class WalletAccounts
+{
+    public Dictionary<string, WalletAccount> Account { get; set; } = new();
+}
+
+public class WalletAccount
+{
+    public string Pubkey { get; set; }
+    public string Address { get; set; }
+    public string PubkeyPath { get; set; }
+    public string CoinSymbole { get; set; }
+    public long Balance { get; set; }
+}
+
+
+public class WalletApiSignMessageAnyAccount
+{
+    public string pubkey { get; set; }
+    public string key { get; set; }
+    public string signature { get; set; }
+    public string response { get; set; }
+    public string content { get; set; }
+    public string network { get; set; }
+    public long balance { get; set; }
+}

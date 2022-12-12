@@ -4,10 +4,12 @@
 @using Blockcore.AtomicSwaps.Server.Controllers
 @using Blockcore.Features.Wallet.Helpers
 @using NBitcoin
+@using Blockcore.AtomicSwaps.BlockcoreWallet
 @inject HttpClient Http
 @inject Storage storage;
 @inject GlobalData globalData;
 @inject ILogger<WalletData> Logger;
+@inject IBlockcoreWalletService WalletService
 
 <PageTitle>Wallet and balances</PageTitle>
 
@@ -103,6 +105,17 @@
     List<string> NetworkList;
     string selectedNetwork;
     int scannedAcount;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        NetworkList = globalData.Networks.Keys.ToList();
+
+        if (storage.GetWalletWords() != null)
+        {
+            hasWallet = true;
+        }
+    }
 
     private async Task Fetch()
     {
@@ -364,15 +377,7 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        NetworkList = globalData.Networks.Keys.ToList();
 
-        if (storage.GetWalletWords() != null)
-        {
-            hasWallet = true;
-        }
-    }
 
     private void Callback(ChangeEventArgs obj)
     {
