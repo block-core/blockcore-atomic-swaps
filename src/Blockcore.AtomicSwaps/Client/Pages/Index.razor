@@ -7,7 +7,7 @@
 @using NBitcoin.Crypto
 @inject HttpClient Http
 @inject Storage storage;
-@inject GlobalData globalData;
+@inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
 @inject ILogger<Index> Logger;
 
@@ -101,7 +101,7 @@
 	
 	protected override async Task OnInitializedAsync()
 	{
-		NetworkList = globalData.Networks.Keys.ToList();
+		NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
 	    if (storage.GetWalletWords() != null)
 	    {

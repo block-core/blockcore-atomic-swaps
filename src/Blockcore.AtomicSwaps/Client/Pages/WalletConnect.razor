@@ -1,18 +1,18 @@
 ﻿@page "/walletconnect"
-@using Blockcore.AtomicSwaps.Shared
-@using Blockcore.Consensus.BlockInfo
 @using Blockcore.AtomicSwaps.Server.Controllers
-@using Blockcore.Features.Wallet.Helpers
 @using NBitcoin
 @using Blockcore.AtomicSwaps.BlockcoreWallet
 @using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions
 @using Blockcore.Utilities
-@using Newtonsoft.Json
+@using System.Text.Json
+@using Blockcore.AtomicSwaps.Client.Services
+
 @inject HttpClient Http
 @inject Storage storage;
-@inject GlobalData globalData;
+@inject SwapsConfiguration SwapsConfiguration;
 @inject ILogger<WalletData> Logger;
 @inject IBlockcoreWalletService WalletService
+@inject IIndexerService IndexerService
 
 <PageTitle>Wallet and balances</PageTitle>
 
@@ -81,7 +81,7 @@ else
 
         hasWallet = true;
 
-        NetworkList = globalData.Networks.Keys.ToList();
+        NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
         _walletAccounts = storage.Get<WalletAccounts?>();
 
@@ -99,9 +99,8 @@ else
         try
         {
             var res = await WalletService.SignMessageAnyAccount("login");
-            var data = System.Text.Json.JsonSerializer.Deserialize<WalletApiSignMessageAnyAccount>(res);
-
-            // todo validate the signature is correct.
+            var data = JsonSerializer.Deserialize<WalletApiSignMessageAnyAccount>(res);
+            Logger.LogInformation(res);
 
             if (!NetworkList.Contains(data.network))
             {
@@ -131,6 +130,10 @@ else
             }
 
             // update balance
+            var resBalance = await WalletService.GetAccountBalance(account.Pubkey);
+            var dataBalance = JsonSerializer.Deserialize<WalletApiGetAccountBalance>(resBalance);
+
+            account.Balance = dataBalance.balance;
 
             storage.Set<WalletAccounts?>(_walletAccounts);
         }

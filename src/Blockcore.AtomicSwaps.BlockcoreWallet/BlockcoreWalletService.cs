@@ -74,7 +74,21 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			}
 		}
 
-		public async ValueTask<string> SignMessageAnyAccount(string value)
+        public async ValueTask<string> GetAccountBalance(string pubkey)
+        {
+            var module = await moduleTask.Value;
+            try
+            {
+                return await module.InvokeAsync<string>("getAccountBalance", pubkey);
+            }
+            catch (Exception ex)
+            {
+                HandleExceptions(ex);
+                throw;
+            }
+        }
+
+        public async ValueTask<string> SignMessageAnyAccount(string value)
 		{
 			var module = await moduleTask.Value;
 			try

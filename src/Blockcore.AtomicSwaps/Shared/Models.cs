@@ -158,3 +158,8 @@ public class WalletApiSignMessageAnyAccount
     public string network { get; set; }
     public long balance { get; set; }
 }
+
+public class WalletApiGetAccountBalance
+{
+    public long balance { get; set; }
+}

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using Blockcore.AtomicSwaps.Client.Services.UserPreferences;
 using Blockcore.AtomicSwaps.Client.Services;
+using Microsoft.JSInterop;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -20,7 +21,7 @@ builder.Services.AddLogging(configure =>
 {
 	configure.AddWebApiLogger();
 });
-builder.Services.AddSingleton(sp => new GlobalData());
+builder.Services.AddSingleton(sp => new SwapsConfiguration());
 
 builder.Services.AddScoped<Storage>();
 
@@ -29,6 +30,8 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
 
 builder.Services.AddScoped<LayoutService>();
+
+builder.Services.AddScoped<IIndexerService, IndexerService>();
 
 builder.Services.AddBlockcoreWallet();
 

@@ -11,7 +11,7 @@ using System.Reflection;
 
 namespace Blockcore.AtomicSwaps.Client
 {
-    public class GlobalData
+    public class SwapsConfiguration
     {
         public Dictionary<string, SwapSession> Swaps { get; } = new();
 
@@ -41,13 +41,14 @@ namespace Blockcore.AtomicSwaps.Client
             return ver != null ? $"{ver.Major}.{ver.Minor}.{ver.Build}" : string.Empty;
         }
 
-        public static uint256 GenerateSecret(Networks.Network network, Storage storage, string sessionsId)
+        public static uint256 GenerateSecret(string payload, string sessionsId)
         {
-            var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
-            var privateBytes = extendedKey.PrivateKey.ToBytes().ToList();
-            var sessionBytes = System.Text.Encoding.UTF8.GetBytes(sessionsId);
-            privateBytes.AddRange(sessionBytes);
-            var secret = Hashes.Hash256(privateBytes.ToArray());
+            //var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
+            //var privateBytes = extendedKey.PrivateKey.ToBytes().ToList();
+            var sessionBytes = System.Text.Encoding.UTF8.GetBytes(sessionsId).ToList();
+            var payloadBytes = System.Text.Encoding.UTF8.GetBytes(sessionsId).ToList();
+            payloadBytes.AddRange(sessionBytes);
+            var secret = Hashes.Hash256(payloadBytes.ToArray());
             return secret;
         }
 

@@ -5,11 +5,12 @@
 @using Blockcore.Features.Wallet.Helpers
 @using NBitcoin
 @using Blockcore.AtomicSwaps.BlockcoreWallet
+@using Blockcore.AtomicSwaps.Client.Services
 @inject HttpClient Http
 @inject Storage storage;
-@inject GlobalData globalData;
+@inject SwapsConfiguration SwapsConfiguration;
 @inject ILogger<WalletData> Logger;
-@inject IBlockcoreWalletService WalletService
+@inject IIndexerService WalletService
 
 <PageTitle>Wallet and balances</PageTitle>
 
@@ -109,7 +110,7 @@
     protected override async Task OnInitializedAsync()
     {
 
-        NetworkList = globalData.Networks.Keys.ToList();
+        NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
         if (storage.GetWalletWords() != null)
         {
@@ -132,12 +133,12 @@
             StateHasChanged();
             await Task.Delay(1);
 
-            Networks.Network network = globalData.Networks[selectedNetwork];
+            Networks.Network network = SwapsConfiguration.Networks[selectedNetwork];
             var coinType = network.Consensus.CoinType;
             var accountIndex = 0; // for now only account 0
             var purpose = 44; // for now only legacy
 
-            var indexer = globalData.Indexers.First(f => f.Symbol == selectedNetwork);
+            var indexer = SwapsConfiguration.Indexers.First(f => f.Symbol == selectedNetwork);
 
             AccountInfo accountInfo = storage.GetAccountInfo(selectedNetwork);
 

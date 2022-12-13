@@ -18,6 +18,17 @@ export async function signMessageAnyAccount(value) {
     //var verify = bitcoinMessage.verify(value, result.key, result.signature);
 }
 
+export async function getAccountBalance(pubkey) {
+    const provider = globalThis.blockcore;
+
+    const result = await provider.request({
+        method: 'accountbalance',
+        params: [{ pubkey: pubkey }],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result);
+}
+
 export async function signMessageAnyAccountJson(value) {
     const message = JSON.parse(value);
 

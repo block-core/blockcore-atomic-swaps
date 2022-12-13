@@ -1,14 +1,19 @@
 ﻿@page "/createswap"
-@using Blockcore.AtomicSwaps.Shared
-@using Blockcore.Consensus.BlockInfo
 @using Blockcore.AtomicSwaps.Server.Controllers
+@using Blockcore.Utilities
 @using NBitcoin
 @using NBitcoin.Crypto
+@using Blockcore.AtomicSwaps.BlockcoreWallet
+@using System.Text.Json
+@using Blockcore.AtomicSwaps.Client.Services
+
 @inject HttpClient Http
 @inject Storage storage;
-@inject GlobalData globalData;
+@inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
 @inject ILogger<CreateSwap> Logger;
+@inject IBlockcoreWalletService WalletService
+@inject IIndexerService IndexerService
 
 <PageTitle>Create Swap</PageTitle>
 
@@ -20,7 +25,7 @@
 
 <p>Create Swap.</p>
 
-@if (!hasWallet)
+@if (_walletAccounts is null)
 {
 	<p>Wallet not connected, navigate to the <a href="/walletconnect">wallet</a> tab to create a wallet</p>
 }
@@ -119,47 +124,36 @@ else
 	long amountToSell = 1;
 	long amountToBuy = 2;
 
-	string mypubkey;
     WalletAccounts? _walletAccounts;
-
-    private bool hasWallet;
 
 	protected override async Task OnInitializedAsync()
 	{
 	    _walletAccounts = storage.Get<WalletAccounts?>();
-
-		if (_walletAccounts == null)
-	    {
-	        hasWallet = false;
-	        return;
-	    }
-
-	    hasWallet = true;
-
-	    NetworkList = _walletAccounts.Account.Keys.ToList();
+	    NetworkList = _walletAccounts?.Account.Keys.ToList();
 	}
 
 	protected async Task CreateNewSwap()
 	{
 	    ExtKey.UseBCForHMACSHA512 = true;
 	    NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+	    
+	    Guard.NotNull(_walletAccounts, nameof(_walletAccounts));
 
 		// check that the user has enough money
 		error = string.Empty;
-		if (SwapFrom == SwapTo) { error = "Cant swap to the same network"; return; }
+	    if (SwapFrom == SwapTo)
+	    {
+	        error = "Cant swap to the same network"; 
+	        return;
+	    }
 
-		Networks.Network network = globalData.Networks[SwapFrom];
-		AccountInfo? accountInfo = storage.GetAccountInfo(SwapFrom);
+		Networks.Network network = SwapsConfiguration.Networks[SwapFrom];
 
-		if (accountInfo == null)
-		{
-			error = "Please scan the wallet";
-			return;
-		}
+	    var account = _walletAccounts.Account[SwapFrom];
 
 	    var amountToSellSats = Money.Coins(amountToSell);
 	    var amountToBuySats = Money.Coins(amountToBuy);
-	    var totalBalance = Money.Satoshis(accountInfo.TotalBalance);
+		var totalBalance = Money.Satoshis(account.Balance);
 
 		if (totalBalance < amountToSellSats)
 		{
@@ -175,7 +169,7 @@ else
 			storage.SetSwaps(myswaps);
 		}
 
-		var pubkey = storage.GetWalletPubkey();
+	    var pubkey = account.Pubkey;
 
 		var totalBalanceInSwaps = myswaps.Sum(s =>
 		{
@@ -190,7 +184,7 @@ else
 
 	    var totalBalanceInSwapsSats = Money.Satoshis(totalBalanceInSwaps);
 
-		Logger.LogInformation($"accountInfo.TotalBalance={accountInfo.TotalBalance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
+		Logger.LogInformation($"accountInfo.TotalBalance={account.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
 
 		if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
 		{
@@ -199,20 +193,23 @@ else
 		}
 
 	    var sessionId = Guid.NewGuid().ToString("N");
-	    var sharedSecret = GlobalData.GenerateSecret(network, storage, sessionId);
+
+		var res = await WalletService.SignMessageAnyAccount(sessionId);
+	    var data = JsonSerializer.Deserialize<WalletApiSignMessageAnyAccount>(res);
+
+	    var sharedSecret = SwapsConfiguration.GenerateSecret(data.signature, sessionId);
 	    var sharedSecretHash = Hashes.Hash160(sharedSecret.ToBytes());
 
-		var postBody = new CreateSwapSession
-			{
-				SenderPubkey = pubkey,
-				FromCoinSymbol = SwapFrom,
-				AmountToSell = amountToSellSats.Satoshi,
-				ToCoinSymbol = SwapTo,
-				AmountToBuy = amountToBuySats.Satoshi,
-				SwapSessionId = sessionId,
-				SharedSecretHash = sharedSecretHash.ToString()
-				
-			};
+	    var postBody = new CreateSwapSession
+	    {
+	        SenderPubkey = pubkey,
+	        FromCoinSymbol = SwapFrom,
+	        AmountToSell = amountToSellSats.Satoshi,
+	        ToCoinSymbol = SwapTo,
+	        AmountToBuy = amountToBuySats.Satoshi,
+	        SwapSessionId = sessionId,
+	        SharedSecretHash = sharedSecretHash.ToString()
+	    };
 
 		await Http.PostAsJsonAsync($"api/SwapCoordinator/create", postBody);
 
