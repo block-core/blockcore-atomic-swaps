@@ -31,7 +31,7 @@ builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
 
 builder.Services.AddScoped<LayoutService>();
 
-builder.Services.AddScoped<IIndexerService, IndexerService>();
+builder.Services.AddScoped<IBlockchainApiService, BlockchainApiService>();
 
 builder.Services.AddBlockcoreWallet();
 

@@ -16,7 +16,7 @@
 @inject NavigationManager NavigationManager;
 @inject ILogger<ViewSwap> Logger;
 @inject IBlockcoreWalletService WalletService
-@inject IIndexerService IndexerService;
+@inject IBlockchainApiService BlockchainApiService;
 
 <PageTitle>View Swaps</PageTitle>
 
@@ -358,7 +358,7 @@
 
         await this.RefreshSwap();
 
-        await this.IndexerService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.SwapTransactionHex);
+        await this.BlockchainApiService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.SwapTransactionHex);
     }
 
     private async Task BuildBuyerSwap()
@@ -372,7 +372,7 @@
 
         await this.RefreshSwap();
 
-        await this.IndexerService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.SwapTransactionHex);
+        await this.BlockchainApiService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.SwapTransactionHex);
     }
 
     private void BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
@@ -457,7 +457,7 @@
     {
         if (swap?.CoinSeller.SwapTransactionHash != null)
         {
-            SellerSwapTransactionConfirmations = await IndexerService.GetConfirmationsAsync(
+            SellerSwapTransactionConfirmations = await BlockchainApiService.GetConfirmationsAsync(
                 swap.CoinSeller.CoinSymbol, 
                 swap.CoinSeller.SwapTransactionHash, 
                 swap.CoinSeller.SwapTransactionHex);
@@ -465,7 +465,7 @@
 
         if (swap?.CoinBuyer.SwapTransactionHash != null)
         {
-            BuyerSwapTransactionConfirmations = await IndexerService.GetConfirmationsAsync(
+            BuyerSwapTransactionConfirmations = await BlockchainApiService.GetConfirmationsAsync(
                 swap.CoinBuyer.CoinSymbol,
                 swap.CoinBuyer.SwapTransactionHash,
                 swap?.CoinBuyer.SwapTransactionHex);
@@ -473,7 +473,7 @@
 
         if (swap?.CoinBuyer.ExchangeTransactionHex != null)
         {
-            SellerExchangeTransactionConfirmations = await IndexerService.GetConfirmationsAsync(
+            SellerExchangeTransactionConfirmations = await BlockchainApiService.GetConfirmationsAsync(
                 swap.CoinBuyer.CoinSymbol,
                 swap.CoinBuyer.ExchangeTransactionHash,
                 swap?.CoinBuyer.ExchangeTransactionHex);
@@ -481,7 +481,7 @@
 
         if (swap?.CoinSeller.ExchangeTransactionHex != null)
         {
-            BuyerExchangeTransactionConfirmations = await IndexerService.GetConfirmationsAsync(
+            BuyerExchangeTransactionConfirmations = await BlockchainApiService.GetConfirmationsAsync(
                 swap.CoinSeller.CoinSymbol,
                 swap.CoinSeller.ExchangeTransactionHash,
                 swap?.CoinSeller.ExchangeTransactionHex);
@@ -510,7 +510,7 @@
 
         await this.RefreshSwap();
 
-        await this.IndexerService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.ExchangeTransactionHex);
+        await this.BlockchainApiService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.ExchangeTransactionHex);
     }
 
     private async Task BuyerExchangeFunds()
@@ -535,7 +535,7 @@
 
         await this.RefreshSwap();
 
-        await this.IndexerService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.ExchangeTransactionHex);
+        await this.BlockchainApiService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.ExchangeTransactionHex);
     }
 
     private void ExchangeSwapFund(SwapSessionCoin swapSessionCoin, uint256 sharedSecret, Key privateKey)
@@ -625,7 +625,7 @@
 
         await this.RefreshSwap();
 
-        await this.IndexerService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.SenderRecoveryTransactionHex);
+        await this.BlockchainApiService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.SenderRecoveryTransactionHex);
     }
 
     private async Task BuyerRecoverFunds()
@@ -645,7 +645,7 @@
 
         await this.RefreshSwap();
 
-        await this.IndexerService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.SenderRecoveryTransactionHex);
+        await this.BlockchainApiService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.SenderRecoveryTransactionHex);
     }
 
     private void RecoverFunds(SwapSessionCoin swapSessionCoin, Key privateKey)

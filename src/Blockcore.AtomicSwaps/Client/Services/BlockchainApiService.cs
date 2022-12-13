@@ -4,13 +4,13 @@ using System.Net.Http.Json;
 namespace Blockcore.AtomicSwaps.Client.Services
 {
 
-    public class IndexerService : IIndexerService
+    public class BlockchainApiService : IBlockchainApiService
 	{
-        private readonly ILogger<IndexerService> _logger;
+        private readonly ILogger<BlockchainApiService> _logger;
         private readonly HttpClient _httpClient;
         private readonly SwapsConfiguration _swapsConfiguration;
 
-        public IndexerService(ILogger<IndexerService> logger, HttpClient httpClient, SwapsConfiguration swapsConfiguration)
+        public BlockchainApiService(ILogger<BlockchainApiService> logger, HttpClient httpClient, SwapsConfiguration swapsConfiguration)
         {
             _logger = logger;
             _httpClient = httpClient;

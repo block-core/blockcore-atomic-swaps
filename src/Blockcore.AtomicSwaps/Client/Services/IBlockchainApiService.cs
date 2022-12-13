@@ -3,7 +3,7 @@
     /// <summary>
     /// A class that will handle communication with the indexers.
     /// </summary>
-    public interface IIndexerService
+    public interface IBlockchainApiService
     {
         Task<int> GetConfirmationsAsync(string network, string trxId, string? trxHex = null);
 
