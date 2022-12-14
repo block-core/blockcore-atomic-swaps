@@ -143,7 +143,7 @@ public class WalletAccount
     public string Pubkey { get; set; }
     public string Address { get; set; }
     public string PubkeyPath { get; set; }
-    public string CoinSymbole { get; set; }
+    public string CoinSymbol { get; set; }
     public long Balance { get; set; }
     public string WalletId { get; set; }
     public string AccountId { get; set; }

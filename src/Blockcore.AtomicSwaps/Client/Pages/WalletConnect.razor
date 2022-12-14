@@ -121,12 +121,12 @@ else
                 {
                     Pubkey = key.ToHex(),
                     Address = data.key,
-                    CoinSymbole = data.network,
+                    CoinSymbol = data.network,
                     WalletId = data.walletId,
                     AccountId = data.accountId
                 };
 
-                _walletAccounts.Account.Add(newAccount.CoinSymbole, newAccount);
+                _walletAccounts.Account.Add(newAccount.CoinSymbol, newAccount);
 
                 account = newAccount;
             }
