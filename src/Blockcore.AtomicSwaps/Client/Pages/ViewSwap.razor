@@ -499,7 +499,7 @@
         Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
 
         var res = await WalletService.SignMessageAnyAccount(swap.SwapSessionId);
-        var data = JsonSerializer.Deserialize<WalletApiSignMessageAnyAccount>(res);
+        var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
 
         var sharedSecret = SwapsConfiguration.GenerateSecret(data.signature, swap.SwapSessionId);
         var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);

@@ -74,12 +74,12 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			}
 		}
 
-        public async ValueTask<string> GetAccountBalance(string pubkey)
+        public async ValueTask<string> GetAccountBalance(string key, string walletId, string accountId)
         {
             var module = await moduleTask.Value;
             try
             {
-                return await module.InvokeAsync<string>("getAccountBalance", pubkey);
+                return await module.InvokeAsync<string>("getAccountBalance", key, walletId, accountId);
             }
             catch (Exception ex)
             {

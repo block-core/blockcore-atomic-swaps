@@ -145,21 +145,22 @@ public class WalletAccount
     public string PubkeyPath { get; set; }
     public string CoinSymbole { get; set; }
     public long Balance { get; set; }
+    public string WalletId { get; set; }
+    public string AccountId { get; set; }
 }
 
-
-public class WalletApiSignMessageAnyAccount
+public class WalletApiMessage<T> where T: class
 {
-    public string pubkey { get; set; }
     public string key { get; set; }
     public string signature { get; set; }
-    public string response { get; set; }
+    public T response { get; set; }
     public string content { get; set; }
     public string network { get; set; }
-    public long balance { get; set; }
+    public string walletId { get; set; }
+    public string accountId { get; set; }
 }
 
-public class WalletApiGetAccountBalance
+public class WalletApiMessageBalance
 {
     public long balance { get; set; }
 }

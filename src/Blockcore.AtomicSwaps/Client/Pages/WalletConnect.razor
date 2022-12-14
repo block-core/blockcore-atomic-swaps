@@ -99,7 +99,7 @@ else
         try
         {
             var res = await WalletService.SignMessageAnyAccount("login");
-            var data = JsonSerializer.Deserialize<WalletApiSignMessageAnyAccount>(res);
+            var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
             Logger.LogInformation(res);
 
             if (!NetworkList.Contains(data.network))
@@ -121,7 +121,9 @@ else
                 {
                     Pubkey = key.ToHex(),
                     Address = data.key,
-                    CoinSymbole = data.network
+                    CoinSymbole = data.network,
+                    WalletId = data.walletId,
+                    AccountId = data.accountId
                 };
 
                 _walletAccounts.Account.Add(newAccount.CoinSymbole, newAccount);
@@ -130,10 +132,10 @@ else
             }
 
             // update balance
-            var resBalance = await WalletService.GetAccountBalance(account.Pubkey);
-            var dataBalance = JsonSerializer.Deserialize<WalletApiGetAccountBalance>(resBalance);
+            var resBalance = await WalletService.GetAccountBalance(account.Address, account.WalletId, account.AccountId);
+            var dataBalance = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageBalance>>(resBalance);
 
-            account.Balance = dataBalance.balance;
+            account.Balance = dataBalance.response.balance;
 
             storage.Set<WalletAccounts?>(_walletAccounts);
         }

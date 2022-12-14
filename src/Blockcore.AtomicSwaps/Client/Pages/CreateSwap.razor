@@ -195,7 +195,7 @@ else
 	    var sessionId = Guid.NewGuid().ToString("N");
 
 		var res = await WalletService.SignMessageAnyAccount(sessionId);
-	    var data = JsonSerializer.Deserialize<WalletApiSignMessageAnyAccount>(res);
+		var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
 
 	    var sharedSecret = SwapsConfiguration.GenerateSecret(data.signature, sessionId);
 	    var sharedSecretHash = Hashes.Hash160(sharedSecret.ToBytes());
