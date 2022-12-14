@@ -5,6 +5,7 @@
 @using NBitcoin.Crypto
 @using Blockcore.AtomicSwaps.BlockcoreWallet
 @using System.Text.Json
+@using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions
 @using Blockcore.AtomicSwaps.Client.Services
 
 @inject HttpClient Http
@@ -19,18 +20,16 @@
 
 <h1>Create Swap</h1>
 
-
-
 <p>This component allow to create new swaps.</p>
 
-<p>Create Swap.</p>
-
-@if (_walletAccounts is null)
+@if (!hasWallet)
 {
-	<p>Wallet not connected, navigate to the <a href="/walletconnect">wallet</a> tab to create a wallet</p>
+    <p>Not wallet found please install the wallet at blockcore.net</p>
 }
 else
 {
+
+
     <div class="row g-3 align-items-center mb-2">
         <div class="col-2">
             <label for="SwapFrom" class="col-form-label">From</label>
@@ -123,21 +122,35 @@ else
 
 	long amountToSell = 1;
 	long amountToBuy = 2;
+    private bool hasWallet;
 
     WalletAccounts? _walletAccounts;
 
 	protected override async Task OnInitializedAsync()
 	{
+	    if (await WalletService.HasBlockcoreWallet() == false)
+	    {
+	        hasWallet = false;
+	        return;
+	    }
+
+	    hasWallet = true;
+
+	    NetworkList = SwapsConfiguration.Networks.Keys.ToList();
+
 	    _walletAccounts = storage.Get<WalletAccounts?>();
-	    NetworkList = _walletAccounts?.Account.Keys.ToList();
+
+	    if(_walletAccounts == null)
+	    {
+	        _walletAccounts = new WalletAccounts();
+	        storage.Set<WalletAccounts?>(_walletAccounts);
+	    }
 	}
 
 	protected async Task CreateNewSwap()
 	{
 	    ExtKey.UseBCForHMACSHA512 = true;
 	    NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-	    
-	    Guard.NotNull(_walletAccounts, nameof(_walletAccounts));
 
 		// check that the user has enough money
 		error = string.Empty;
@@ -149,17 +162,33 @@ else
 
 		Networks.Network network = SwapsConfiguration.Networks[SwapFrom];
 
-	    var account = _walletAccounts.Account[SwapFrom];
+	    var sessionId = Guid.NewGuid().ToString("N");
+
+	    //var account = _walletAccounts.Account[SwapFrom];
+
+        var (errorOut, account, sharedSecret, sharedSecretHash) = await ConnectWallet(sessionId);
+
+	    if (!string.IsNullOrEmpty(error))
+	    {
+            error = errorOut;
+	        return;
+	    }
+
+	    if (account.CoinSymbol != SwapFrom)
+	    {
+            error = $"Incorrect network selected, expected {account.CoinSymbol} selected {SwapFrom}";
+	        return;
+	    }
 
 	    var amountToSellSats = Money.Coins(amountToSell);
 	    var amountToBuySats = Money.Coins(amountToBuy);
 		var totalBalance = Money.Satoshis(account.Balance);
 
-		if (totalBalance < amountToSellSats)
-		{
-			error = "You do not have enough funds";
-			return;
-		}
+		//if (totalBalance < amountToSellSats)
+		//{
+		//	error = "You do not have enough funds";
+		//	return;
+		//}
 
 		var myswaps = storage.GetSwaps();
 
@@ -186,19 +215,11 @@ else
 
 		Logger.LogInformation($"accountInfo.TotalBalance={account.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
 
-		if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
-		{
-			error = "funds are used in other swaps no funds left to make a swap";
-			return;
-		}
-
-	    var sessionId = Guid.NewGuid().ToString("N");
-
-		var res = await WalletService.SignMessageAnyAccount(sessionId);
-		var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
-
-	    var sharedSecret = SwapsConfiguration.GenerateSecret(data.signature, sessionId);
-	    var sharedSecretHash = Hashes.Hash160(sharedSecret.ToBytes());
+		//if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
+		//{
+		//	error = "funds are used in other swaps no funds left to make a swap";
+		//	return;
+		//}
 
 	    var postBody = new CreateSwapSession
 	    {
@@ -232,5 +253,73 @@ else
 	{
 		NavigationManager.NavigateTo($"viewswap/{session}");
 	}
+
+    private async Task<(string? Error, WalletAccount? Account, uint256? Secret, uint160? SecretHash)> ConnectWallet(string sessionId)
+    {
+        Guard.NotNull(_walletAccounts, nameof(_walletAccounts));
+
+        try
+        {
+            var res = await WalletService.SignMessageAnyAccount(sessionId);
+            var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
+
+            Logger.LogInformation(res);
+
+            var sharedSecret = SwapsConfiguration.GenerateSecret(data.signature, sessionId);
+            var sharedSecretHash = Hashes.Hash160(sharedSecret.ToBytes());
+
+
+            if (!NetworkList.Contains(data.network))
+            {
+                error = $"The network {data.network} is not supported";
+                return (error, null, null, null);
+            }
+
+            var key = PubKey.RecoverFromMessage(data.content, data.signature);
+            if (!key.VerifyMessage(data.content, data.signature))
+            {
+                error = $"Failed to verify the signature";
+                return (error, null, null, null);
+            }
+
+            if (!_walletAccounts.Account.TryGetValue(data.network, out WalletAccount account))
+            {
+                WalletAccount newAccount = new WalletAccount
+                    {
+                        Pubkey = key.ToHex(),
+                        Address = data.key,
+                        CoinSymbol = data.network,
+                        WalletId = data.walletId,
+                        AccountId = data.accountId
+                    };
+
+                _walletAccounts.Account.Add(newAccount.CoinSymbol, newAccount);
+
+                account = newAccount;
+            }
+
+            // update balance
+            //var resBalance = await WalletService.GetAccountBalance(account.Address, account.WalletId, account.AccountId);
+            //var dataBalance = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageBalance>>(resBalance);
+
+            //account.Balance = dataBalance.response.balance;
+
+            storage.Set<WalletAccounts?>(_walletAccounts);
+
+            return (null, account, sharedSecret, sharedSecretHash);
+        }
+        catch (NoBlockcoreWalletException nbwe)
+        {
+            error = "Not wallet found please install the wallet at blockcore.net";
+            return (error, null, null, null);
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+            Console.WriteLine(e);
+        }
+
+        return (error, null, null, null);
+    }
 
 }
