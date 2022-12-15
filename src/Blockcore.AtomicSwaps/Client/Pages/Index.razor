@@ -5,11 +5,15 @@
 @using Blockcore.AtomicSwaps.Server.Controllers
 @using NBitcoin
 @using NBitcoin.Crypto
+@using Blockcore.AtomicSwaps.BlockcoreWallet
+@using Blockcore.AtomicSwaps.Client.Services
 @inject HttpClient Http
 @inject Storage storage;
 @inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
 @inject ILogger<Index> Logger;
+@inject IBlockcoreWalletService WalletService
+@inject IBlockchainApiService BlockchainApiService
 
 <PageTitle>Blockcore Atomic Swaps</PageTitle>
 
@@ -50,7 +54,7 @@
 					<td>@Money.Satoshis(swap.CoinSeller.Amount) - @swap.CoinSeller.CoinSymbol</td>
 					<td>@Money.Satoshis(swap.CoinBuyer.Amount) - @swap.CoinBuyer.CoinSymbol</td>
 					<td>@swap.Created </td>
-					<td>@(swap.CoinSeller.SenderPubkey == mypubkey ? "I am seller" : swap.CoinBuyer.SenderPubkey == mypubkey ? "I am buyer" : "not my swap")</td>
+					<td>@(_walletAccounts.HasKey(swap.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasKey(swap.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</td>
 					<td>@swap.Status </td>
 					<td><button class="btn btn-info" @onclick="() => this.ViewSwap(swap.SwapSessionId)">Details</button> </td>
 				</tr>
@@ -72,12 +76,11 @@
 
 	long amountToSell = 1;
 	long amountToBuy = 10;
+    WalletAccounts? _walletAccounts;
 
 	string mypubkey;
 	private async Task Fetch()
 	{
-		mypubkey = storage.GetWalletPubkey();
-
 	    myswaps = storage.GetSwaps();
 
 	    if (myswaps != null)
@@ -103,9 +106,20 @@
 	{
 		NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
-	    if (storage.GetWalletWords() != null)
+	    if (await WalletService.HasBlockcoreWallet() == false)
 	    {
-	        hasWallet = true;
+	        hasWallet = false;
+	        return;
+	    }
+
+	    hasWallet = true;
+
+	    _walletAccounts = storage.Get<WalletAccounts?>();
+
+	    if(_walletAccounts == null)
+	    {
+	        _walletAccounts = new WalletAccounts();
+	        storage.Set<WalletAccounts?>(_walletAccounts);
 	    }
 
 		await this.Fetch();

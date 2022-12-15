@@ -7,6 +7,7 @@
 @using System.Net
 @using System.Text.Json
 @using Blockcore.AtomicSwaps.BlockcoreWallet
+@using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions
 @using Blockcore.AtomicSwaps.Client.Services
 @using Blockcore.Utilities
 @using JsonSerializer = System.Text.Json.JsonSerializer
@@ -36,7 +37,8 @@
 
     <h4>Swap @Money.Satoshis(swap.CoinSeller.Amount) @swap.CoinSeller.CoinSymbol for @Money.Satoshis(swap.CoinBuyer.Amount) @swap.CoinBuyer.CoinSymbol</h4>
 
-    @if (swap.CoinSeller.SenderPubkey == mypubkey){<p class="text-success"><strong> I am the seller</strong></p>}
+    @if (mypubkey == null){<p><strong>Not my swap</strong></p>}
+    else if (swap.CoinSeller.SenderPubkey == mypubkey){<p class="text-success"><strong> I am the seller</strong></p>}
     else if (swap.CoinBuyer.SenderPubkey == mypubkey){<p class="text-success"><strong>I am the buyer</strong></p>}
     else{<p><strong>Not my swap</strong></p>}
 
@@ -255,19 +257,27 @@
     WalletAccounts? _walletAccounts;
 
     private bool hasWallet;
+    List<string> NetworkList;
 
     protected override async Task OnInitializedAsync()
     {
-        _walletAccounts = storage.Get<WalletAccounts?>();
-
-        if (_walletAccounts == null)
+        if (await WalletService.HasBlockcoreWallet() == false)
         {
             hasWallet = false;
+            return;
         }
-        
+
         hasWallet = true;
 
-        mypubkey = storage.GetWalletPubkey();
+        _walletAccounts = storage.Get<WalletAccounts?>();
+
+        if(_walletAccounts == null)
+        {
+            _walletAccounts = new WalletAccounts();
+            storage.Set<WalletAccounts?>(_walletAccounts);
+        }
+
+        NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
         string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
 
@@ -282,6 +292,22 @@
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true
         });
+
+        foreach (var accountValue in _walletAccounts.Account.Values)
+        {
+            if (accountValue.Pubkey == swap.CoinSeller.SenderPubkey)
+            {
+                mypubkey = accountValue.Pubkey;
+                break;
+                
+            }
+
+            if (accountValue.Pubkey == swap.CoinBuyer.SenderPubkey)
+            {
+                mypubkey = accountValue.Pubkey;
+                break;
+            }
+        }
 
         await this.RefreshConfirmations();
     }
@@ -321,13 +347,16 @@
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
         Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
-        AccountInfo accountInfo = storage.GetAccountInfo(network.CoinTicker);
 
-        if (accountInfo == null)
+        var (errorOut, account) = await ConnectWallet(network.CoinTicker, swap.SwapSessionId);
+
+        if (!string.IsNullOrEmpty(error))
         {
-            error = "Please scan the wallet";
+            error = errorOut;
             return;
         }
+
+        mypubkey = account.Pubkey;
 
         swap.Status = SwapsDataStatus.InProgress;
         swap.CoinBuyer.SenderPubkey = mypubkey;
@@ -346,6 +375,76 @@
         myswaps.Add(swap);
         storage.SetSwaps(myswaps);
     }
+
+    private async Task<(string? Error, WalletAccount? Account)> ConnectWallet(string coinSymbol, string sessionId)
+    {
+        Guard.NotNull(_walletAccounts, nameof(_walletAccounts));
+
+        try
+        {
+            if (_walletAccounts.Account.TryGetValue(coinSymbol, out WalletAccount accountFound))
+            {
+                return (null, accountFound);
+            }
+
+            var res = await WalletService.SignMessageAnyAccount(sessionId);
+            var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
+
+            Logger.LogInformation(res);
+
+            if (coinSymbol != data.network)
+            {
+                error = $"Wrong network selected {data.network}";
+                return (error, null);
+            }
+
+            var key = PubKey.RecoverFromMessage(data.content, data.signature);
+            if (!key.VerifyMessage(data.content, data.signature))
+            {
+                error = $"Failed to verify the signature";
+                return (error, null);
+            }
+
+            if (!_walletAccounts.Account.TryGetValue(data.network, out WalletAccount account))
+            {
+                WalletAccount newAccount = new WalletAccount
+                    {
+                        Pubkey = key.ToHex(),
+                        Address = data.key,
+                        CoinSymbol = data.network,
+                        WalletId = data.walletId,
+                        AccountId = data.accountId
+                    };
+
+                _walletAccounts.Account.Add(newAccount.CoinSymbol, newAccount);
+
+                account = newAccount;
+            }
+
+            // update balance
+            //var resBalance = await WalletService.GetAccountBalance(account.Address, account.WalletId, account.AccountId);
+            //var dataBalance = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageBalance>>(resBalance);
+
+            //account.Balance = dataBalance.response.balance;
+
+            storage.Set<WalletAccounts?>(_walletAccounts);
+
+            return (null, account);
+        }
+        catch (NoBlockcoreWalletException nbwe)
+        {
+            error = "Not wallet found please install the wallet at blockcore.net";
+            return (error, null);
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+            Console.WriteLine(e);
+        }
+
+        return (error, null);
+    }
+
 
     private async Task BuildSellerSwap()
     {

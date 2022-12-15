@@ -136,6 +136,11 @@ public class TransactionData
 public class WalletAccounts
 {
     public Dictionary<string, WalletAccount> Account { get; set; } = new();
+
+    public bool HasKey(string pubkey)
+    {
+	    return Account.Values.Any(a => a.Pubkey == pubkey);
+    }
 }
 
 public class WalletAccount

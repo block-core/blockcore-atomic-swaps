@@ -22,14 +22,14 @@
 
 <p>This component allow to create new swaps.</p>
 
+<p class="alert-danger">@error</p>
+
 @if (!hasWallet)
 {
     <p>Not wallet found please install the wallet at blockcore.net</p>
 }
 else
 {
-
-
     <div class="row g-3 align-items-center mb-2">
         <div class="col-2">
             <label for="SwapFrom" class="col-form-label">From</label>
@@ -108,7 +108,7 @@ else
     <button class="btn btn-primary" @onclick="CreateNewSwap">Create Swap</button>
 }
 
-<p class="alert-danger">@error</p>
+
 
 @code {
 	private List<SwapSession> swaps;
