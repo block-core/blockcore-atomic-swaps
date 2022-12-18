@@ -269,13 +269,7 @@
 
         hasWallet = true;
 
-        _walletAccounts = storage.Get<WalletAccounts?>();
-
-        if(_walletAccounts == null)
-        {
-            _walletAccounts = new WalletAccounts();
-            storage.Set<WalletAccounts?>(_walletAccounts);
-        }
+        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
 
         NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
@@ -293,7 +287,7 @@
             WriteIndented = true
         });
 
-        foreach (var accountValue in _walletAccounts.Account.Values)
+        foreach (var accountValue in _walletAccounts.Accounts.Values)
         {
             if (accountValue.Pubkey == swap.CoinSeller.SenderPubkey)
             {
@@ -382,7 +376,7 @@
 
         try
         {
-            if (_walletAccounts.Account.TryGetValue(coinSymbol, out WalletAccount accountFound))
+            if (_walletAccounts.Accounts.TryGetValue(coinSymbol, out WalletAccount accountFound))
             {
                 return (null, accountFound);
             }
@@ -405,7 +399,7 @@
                 return (error, null);
             }
 
-            if (!_walletAccounts.Account.TryGetValue(data.network, out WalletAccount account))
+            if (!_walletAccounts.Accounts.TryGetValue(data.network, out WalletAccount account))
             {
                 WalletAccount newAccount = new WalletAccount
                     {
@@ -416,7 +410,7 @@
                         AccountId = data.accountId
                     };
 
-                _walletAccounts.Account.Add(newAccount.CoinSymbol, newAccount);
+                _walletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
 
                 account = newAccount;
             }

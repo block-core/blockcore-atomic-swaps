@@ -18,12 +18,23 @@ export async function signMessageAnyAccount(value) {
     //var verify = bitcoinMessage.verify(value, result.key, result.signature);
 }
 
-export async function getAccountBalance(key, walletId, accountId) {
+export async function getWallet(key) {
     const provider = globalThis.blockcore;
 
     const result = await provider.request({
-        method: 'accountbalance',
-        params: [{ key: key, walletId: walletId, accountId: accountId }],
+        method: 'wallets',
+        params: [{ key: key }],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result);
+}
+
+export async function deriveSwapKey(key, walletId, accountId, includePrivateKey) {
+    const provider = globalThis.blockcore;
+
+    const result = await provider.request({
+        method: 'atomicswaps.keyhandler',
+        params: [{ key: key, walletId: walletId, accountId: accountId, includePrivateKey: includePrivateKey }],
     });
     console.log('Result:', result);
     return JSON.stringify(result);

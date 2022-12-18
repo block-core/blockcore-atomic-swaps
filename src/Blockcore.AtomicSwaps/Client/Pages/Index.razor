@@ -54,7 +54,7 @@
 					<td>@Money.Satoshis(swap.CoinSeller.Amount) - @swap.CoinSeller.CoinSymbol</td>
 					<td>@Money.Satoshis(swap.CoinBuyer.Amount) - @swap.CoinBuyer.CoinSymbol</td>
 					<td>@swap.Created </td>
-					<td>@(_walletAccounts.HasKey(swap.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasKey(swap.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</td>
+					<td>@(_walletAccounts.HasAccountKey(swap.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(swap.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</td>
 					<td>@swap.Status </td>
 					<td><button class="btn btn-info" @onclick="() => this.ViewSwap(swap.SwapSessionId)">Details</button> </td>
 				</tr>
@@ -114,14 +114,8 @@
 
 	    hasWallet = true;
 
-	    _walletAccounts = storage.Get<WalletAccounts?>();
-
-	    if(_walletAccounts == null)
-	    {
-	        _walletAccounts = new WalletAccounts();
-	        storage.Set<WalletAccounts?>(_walletAccounts);
-	    }
-
+	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+		
 		await this.Fetch();
 	}
 

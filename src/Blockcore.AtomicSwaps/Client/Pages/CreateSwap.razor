@@ -138,13 +138,7 @@ else
 
 	    NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
-	    _walletAccounts = storage.Get<WalletAccounts?>();
-
-	    if(_walletAccounts == null)
-	    {
-	        _walletAccounts = new WalletAccounts();
-	        storage.Set<WalletAccounts?>(_walletAccounts);
-	    }
+	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
 	}
 
 	protected async Task CreateNewSwap()
@@ -282,7 +276,7 @@ else
                 return (error, null, null, null);
             }
 
-            if (!_walletAccounts.Account.TryGetValue(data.network, out WalletAccount account))
+            if (!_walletAccounts.Accounts.TryGetValue(data.network, out WalletAccount account))
             {
                 WalletAccount newAccount = new WalletAccount
                     {
@@ -293,7 +287,7 @@ else
                         AccountId = data.accountId
                     };
 
-                _walletAccounts.Account.Add(newAccount.CoinSymbol, newAccount);
+                _walletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
 
                 account = newAccount;
             }

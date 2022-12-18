@@ -18,7 +18,7 @@
 
 <h1>Connected Wallets</h1>
 
-@if(!hasWallet)
+@if (!hasWallet)
 {
     <p>Not wallet found please install the wallet at blockcore.net</p>
 }
@@ -26,10 +26,11 @@ else
 {
     <p class="alert-danger">@error</p>
 
-    <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">Add account</button>
+    <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">@(_walletAccounts.Connected ? "Refresh" : "Connect")</button>
 
-    @if (_walletAccounts != null && _walletAccounts.Account.Any())
+    @if (_walletAccounts.Connected)
     {
+        <p>Wallet key - @_walletAccounts.WalletPubKey</p>
 
         <table class="table table-bordered">
             <thead>
@@ -41,12 +42,12 @@ else
             </thead>
             <tbody>
 
-            @foreach (var walletAccount in _walletAccounts.Account)
+                @foreach (var walletAccount in _walletAccounts.Accounts)
             {
                 <tr>
-                    <td>@walletAccount.Key</td>
+                    <td>@walletAccount.Value.CoinSymbol</td>
                     <td>@walletAccount.Value.Pubkey</td>
-                    <td>@Money.Satoshis(walletAccount.Value.Balance).ToUnit(MoneyUnit.BTC) @walletAccount.Key</td>
+                    <td>@Money.Satoshis(walletAccount.Value.Balance).ToUnit(MoneyUnit.BTC) @walletAccount.Value.CoinSymbol</td>
                 </tr>
             }
             </tbody>
@@ -68,76 +69,72 @@ else
 
     string loadingStatus = string.Empty;
 
-    WalletAccounts? _walletAccounts;
-    List<string> NetworkList;
+    WalletAccounts _walletAccounts = new();
+    List<string> _networkList = new();
 
     protected override async Task OnInitializedAsync()
     {
-        if (await WalletService.HasBlockcoreWallet() == false)
-        {
-            hasWallet = false;
-            return;
-        }
-
-        hasWallet = true;
-
-        NetworkList = SwapsConfiguration.Networks.Keys.ToList();
-
-        _walletAccounts = storage.Get<WalletAccounts?>();
-
-        if(_walletAccounts == null)
-        {
-            _walletAccounts = new WalletAccounts();
-            storage.Set<WalletAccounts?>(_walletAccounts);
-        }
+        hasWallet = await WalletService.HasBlockcoreWallet();
+        _networkList = SwapsConfiguration.Networks.Keys.ToList();
+        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
     }
 
     private async Task ConnectWallet()
     {
-        Guard.NotNull(_walletAccounts, nameof(_walletAccounts));
-
         try
         {
-            var res = await WalletService.SignMessageAnyAccount("login");
-            var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
+            var res = await WalletService.GetWallet();
             Logger.LogInformation(res);
 
-            if (!NetworkList.Contains(data.network))
+            var walletApiMessage = JsonSerializer.Deserialize<WalletApiMessage?>(res);
+
+            if (walletApiMessage == null)
             {
-                error = $"The network {data.network} is not supported";
+                error = $"Failed to read wallet data";
                 return;
             }
 
-            var key = PubKey.RecoverFromMessage(data.content, data.signature);
-            if (!key.VerifyMessage(data.content, data.signature))
+            if (_walletAccounts.Connected)
             {
-                error = $"Failed to verify the signature";
-                return;
-            }
-
-            if (!_walletAccounts.Account.TryGetValue(data.network, out WalletAccount account))
-            {
-                WalletAccount newAccount = new WalletAccount
+                if (_walletAccounts.WalletPubKey != walletApiMessage.key)
                 {
-                    Pubkey = key.ToHex(),
-                    Address = data.key,
-                    CoinSymbol = data.network,
-                    WalletId = data.walletId,
-                    AccountId = data.accountId
-                };
-
-                _walletAccounts.Account.Add(newAccount.CoinSymbol, newAccount);
-
-                account = newAccount;
+                    error = $"Incorrect wallet, expected {_walletAccounts.WalletPubKey} but got {walletApiMessage.key}";
+                    return;
+                }
+            }
+            else
+            {
+                _walletAccounts.WalletPubKey = walletApiMessage.key;
             }
 
-            // update balance
-            var resBalance = await WalletService.GetAccountBalance(account.Address, account.WalletId, account.AccountId);
-            var dataBalance = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageBalance>>(resBalance);
+            foreach (var walletAccount in walletApiMessage.response.accounts)
+            {
+                if (_walletAccounts.Accounts.TryGetValue(walletAccount.networkType, out WalletAccount account))
+                {
+                    // refresh the balance
+                    account.Balance = walletAccount.history.balance;
+                }
+                else
+                {
+                    // based on BCIP2 and BCIP3 "m / purpose' / coin_type' / account' / swap_key' / secret"
+                    // the wallet key already derives ""m / purpose'" so we derive eh account key next
+                    var keysRes = await WalletService.DeriveSwapKey(walletApiMessage.key, walletApiMessage.response.wallet.id, walletAccount.id, false);
+                    var keys = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageKeys>>(keysRes);
 
-            account.Balance = dataBalance.response.balance;
+                    WalletAccount newAccount = new WalletAccount
+                    {
+                        Pubkey = keys.response.publicKey,
+                        CoinSymbol = walletAccount.networkType,
+                        WalletId = walletApiMessage.response.wallet.id,
+                        AccountId = walletAccount.id,
+                        Balance = walletAccount.history.balance,
+                    };
 
-            storage.Set<WalletAccounts?>(_walletAccounts);
+                    _walletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
+                }
+            }
+
+             storage.Set<WalletAccounts>(_walletAccounts);
         }
         catch (NoBlockcoreWalletException nbwe)
         {
@@ -149,7 +146,5 @@ else
             error = e.Message;
             Console.WriteLine(e);
         }
-
     }
-
 }
