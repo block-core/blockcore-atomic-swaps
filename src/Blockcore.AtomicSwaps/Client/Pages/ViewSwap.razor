@@ -419,7 +419,7 @@
             //var resBalance = await WalletService.GetAccountBalance(account.Address, account.WalletId, account.AccountId);
             //var dataBalance = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageBalance>>(resBalance);
 
-            //account.Balance = dataBalance.response.balance;
+            //account.Balance = dataBalance.ContentData.balance;
 
             storage.Set<WalletAccounts?>(_walletAccounts);
 

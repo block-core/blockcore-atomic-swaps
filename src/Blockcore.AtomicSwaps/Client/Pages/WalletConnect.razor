@@ -107,7 +107,7 @@ else
                 _walletAccounts.WalletPubKey = walletApiMessage.key;
             }
 
-            foreach (var walletAccount in walletApiMessage.response.accounts)
+            foreach (var walletAccount in walletApiMessage.content.accounts)
             {
                 if (_walletAccounts.Accounts.TryGetValue(walletAccount.networkType, out WalletAccount account))
                 {
@@ -118,14 +118,14 @@ else
                 {
                     // based on BCIP2 and BCIP3 "m / purpose' / coin_type' / account' / swap_key' / secret"
                     // the wallet key already derives ""m / purpose'" so we derive eh account key next
-                    var keysRes = await WalletService.DeriveSwapKey(walletApiMessage.key, walletApiMessage.response.wallet.id, walletAccount.id, false);
+                    var keysRes = await WalletService.GetSwapKey(walletApiMessage.key, walletApiMessage.content.wallet.id, walletAccount.id, false);
                     var keys = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageKeys>>(keysRes);
 
                     WalletAccount newAccount = new WalletAccount
                     {
                         Pubkey = keys.response.publicKey,
                         CoinSymbol = walletAccount.networkType,
-                        WalletId = walletApiMessage.response.wallet.id,
+                            WalletId = walletApiMessage.content.wallet.id,
                         AccountId = walletAccount.id,
                         Balance = walletAccount.history.balance,
                     };

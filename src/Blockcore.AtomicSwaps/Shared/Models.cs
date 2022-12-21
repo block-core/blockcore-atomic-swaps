@@ -151,6 +151,11 @@ public class WalletAccounts
     {
 	    return Accounts.Values.Any(a => a.Pubkey == pubkey);
     }
+
+    public WalletAccount GetAccount(string coinSymbol)
+    {
+        return Accounts[coinSymbol];
+    }
 }
 
 public class WalletAccount
@@ -182,12 +187,17 @@ public class WalletApiMessageKeys
     public string privateKey { get; set; }
 }
 
+public class WalletApiMessageSecret
+{
+    public string secret { get; set; }
+}
+
 // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
 
 public class WalletApiMessage
 {
     public string key { get; set; }
-    public Response response { get; set; }
+    public ContentData content { get; set; }
 
     public class Account
     {
@@ -285,7 +295,7 @@ public class WalletApiMessage
     }
 
 
-    public class Response
+    public class ContentData
     {
         public Wallet wallet { get; set; }
         public List<Account> accounts { get; set; }

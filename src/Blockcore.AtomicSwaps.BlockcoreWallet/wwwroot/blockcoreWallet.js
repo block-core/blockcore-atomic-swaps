@@ -29,12 +29,23 @@ export async function getWallet(key) {
     return JSON.stringify(result);
 }
 
-export async function deriveSwapKey(key, walletId, accountId, includePrivateKey) {
+export async function getSwapKey(key, walletId, accountId, includePrivateKey) {
     const provider = globalThis.blockcore;
 
     const result = await provider.request({
         method: 'atomicswaps.keyhandler',
         params: [{ key: key, walletId: walletId, accountId: accountId, includePrivateKey: includePrivateKey }],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result);
+}
+
+export async function getSwapSecret(key, walletId, accountId, message) {
+    const provider = globalThis.blockcore;
+
+    const result = await provider.request({
+        method: 'atomicswaps.secrethandler',
+        params: [{ key: key, walletId: walletId, accountId: accountId, message: message }],
     });
     console.log('Result:', result);
     return JSON.stringify(result);

@@ -14,7 +14,8 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		ValueTask<bool> IsSiteConnected();
 		ValueTask<string> SignMessageAnyAccount(string value);
         ValueTask<string> GetWallet(string? key = null);
-        ValueTask<string> DeriveSwapKey(string key, string walletId, string accountId, bool includePrivateKey);
+        ValueTask<string> GetSwapKey(string key, string walletId, string accountId, bool includePrivateKey);
+        ValueTask<string> GetSwapSecret(string key, string walletId, string accountId, string message);
         ValueTask<string> SignMessageAnyAccountJson(string value);
 		ValueTask<string> PaymentRequest(string network, string amount);
 		ValueTask<string> DIDSupportedMethods();

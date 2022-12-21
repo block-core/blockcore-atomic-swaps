@@ -38,7 +38,7 @@ else
             <select class="form-select" @bind="SwapFrom" type="text">
                 <option value="" selected disabled>Please select</option>
                 @{
-                    @foreach (var prp in NetworkList)
+                    @foreach (var prp in _networkList)
                     {
                         <option value="@prp">@prp</option>
                     }
@@ -76,7 +76,7 @@ else
             <select class="form-select" @bind="SwapTo" type="text">
                 <option value="" selected disabled>Please select</option>
                 @{
-                    @foreach (var prp in NetworkList)
+                    @foreach (var prp in _networkList)
                     {
                         <option value="@prp">@prp</option>
                     }
@@ -104,16 +104,18 @@ else
         </div>
     </div>
 
-
-    <button class="btn btn-primary" @onclick="CreateNewSwap">Create Swap</button>
+    @if (!_walletAccounts.Connected)
+    {
+        <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">"Connect Wallet"</button>
+    }
+    else
+    {
+        <button class="btn btn-primary" @onclick="CreateNewSwap">Create Swap</button>
+    }
 }
-
-
 
 @code {
 	private List<SwapSession> swaps;
-	Networks.Network network;
-	List<string> NetworkList;
 
 	string error;
 
@@ -123,21 +125,15 @@ else
 	long amountToSell = 1;
 	long amountToBuy = 2;
     private bool hasWallet;
+    private bool busy = false;
 
-    WalletAccounts? _walletAccounts;
+    WalletAccounts _walletAccounts = new();
+    List<string> _networkList = new();
 
 	protected override async Task OnInitializedAsync()
 	{
-	    if (await WalletService.HasBlockcoreWallet() == false)
-	    {
-	        hasWallet = false;
-	        return;
-	    }
-
-	    hasWallet = true;
-
-	    NetworkList = SwapsConfiguration.Networks.Keys.ToList();
-
+	    hasWallet = await WalletService.HasBlockcoreWallet();
+        _networkList = SwapsConfiguration.Networks.Keys.ToList();
 	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
 	}
 
@@ -156,33 +152,32 @@ else
 
 		Networks.Network network = SwapsConfiguration.Networks[SwapFrom];
 
-	    var sessionId = Guid.NewGuid().ToString("N");
+	    await ConnectWallet();
 
-	    //var account = _walletAccounts.Account[SwapFrom];
-
-        var (errorOut, account, sharedSecret, sharedSecretHash) = await ConnectWallet(sessionId);
-
-	    if (!string.IsNullOrEmpty(error))
+        
+        if (!_walletAccounts.Accounts.ContainsKey(SwapFrom))
 	    {
-            error = errorOut;
+            error = $"The coin {SwapFrom} network is not found in wallet";
 	        return;
 	    }
 
-	    if (account.CoinSymbol != SwapFrom)
+	    if (!_walletAccounts.Accounts.ContainsKey(SwapTo))
 	    {
-            error = $"Incorrect network selected, expected {account.CoinSymbol} selected {SwapFrom}";
+            error = $"The coin {SwapTo} network is not found in wallet";
 	        return;
 	    }
+
+	    var account = _walletAccounts.GetAccount(SwapFrom);
 
 	    var amountToSellSats = Money.Coins(amountToSell);
 	    var amountToBuySats = Money.Coins(amountToBuy);
 		var totalBalance = Money.Satoshis(account.Balance);
 
-		//if (totalBalance < amountToSellSats)
-		//{
-		//	error = "You do not have enough funds";
-		//	return;
-		//}
+		if (totalBalance < amountToSellSats)
+		{
+			error = "You do not have enough funds";
+			return;
+		}
 
 		var myswaps = storage.GetSwaps();
 
@@ -209,11 +204,20 @@ else
 
 		Logger.LogInformation($"accountInfo.TotalBalance={account.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
 
-		//if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
-		//{
-		//	error = "funds are used in other swaps no funds left to make a swap";
-		//	return;
-		//}
+		if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
+		{
+			error = "funds are used in other swaps no funds left to make a swap";
+			return;
+		}
+
+	    var sessionId = Guid.NewGuid().ToString("N");
+	    var (errorOut, sharedSecret, sharedSecretHash) = await GenerateSecretHash(account, sessionId);
+
+        if (!string.IsNullOrEmpty(errorOut))
+	    {
+	        error = errorOut;
+	        return;
+	    }
 
 	    var postBody = new CreateSwapSession
 	    {
@@ -248,64 +252,102 @@ else
 		NavigationManager.NavigateTo($"viewswap/{session}");
 	}
 
-    private async Task<(string? Error, WalletAccount? Account, uint256? Secret, uint160? SecretHash)> ConnectWallet(string sessionId)
+    private async Task ConnectWallet()
+    {
+        try
+        {
+            var res = await WalletService.GetWallet();
+            Logger.LogInformation(res);
+
+            var walletApiMessage = JsonSerializer.Deserialize<WalletApiMessage?>(res);
+
+            if (walletApiMessage == null)
+            {
+                error = $"Failed to read wallet data";
+                return;
+            }
+
+            if (_walletAccounts.Connected)
+            {
+                if (_walletAccounts.WalletPubKey != walletApiMessage.key)
+                {
+                    error = $"Incorrect wallet, expected {_walletAccounts.WalletPubKey} but got {walletApiMessage.key}";
+                    return;
+                }
+            }
+            else
+            {
+                _walletAccounts.WalletPubKey = walletApiMessage.key;
+            }
+
+            foreach (var walletAccount in walletApiMessage.content.accounts)
+            {
+                if (_walletAccounts.Accounts.TryGetValue(walletAccount.networkType, out WalletAccount account))
+                {
+                    // refresh the balance
+                    account.Balance = walletAccount.history.balance;
+                }
+                else
+                {
+                    // based on BCIP2 and BCIP3 "m / purpose' / coin_type' / account' / swap_key' / secret"
+                    // the wallet key already derives ""m / purpose'" so we derive eh account key next
+                    var keysRes = await WalletService.GetSwapKey(walletApiMessage.key, walletApiMessage.content.wallet.id, walletAccount.id, false);
+                    var keys = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageKeys>>(keysRes);
+
+                    WalletAccount newAccount = new WalletAccount
+                        {
+                            Pubkey = keys.response.publicKey,
+                            CoinSymbol = walletAccount.networkType,
+                            WalletId = walletApiMessage.content.wallet.id,
+                            AccountId = walletAccount.id,
+                            Balance = walletAccount.history.balance,
+                        };
+
+                    _walletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
+                }
+            }
+
+            storage.Set<WalletAccounts>(_walletAccounts);
+        }
+        catch (NoBlockcoreWalletException nbwe)
+        {
+            error = "Not wallet found please install the wallet at blockcore.net";
+            return;
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+            Logger.LogError("Error", e);
+        }
+    }
+
+
+    private async Task<(string? Error, uint256? Secret, uint160? SecretHash)> GenerateSecretHash(WalletAccount walletAccount, string sessionId)
     {
         Guard.NotNull(_walletAccounts, nameof(_walletAccounts));
 
         try
         {
-            var res = await WalletService.SignMessageAnyAccount(sessionId);
-            var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
-
+            var res = await WalletService.GetSwapSecret(walletAccount.Pubkey, walletAccount.WalletId, walletAccount.AccountId, sessionId);
             Logger.LogInformation(res);
 
-            var sharedSecret = SwapsConfiguration.GenerateSecret(data.signature, sessionId);
+            var data = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageSecret>>(res);
+
+            if (data?.response?.secret == null)
+            {
+                error = $"Failed to generate the secret";
+                return (error, null, null);
+            }
+
+            var sharedSecret = new uint256(data.response.secret);//  SwapsConfiguration.GenerateSecret(data.signature, sessionId);
             var sharedSecretHash = Hashes.Hash160(sharedSecret.ToBytes());
-
-
-            if (!NetworkList.Contains(data.network))
-            {
-                error = $"The network {data.network} is not supported";
-                return (error, null, null, null);
-            }
-
-            var key = PubKey.RecoverFromMessage(data.content, data.signature);
-            if (!key.VerifyMessage(data.content, data.signature))
-            {
-                error = $"Failed to verify the signature";
-                return (error, null, null, null);
-            }
-
-            if (!_walletAccounts.Accounts.TryGetValue(data.network, out WalletAccount account))
-            {
-                WalletAccount newAccount = new WalletAccount
-                    {
-                        Pubkey = key.ToHex(),
-                        Address = data.key,
-                        CoinSymbol = data.network,
-                        WalletId = data.walletId,
-                        AccountId = data.accountId
-                    };
-
-                _walletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
-
-                account = newAccount;
-            }
-
-            // update balance
-            //var resBalance = await WalletService.GetAccountBalance(account.Address, account.WalletId, account.AccountId);
-            //var dataBalance = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageBalance>>(resBalance);
-
-            //account.Balance = dataBalance.response.balance;
-
-            storage.Set<WalletAccounts?>(_walletAccounts);
-
-            return (null, account, sharedSecret, sharedSecretHash);
+            
+            return (null, sharedSecret, sharedSecretHash);
         }
         catch (NoBlockcoreWalletException nbwe)
         {
             error = "Not wallet found please install the wallet at blockcore.net";
-            return (error, null, null, null);
+            return (error, null, null);
         }
         catch (Exception e)
         {
@@ -313,7 +355,6 @@ else
             Console.WriteLine(e);
         }
 
-        return (error, null, null, null);
+        return (error, null, null);
     }
-
 }
