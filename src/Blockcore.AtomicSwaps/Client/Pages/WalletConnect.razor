@@ -11,7 +11,7 @@
 @inject Storage storage;
 @inject SwapsConfiguration SwapsConfiguration;
 @inject ILogger<WalletData> Logger;
-@inject IBlockcoreWalletService WalletService
+@inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService
 
 <PageTitle>Wallet and balances</PageTitle>
@@ -74,7 +74,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        hasWallet = await WalletService.HasBlockcoreWallet();
+        hasWallet = await WalletConnector.HasBlockcoreWallet();
         _networkList = SwapsConfiguration.Networks.Keys.ToList();
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
     }
@@ -83,7 +83,7 @@ else
     {
         try
         {
-            var res = await WalletService.GetWallet();
+            var res = await WalletConnector.GetWallet();
             Logger.LogInformation(res);
 
             var walletApiMessage = JsonSerializer.Deserialize<WalletApiMessage?>(res);
@@ -118,7 +118,7 @@ else
                 {
                     // based on BCIP2 and BCIP3 "m / purpose' / coin_type' / account' / swap_key' / secret"
                     // the wallet key already derives ""m / purpose'" so we derive eh account key next
-                    var keysRes = await WalletService.GetSwapKey(walletApiMessage.key, walletApiMessage.content.wallet.id, walletAccount.id, false);
+                    var keysRes = await WalletConnector.GetSwapKey(walletApiMessage.key, walletApiMessage.content.wallet.id, walletAccount.id, false);
                     var keys = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageKeys>>(keysRes);
 
                     WalletAccount newAccount = new WalletAccount

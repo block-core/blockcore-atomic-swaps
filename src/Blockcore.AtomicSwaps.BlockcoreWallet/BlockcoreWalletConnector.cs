@@ -15,14 +15,14 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 	// This class can be registered as scoped DI service and then injected into Blazor
 	// components for use.
 
-	public class BlockcoreWalletService : IAsyncDisposable, IBlockcoreWalletService
+	public class BlockcoreWalletConnector : IAsyncDisposable, IBlockcoreWalletConnector
 	{
 		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
 
 		//public static event Func<Task>? ConnectEvent;
 		//public static event Func<Task>? DisconnectEvent;
 
-		public BlockcoreWalletService(IJSRuntime jsRuntime)
+		public BlockcoreWalletConnector(IJSRuntime jsRuntime)
 		{
 			moduleTask = new(() => LoadScripts(jsRuntime).AsTask());
 		}

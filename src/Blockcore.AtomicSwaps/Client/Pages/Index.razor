@@ -12,7 +12,7 @@
 @inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
 @inject ILogger<Index> Logger;
-@inject IBlockcoreWalletService WalletService
+@inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService
 
 <PageTitle>Blockcore Atomic Swaps</PageTitle>
@@ -106,7 +106,7 @@
 	{
 		NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
-	    if (await WalletService.HasBlockcoreWallet() == false)
+	    if (await WalletConnector.HasBlockcoreWallet() == false)
 	    {
 	        hasWallet = false;
 	        return;

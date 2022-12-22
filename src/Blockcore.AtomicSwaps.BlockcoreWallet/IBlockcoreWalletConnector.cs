@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Blockcore.AtomicSwaps.BlockcoreWallet
 {
-	public interface IBlockcoreWalletService
+	public interface IBlockcoreWalletConnector
 	{
 
 		ValueTask ConnectBlockcoreWallet();

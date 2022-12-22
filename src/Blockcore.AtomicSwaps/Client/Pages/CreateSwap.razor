@@ -13,7 +13,7 @@
 @inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
 @inject ILogger<CreateSwap> Logger;
-@inject IBlockcoreWalletService WalletService
+@inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService
 
 <PageTitle>Create Swap</PageTitle>
@@ -132,7 +132,7 @@ else
 
 	protected override async Task OnInitializedAsync()
 	{
-	    hasWallet = await WalletService.HasBlockcoreWallet();
+	    hasWallet = await WalletConnector.HasBlockcoreWallet();
         _networkList = SwapsConfiguration.Networks.Keys.ToList();
 	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
 	}
@@ -256,7 +256,7 @@ else
     {
         try
         {
-            var res = await WalletService.GetWallet();
+            var res = await WalletConnector.GetWallet();
             Logger.LogInformation(res);
 
             var walletApiMessage = JsonSerializer.Deserialize<WalletApiMessage?>(res);
@@ -291,7 +291,7 @@ else
                 {
                     // based on BCIP2 and BCIP3 "m / purpose' / coin_type' / account' / swap_key' / secret"
                     // the wallet key already derives ""m / purpose'" so we derive eh account key next
-                    var keysRes = await WalletService.GetSwapKey(walletApiMessage.key, walletApiMessage.content.wallet.id, walletAccount.id, false);
+                    var keysRes = await WalletConnector.GetSwapKey(walletApiMessage.key, walletApiMessage.content.wallet.id, walletAccount.id, false);
                     var keys = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageKeys>>(keysRes);
 
                     WalletAccount newAccount = new WalletAccount
@@ -328,7 +328,7 @@ else
 
         try
         {
-            var res = await WalletService.GetSwapSecret(walletAccount.Pubkey, walletAccount.WalletId, walletAccount.AccountId, sessionId);
+            var res = await WalletConnector.GetSwapSecret(walletAccount.Pubkey, walletAccount.WalletId, walletAccount.AccountId, sessionId);
             Logger.LogInformation(res);
 
             var data = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageSecret>>(res);

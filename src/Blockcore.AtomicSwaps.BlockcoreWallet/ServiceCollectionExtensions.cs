@@ -7,7 +7,7 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
     {
         public static void AddBlockcoreWallet(this IServiceCollection services)
         {
-            services.AddScoped<IBlockcoreWalletService>(sp => new BlockcoreWalletService(sp.GetRequiredService<IJSRuntime>()));
+            services.AddScoped<IBlockcoreWalletConnector>(sp => new BlockcoreWalletConnector(sp.GetRequiredService<IJSRuntime>()));
         }
     }
 }

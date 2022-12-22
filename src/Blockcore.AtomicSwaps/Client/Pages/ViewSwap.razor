@@ -4,7 +4,6 @@
 @using Blockcore.Consensus.ScriptInfo
 @using Blockcore.Features.Wallet.Helpers
 @using NBitcoin
-@using System.Net
 @using System.Text.Json
 @using Blockcore.AtomicSwaps.BlockcoreWallet
 @using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions
@@ -16,7 +15,7 @@
 @inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
 @inject ILogger<ViewSwap> Logger;
-@inject IBlockcoreWalletService WalletService
+@inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService;
 
 <PageTitle>View Swaps</PageTitle>
@@ -72,7 +71,21 @@
 
     @if (swap.CoinSeller.SenderPubkey != mypubkey && swap.CoinBuyer.SenderPubkey == null)
     {
-        <button class="btn btn-success" @onclick="BuyerTakeSwap">Claim This Swap</button>
+        if (hasWallet)
+        {
+            if (_walletAccounts.Connected)
+            {
+                <button class="btn btn-success" @onclick="BuyerTakeSwap">Claim This Swap</button>
+            }
+            else
+            {
+                <p><a href="/walletconnect">Connect a wallet to participate in this swap </a></p>
+            }
+        }
+        else
+        {
+            <p>Not wallet found please install the wallet at blockcore.net to participate in this swap</p>
+        }
     }
 
     <hr />
@@ -254,23 +267,15 @@
     int SellerRecoveryTransactionConfirmations;
     int BuyerRecoveryTransactionConfirmations;
    
-    WalletAccounts? _walletAccounts;
+    WalletAccounts _walletAccounts = new();
 
     private bool hasWallet;
     List<string> NetworkList;
 
     protected override async Task OnInitializedAsync()
     {
-        if (await WalletService.HasBlockcoreWallet() == false)
-        {
-            hasWallet = false;
-            return;
-        }
-
-        hasWallet = true;
-
+        hasWallet = await WalletConnector.HasBlockcoreWallet();
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
-
         NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
         string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
@@ -287,22 +292,12 @@
             WriteIndented = true
         });
 
-        foreach (var accountValue in _walletAccounts.Accounts.Values)
-        {
-            if (accountValue.Pubkey == swap.CoinSeller.SenderPubkey)
-            {
-                mypubkey = accountValue.Pubkey;
-                break;
-                
-            }
+        if (swap?.CoinSeller?.SenderPubkey != null && _walletAccounts.HasAccountKey(swap.CoinSeller.SenderPubkey))
+            mypubkey = swap.CoinSeller.SenderPubkey;
 
-            if (accountValue.Pubkey == swap.CoinBuyer.SenderPubkey)
-            {
-                mypubkey = accountValue.Pubkey;
-                break;
-            }
-        }
-
+        if (swap?.CoinBuyer?.SenderPubkey != null && _walletAccounts.HasAccountKey(swap.CoinBuyer.SenderPubkey))
+            mypubkey = swap.CoinBuyer.SenderPubkey;
+            
         await this.RefreshConfirmations();
     }
 
@@ -381,7 +376,7 @@
                 return (null, accountFound);
             }
 
-            var res = await WalletService.SignMessageAnyAccount(sessionId);
+            var res = await WalletConnector.SignMessageAnyAccount(sessionId);
             var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
 
             Logger.LogInformation(res);
@@ -416,7 +411,7 @@
             }
 
             // update balance
-            //var resBalance = await WalletService.GetAccountBalance(account.Address, account.WalletId, account.AccountId);
+            //var resBalance = await WalletConnector.GetAccountBalance(account.Address, account.WalletId, account.AccountId);
             //var dataBalance = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageBalance>>(resBalance);
 
             //account.Balance = dataBalance.ContentData.balance;
@@ -591,7 +586,7 @@
 
         Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
 
-        var res = await WalletService.SignMessageAnyAccount(swap.SwapSessionId);
+        var res = await WalletConnector.SignMessageAnyAccount(swap.SwapSessionId);
         var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
 
         var sharedSecret = SwapsConfiguration.GenerateSecret(data.signature, swap.SwapSessionId);

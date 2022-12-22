@@ -13,7 +13,7 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		private bool disposedValue;
 
 		[Inject]
-		public IBlockcoreWalletService blockcoreWalletService { get; set; } = default!;
+		public IBlockcoreWalletConnector BlockcoreWalletConnector { get; set; } = default!;
 		public bool HasBlockcoreWallet { get; set; }
 		string[] arr = new string[] { };
 
@@ -26,36 +26,36 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 
 		protected override async Task OnInitializedAsync()
 		{
-			HasBlockcoreWallet = await blockcoreWalletService.HasBlockcoreWallet();
+			HasBlockcoreWallet = await BlockcoreWalletConnector.HasBlockcoreWallet();
 		}
 
 		public async Task SignMessageAnyAccount(string value)
 		{
-			var result = await blockcoreWalletService.SignMessageAnyAccount(value);
+			var result = await BlockcoreWalletConnector.SignMessageAnyAccount(value);
 			SignedMessageAnyAccount = $"Signed: {result}";
 		}
 
 		public async Task SignMessageAnyAccountJson(string value)
 		{
-			var result = await blockcoreWalletService.SignMessageAnyAccountJson(value);
+			var result = await BlockcoreWalletConnector.SignMessageAnyAccountJson(value);
 			SignedMessageAnyAccountJson = $"Signed: {result}";
 		}
 
 		public async Task PaymentRequest(string network, string amount)
 		{
-			var result = await blockcoreWalletService.PaymentRequest(network, amount);
+			var result = await BlockcoreWalletConnector.PaymentRequest(network, amount);
 			PaymentRequestResult = $"{result}";
 		}
 
 		public async Task DIDSupportedMethods()
 		{
-			var result = await blockcoreWalletService.DIDSupportedMethods();
+			var result = await BlockcoreWalletConnector.DIDSupportedMethods();
 			DIDSupportedMethodsResult = $"{result}";
 		}
 
 		public async Task DIDRequest(string[] methods)
 		{
-			var result = await blockcoreWalletService.DIDRequest(methods);
+			var result = await BlockcoreWalletConnector.DIDRequest(methods);
 			DIDRequestResult = $"{result}";
 		}
 
@@ -63,7 +63,7 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		{
 			try
 			{
-				var result = await blockcoreWalletService.SignMessage(message);
+				var result = await BlockcoreWalletConnector.SignMessage(message);
 				SignedMessage = $"Signed: {result}";
 			}
 			catch (UserDeniedException)

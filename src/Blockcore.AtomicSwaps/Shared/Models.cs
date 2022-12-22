@@ -235,7 +235,7 @@ public class WalletApiMessage
 
     public class History
     {
-        public int balance { get; set; }
+        public long balance { get; set; }
         public List<HistoryItem> history { get; set; }
         public int unconfirmed { get; set; }
         public List<Unspent> unspent { get; set; }
@@ -245,7 +245,7 @@ public class WalletApiMessage
     {
         public int blockIndex { get; set; }
         public string calculatedAddress { get; set; }
-        public int calculatedValue { get; set; }
+        public long calculatedValue { get; set; }
         public string entryType { get; set; }
         public int fee { get; set; }
         public bool finalized { get; set; }
@@ -314,7 +314,7 @@ public class WalletApiMessage
     public class Unspent
     {
         public string address { get; set; }
-        public int balance { get; set; }
+        public long balance { get; set; }
         public int index { get; set; }
         public string transactionHash { get; set; }
         public bool unconfirmed { get; set; }
