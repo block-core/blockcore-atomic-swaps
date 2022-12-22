@@ -133,6 +133,12 @@ public class TransactionData
     public List<Output> outputs { get; set; }
 }
 
+public class WalletConnectInput
+{
+    public WalletAccounts WalletAccounts { get; set; }
+    public WalletApiMessage? WalletApiMessage { get; set; }
+}
+
 public class WalletAccounts
 {
     public Dictionary<string, WalletAccount> Accounts { get; set; } = new();

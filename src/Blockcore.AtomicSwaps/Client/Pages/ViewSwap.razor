@@ -17,6 +17,7 @@
 @inject ILogger<ViewSwap> Logger;
 @inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService;
+@inject IWalletService WalletService
 
 <PageTitle>View Swaps</PageTitle>
 
@@ -336,14 +337,7 @@
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
         Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
-
-        var (errorOut, account) = await ConnectWallet(network.CoinTicker, swap.SwapSessionId);
-
-        if (!string.IsNullOrEmpty(error))
-        {
-            error = errorOut;
-            return;
-        }
+        var account = _walletAccounts.GetAccount(network.CoinTicker);
 
         mypubkey = account.Pubkey;
 
@@ -364,77 +358,7 @@
         myswaps.Add(swap);
         storage.SetSwaps(myswaps);
     }
-
-    private async Task<(string? Error, WalletAccount? Account)> ConnectWallet(string coinSymbol, string sessionId)
-    {
-        Guard.NotNull(_walletAccounts, nameof(_walletAccounts));
-
-        try
-        {
-            if (_walletAccounts.Accounts.TryGetValue(coinSymbol, out WalletAccount accountFound))
-            {
-                return (null, accountFound);
-            }
-
-            var res = await WalletConnector.SignMessageAnyAccount(sessionId);
-            var data = JsonSerializer.Deserialize<WalletApiMessage<string>>(res);
-
-            Logger.LogInformation(res);
-
-            if (coinSymbol != data.network)
-            {
-                error = $"Wrong network selected {data.network}";
-                return (error, null);
-            }
-
-            var key = PubKey.RecoverFromMessage(data.content, data.signature);
-            if (!key.VerifyMessage(data.content, data.signature))
-            {
-                error = $"Failed to verify the signature";
-                return (error, null);
-            }
-
-            if (!_walletAccounts.Accounts.TryGetValue(data.network, out WalletAccount account))
-            {
-                WalletAccount newAccount = new WalletAccount
-                    {
-                        Pubkey = key.ToHex(),
-                        Address = data.key,
-                        CoinSymbol = data.network,
-                        WalletId = data.walletId,
-                        AccountId = data.accountId
-                    };
-
-                _walletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
-
-                account = newAccount;
-            }
-
-            // update balance
-            //var resBalance = await WalletConnector.GetAccountBalance(account.Address, account.WalletId, account.AccountId);
-            //var dataBalance = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageBalance>>(resBalance);
-
-            //account.Balance = dataBalance.ContentData.balance;
-
-            storage.Set<WalletAccounts?>(_walletAccounts);
-
-            return (null, account);
-        }
-        catch (NoBlockcoreWalletException nbwe)
-        {
-            error = "Not wallet found please install the wallet at blockcore.net";
-            return (error, null);
-        }
-        catch (Exception e)
-        {
-            error = e.Message;
-            Console.WriteLine(e);
-        }
-
-        return (error, null);
-    }
-
-
+    
     private async Task BuildSellerSwap()
     {
         if (swap.CoinSeller.SenderPubkey != mypubkey)
@@ -454,7 +378,7 @@
         if (swap.CoinBuyer.SenderPubkey != mypubkey)
             throw new Exception("buyer pubkey was changed");
 
-        BuildSideSwap(swap.CoinBuyer, swap.CoinSeller.RecoveryLockTime.Value.AddHours(-24));
+        await BuildSideSwap(swap.CoinBuyer, swap.CoinSeller.RecoveryLockTime.Value.AddHours(-24));
 
         await PostSwap(swap);
 
@@ -463,7 +387,7 @@
         await this.BlockchainApiService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.SwapTransactionHex);
     }
 
-    private void BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
+    private async Task BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
@@ -472,8 +396,13 @@
 
         swapSessionCoin.RecoveryLockTime = recoveryLockTime;
 
-        AccountInfo? accountInfo = storage.GetAccountInfo(network.CoinTicker);
-        Guard.NotNull(accountInfo, nameof(accountInfo));
+        // refresh the account balances
+        var walletConnectInput = new WalletConnectInput { WalletAccounts = _walletAccounts };
+        var errorRes = await WalletService.ConnectWallet(walletConnectInput);
+        errorRes.ThorwIfError();
+
+        var account = _walletAccounts.GetAccount(network.CoinTicker);
+        var walletAccount = walletConnectInput.WalletApiMessage.content.accounts.First(a => a.networkType == network.CoinTicker);
 
         var fee = network.MinRelayTxFee * 3;
         if (!SwapsConfiguration.FindInputs(network, storage, swapSessionCoin.Amount, fee, out List<UtxoData> balancesList))
@@ -486,8 +415,11 @@
         
         PubKey pubKey = SwapsConfiguration.GetNextAvailableAddress(network, storage);
 
-        RedeemType redeemType = HdOperations.GetPurpose(accountInfo.Path) == 44 ? RedeemType.P2SH :
-            HdOperations.GetPurpose(accountInfo.Path) == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
+        //RedeemType redeemType = HdOperations.GetPurpose(accountInfo.Path) == 44 ? RedeemType.P2SH :
+        //    HdOperations.GetPurpose(accountInfo.Path) == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
+
+        RedeemType redeemType = walletAccount.purpose == 44 ? RedeemType.P2SH :
+            walletAccount.purpose == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
 
         var change = redeemType == RedeemType.P2SH ? 
             pubKey.GetAddress(network).ScriptPubKey : 

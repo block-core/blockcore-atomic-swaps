@@ -7,6 +7,8 @@ namespace Blockcore.AtomicSwaps.Client.Services
     /// </summary>
     public interface IWalletService
     {
+        Task<string> ConnectWallet(WalletConnectInput walletConnectInput);
+
         Task<string> ConnectWallet(WalletAccounts walletAccounts);
 
     }

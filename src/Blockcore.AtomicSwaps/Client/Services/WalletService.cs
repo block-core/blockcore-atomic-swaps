@@ -7,7 +7,6 @@ using Blockcore.AtomicSwaps.BlockcoreWallet;
 
 namespace Blockcore.AtomicSwaps.Client.Services
 {
-
     public class WalletService : IWalletService
     {
         private readonly ILogger<BlockchainApiService> _logger;
@@ -23,35 +22,40 @@ namespace Blockcore.AtomicSwaps.Client.Services
             _walletConnector = walletConnector;
         }
 
-        public async Task<string> ConnectWallet(WalletAccounts walletAccounts)
+        public Task<string> ConnectWallet(WalletAccounts walletAccounts)
+        {
+            return ConnectWallet(new WalletConnectInput { WalletAccounts = walletAccounts });
+        }
+
+        public async Task<string> ConnectWallet(WalletConnectInput walletConnectInput)
         {
             try
             {
                 var res = await _walletConnector.GetWallet();
                 _logger.LogInformation(res);
 
-                var walletApiMessage = JsonSerializer.Deserialize<WalletApiMessage?>(res);
+                walletConnectInput.WalletApiMessage = JsonSerializer.Deserialize<WalletApiMessage?>(res);
 
-                if (walletApiMessage == null)
+                if (walletConnectInput.WalletApiMessage == null)
                 {
                     return $"Failed to read wallet data";
                 }
 
-                if (walletAccounts.Connected)
+                if (walletConnectInput.WalletAccounts.Connected)
                 {
-                    if (walletAccounts.WalletPubKey != walletApiMessage.key)
+                    if (walletConnectInput.WalletAccounts.WalletPubKey != walletConnectInput.WalletApiMessage.key)
                     {
-                        return $"Incorrect wallet, expected {walletAccounts.WalletPubKey} but got {walletApiMessage.key}";
+                        return $"Incorrect wallet, expected {walletConnectInput.WalletAccounts.WalletPubKey} but got {walletConnectInput.WalletApiMessage.key}";
                     }
                 }
                 else
                 {
-                    walletAccounts.WalletPubKey = walletApiMessage.key;
+                    walletConnectInput.WalletAccounts.WalletPubKey = walletConnectInput.WalletApiMessage.key;
                 }
 
-                foreach (var walletAccount in walletApiMessage.content.accounts)
+                foreach (var walletAccount in walletConnectInput.WalletApiMessage.content.accounts)
                 {
-                    if (walletAccounts.Accounts.TryGetValue(walletAccount.networkType, out WalletAccount account))
+                    if (walletConnectInput.WalletAccounts.Accounts.TryGetValue(walletAccount.networkType, out WalletAccount account))
                     {
                         // refresh the balance
                         account.Balance = walletAccount.history.balance;
@@ -60,23 +64,23 @@ namespace Blockcore.AtomicSwaps.Client.Services
                     {
                         // based on BCIP2 and BCIP3 "m / purpose' / coin_type' / account' / swap_key' / secret"
                         // the wallet key already derives ""m / purpose'" so we derive eh account key next
-                        var keysRes = await _walletConnector.GetSwapKey(walletApiMessage.key, walletApiMessage.content.wallet.id, walletAccount.id, false);
+                        var keysRes = await _walletConnector.GetSwapKey(walletConnectInput.WalletApiMessage.key, walletConnectInput.WalletApiMessage.content.wallet.id, walletAccount.id, false);
                         var keys = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageKeys>>(keysRes);
 
                         WalletAccount newAccount = new WalletAccount
                         {
                             Pubkey = keys.response.publicKey,
                             CoinSymbol = walletAccount.networkType,
-                            WalletId = walletApiMessage.content.wallet.id,
+                            WalletId = walletConnectInput.WalletApiMessage.content.wallet.id,
                             AccountId = walletAccount.id,
                             Balance = walletAccount.history.balance,
                         };
 
-                        walletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
+                        walletConnectInput.WalletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
                     }
                 }
 
-                _storage.Set<WalletAccounts>(walletAccounts);
+                _storage.Set<WalletAccounts>(walletConnectInput.WalletAccounts);
             }
             catch (NoBlockcoreWalletException nbwe)
             {

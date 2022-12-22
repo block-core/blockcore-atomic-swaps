@@ -41,15 +41,15 @@ namespace Blockcore.AtomicSwaps.Client
             return _storage.GetItemAsString("privkey");
         }
 
-        public AccountInfo? GetAccountInfo(string network)
-        {
-            return _storage.GetItem<AccountInfo>($"utxo:{network}");
-        }
+        //public AccountInfo? GetAccountInfo(string network)
+        //{
+        //    return _storage.GetItem<AccountInfo>($"utxo:{network}");
+        //}
 
-        public void SetAccountInfo(string network, AccountInfo items)
-        {
-            _storage.SetItem($"utxo:{network}", items);
-        }
+        //public void SetAccountInfo(string network, AccountInfo items)
+        //{
+        //    _storage.SetItem($"utxo:{network}", items);
+        //}
 
         public void SetSwaps(List<SwapSession> swapSessions)
         {
