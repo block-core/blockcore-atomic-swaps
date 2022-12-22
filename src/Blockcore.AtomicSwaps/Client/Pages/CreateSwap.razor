@@ -15,6 +15,7 @@
 @inject ILogger<CreateSwap> Logger;
 @inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService
+@inject IWalletService WalletService
 
 <PageTitle>Create Swap</PageTitle>
 
@@ -152,8 +153,13 @@ else
 
 		Networks.Network network = SwapsConfiguration.Networks[SwapFrom];
 
-	    await ConnectWallet();
+	    var errorRes = await WalletService.ConnectWallet(_walletAccounts);
 
+	    if (!string.IsNullOrEmpty(errorRes))
+	    {
+	        error = errorRes;
+            return;
+	    }
         
         if (!_walletAccounts.Accounts.ContainsKey(SwapFrom))
 	    {
@@ -251,76 +257,11 @@ else
 	{
 		NavigationManager.NavigateTo($"viewswap/{session}");
 	}
-
+    
     private async Task ConnectWallet()
     {
-        try
-        {
-            var res = await WalletConnector.GetWallet();
-            Logger.LogInformation(res);
-
-            var walletApiMessage = JsonSerializer.Deserialize<WalletApiMessage?>(res);
-
-            if (walletApiMessage == null)
-            {
-                error = $"Failed to read wallet data";
-                return;
-            }
-
-            if (_walletAccounts.Connected)
-            {
-                if (_walletAccounts.WalletPubKey != walletApiMessage.key)
-                {
-                    error = $"Incorrect wallet, expected {_walletAccounts.WalletPubKey} but got {walletApiMessage.key}";
-                    return;
-                }
-            }
-            else
-            {
-                _walletAccounts.WalletPubKey = walletApiMessage.key;
-            }
-
-            foreach (var walletAccount in walletApiMessage.content.accounts)
-            {
-                if (_walletAccounts.Accounts.TryGetValue(walletAccount.networkType, out WalletAccount account))
-                {
-                    // refresh the balance
-                    account.Balance = walletAccount.history.balance;
-                }
-                else
-                {
-                    // based on BCIP2 and BCIP3 "m / purpose' / coin_type' / account' / swap_key' / secret"
-                    // the wallet key already derives ""m / purpose'" so we derive eh account key next
-                    var keysRes = await WalletConnector.GetSwapKey(walletApiMessage.key, walletApiMessage.content.wallet.id, walletAccount.id, false);
-                    var keys = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageKeys>>(keysRes);
-
-                    WalletAccount newAccount = new WalletAccount
-                        {
-                            Pubkey = keys.response.publicKey,
-                            CoinSymbol = walletAccount.networkType,
-                            WalletId = walletApiMessage.content.wallet.id,
-                            AccountId = walletAccount.id,
-                            Balance = walletAccount.history.balance,
-                        };
-
-                    _walletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
-                }
-            }
-
-            storage.Set<WalletAccounts>(_walletAccounts);
-        }
-        catch (NoBlockcoreWalletException nbwe)
-        {
-            error = "Not wallet found please install the wallet at blockcore.net";
-            return;
-        }
-        catch (Exception e)
-        {
-            error = e.Message;
-            Logger.LogError("Error", e);
-        }
+        error = await WalletService.ConnectWallet(_walletAccounts);
     }
-
 
     private async Task<(string? Error, uint256? Secret, uint160? SecretHash)> GenerateSecretHash(WalletAccount walletAccount, string sessionId)
     {
