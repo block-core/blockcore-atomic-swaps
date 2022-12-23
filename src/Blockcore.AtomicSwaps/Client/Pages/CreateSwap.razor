@@ -272,7 +272,7 @@ else
             var res = await WalletConnector.GetSwapSecret(walletAccount.Pubkey, walletAccount.WalletId, walletAccount.AccountId, sessionId);
             Logger.LogInformation(res);
 
-            var data = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageSecret>>(res);
+            var data = JsonSerializer.Deserialize<WalletResultMessage<WalletApiMessageSecret>>(res);
 
             if (data?.response?.secret == null)
             {

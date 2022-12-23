@@ -27,14 +27,25 @@ namespace Blockcore.AtomicSwaps.Client.Services
             return ConnectWallet(new WalletConnectInput { WalletAccounts = walletAccounts });
         }
 
+        public async Task<string> SendCoins(BlockcoreWalletSendFunds blockcoreWalletSendFunds)
+        {
+            try
+            {
+                var res = await _walletConnector.SendCoins(blockcoreWalletSendFunds);
+                return res;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+                throw;
+            }
+        }
+
         public async Task<string> ConnectWallet(WalletConnectInput walletConnectInput)
         {
             try
             {
-                var res = await _walletConnector.GetWallet();
-                _logger.LogInformation(res);
-
-                walletConnectInput.WalletApiMessage = JsonSerializer.Deserialize<WalletApiMessage?>(res);
+                walletConnectInput.WalletApiMessage = await _walletConnector.GetWallet();
 
                 if (walletConnectInput.WalletApiMessage == null)
                 {
@@ -53,7 +64,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
                     walletConnectInput.WalletAccounts.WalletPubKey = walletConnectInput.WalletApiMessage.key;
                 }
 
-                foreach (var walletAccount in walletConnectInput.WalletApiMessage.content.accounts)
+                foreach (var walletAccount in walletConnectInput.WalletApiMessage.response.accounts)
                 {
                     if (walletConnectInput.WalletAccounts.Accounts.TryGetValue(walletAccount.networkType, out WalletAccount account))
                     {
@@ -64,16 +75,17 @@ namespace Blockcore.AtomicSwaps.Client.Services
                     {
                         // based on BCIP2 and BCIP3 "m / purpose' / coin_type' / account' / swap_key' / secret"
                         // the wallet key already derives ""m / purpose'" so we derive eh account key next
-                        var keysRes = await _walletConnector.GetSwapKey(walletConnectInput.WalletApiMessage.key, walletConnectInput.WalletApiMessage.content.wallet.id, walletAccount.id, false);
-                        var keys = JsonSerializer.Deserialize<WalletApiMessage<WalletApiMessageKeys>>(keysRes);
+                        var keysRes = await _walletConnector.GetSwapKey(walletConnectInput.WalletApiMessage.key, walletConnectInput.WalletApiMessage.response.wallet.id, walletAccount.id, false);
+                        var keys = JsonSerializer.Deserialize<WalletResultMessage<WalletApiMessageKeys>>(keysRes);
 
                         WalletAccount newAccount = new WalletAccount
                         {
                             Pubkey = keys.response.publicKey,
                             CoinSymbol = walletAccount.networkType,
-                            WalletId = walletConnectInput.WalletApiMessage.content.wallet.id,
+                            WalletId = walletConnectInput.WalletApiMessage.response.wallet.id,
                             AccountId = walletAccount.id,
                             Balance = walletAccount.history.balance,
+                            AccountPurpose = walletAccount.purpose
                         };
 
                         walletConnectInput.WalletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);

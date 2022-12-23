@@ -74,12 +74,29 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			}
 		}
 
-        public async ValueTask<string> GetWallet(string? key = null)
+        public async ValueTask<string> SendCoins(BlockcoreWalletSendFunds data)
+        {
+            var input = JsonSerializer.Serialize(data);
+            var module = await moduleTask.Value;
+            try
+            {
+                return await module.InvokeAsync<string>("sendCoins", input);
+            }
+            catch (Exception ex)
+            {
+                HandleExceptions(ex);
+                throw;
+            }
+        }
+
+        public async ValueTask<BlockcoreWalletMessageOut?> GetWallet(string? key = null)
         {
             var module = await moduleTask.Value;
             try
             {
-                return await module.InvokeAsync<string>("getWallet", key);
+                var result = await module.InvokeAsync<string>("getWallet", key);
+                return JsonSerializer.Deserialize<BlockcoreWalletMessageOut?>(result);
+
             }
             catch (Exception ex)
             {

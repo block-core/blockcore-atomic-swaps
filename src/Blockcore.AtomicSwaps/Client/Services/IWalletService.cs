@@ -1,4 +1,5 @@
-﻿using Blockcore.AtomicSwaps.Server.Controllers;
+﻿using Blockcore.AtomicSwaps.BlockcoreWallet;
+using Blockcore.AtomicSwaps.Server.Controllers;
 
 namespace Blockcore.AtomicSwaps.Client.Services
 {
@@ -11,5 +12,12 @@ namespace Blockcore.AtomicSwaps.Client.Services
 
         Task<string> ConnectWallet(WalletAccounts walletAccounts);
 
+        Task<string> SendCoins(BlockcoreWalletSendFunds blockcoreWalletSendFunds);
+    }
+
+    public class WalletConnectInput
+    {
+        public WalletAccounts WalletAccounts { get; set; }
+        public BlockcoreWalletMessageOut? WalletApiMessage { get; set; }
     }
 }

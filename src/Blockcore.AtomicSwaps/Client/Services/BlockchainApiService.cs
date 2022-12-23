@@ -31,7 +31,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
                 _logger.LogError(hre, $"Failed read trx {network} {trxId}");
 
                 // try to rebroadcast
-                if (trxHex != null)
+                if (!string.IsNullOrEmpty(trxHex))
                 {
                     await Broadcast(network, trxHex);
                 }
@@ -42,10 +42,13 @@ namespace Blockcore.AtomicSwaps.Client.Services
 
         public async Task Broadcast(string network, string? trxHex)
         {
-            var indexer = _swapsConfiguration.Indexers.First(f => f.Symbol == network);
-            var url = $"/command/send";
-            var result = await _httpClient.PostAsync(indexer.Url + url, new StringContent(trxHex));
-            result.EnsureSuccessStatusCode();
+            if (!string.IsNullOrEmpty(trxHex))
+            {
+                var indexer = _swapsConfiguration.Indexers.First(f => f.Symbol == network);
+                var url = $"/command/send";
+                var result = await _httpClient.PostAsync(indexer.Url + url, new StringContent(trxHex));
+                result.EnsureSuccessStatusCode();
+            }
         }
     }
 }

@@ -11,6 +11,23 @@ namespace Blockcore.AtomicSwaps.Shared
 {
     public class SwapBuilder
     {
+        public static (Script RedeemScript, string SwapAddress) CreateSwapAddress(
+            Network network,
+            uint160 sharedSecretHash,
+            PubKey senderPublicKey,
+            PubKey receiverPublicKey,
+            DateTime lockTime,
+            RedeemType redeemType)
+        {
+            var locktime = Utils.DateTimeToUnixTime(lockTime);
+
+            Script swapScript = SwapScripts.GetAtomicSwapHtlcScript(locktime, senderPublicKey, receiverPublicKey, sharedSecretHash);
+
+            IDestination swapScriptHash = redeemType == RedeemType.P2SH ? swapScript.Hash : swapScript.WitHash;
+            var swapAddress = swapScriptHash.ScriptPubKey.GetDestinationAddress(network).ToString();
+            return (swapScript, swapAddress);
+        }
+
         public static (Transaction Transaction, Script RedeemScript, string SwapAddress) CreateSwapTransaction(
             Network network, 
             uint160 sharedSecretHash, 

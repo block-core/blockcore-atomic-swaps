@@ -1,5 +1,6 @@
 ﻿using Microsoft.JSInterop;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -13,7 +14,7 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		ValueTask<bool> HasBlockcoreWallet();
 		ValueTask<bool> IsSiteConnected();
 		ValueTask<string> SignMessageAnyAccount(string value);
-        ValueTask<string> GetWallet(string? key = null);
+        ValueTask<BlockcoreWalletMessageOut?> GetWallet(string? key = null);
         ValueTask<string> GetSwapKey(string key, string walletId, string accountId, bool includePrivateKey);
         ValueTask<string> GetSwapSecret(string key, string walletId, string accountId, string message);
         ValueTask<string> SignMessageAnyAccountJson(string value);
@@ -21,6 +22,6 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		ValueTask<string> DIDSupportedMethods();
 		ValueTask<string> DIDRequest(string[] methods);
 		ValueTask<string> SignMessage(string msg);
-
-	}
+        ValueTask<string> SendCoins(BlockcoreWalletSendFunds data);
+    }
 }

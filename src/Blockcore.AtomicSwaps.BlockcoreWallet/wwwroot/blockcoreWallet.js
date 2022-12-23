@@ -18,6 +18,18 @@ export async function signMessageAnyAccount(value) {
     //var verify = bitcoinMessage.verify(value, result.key, result.signature);
 }
 
+export async function sendCoins(input) {
+    const provider = globalThis.blockcore;
+
+    var data = JSON.parse(input)
+    const result = await provider.request({
+        method: 'sendtransaction',
+        params: [{ data: data }],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result);
+}
+
 export async function getWallet(key) {
     const provider = globalThis.blockcore;
 
