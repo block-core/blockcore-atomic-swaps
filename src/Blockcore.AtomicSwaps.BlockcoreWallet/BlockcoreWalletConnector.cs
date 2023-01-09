@@ -74,13 +74,14 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			}
 		}
 
-        public async ValueTask<string> SendCoins(BlockcoreWalletSendFunds data)
+        public async ValueTask<BlockcoreWalletSendFundsOut?> SendCoins(BlockcoreWalletSendFunds data)
         {
             var input = JsonSerializer.Serialize(data);
             var module = await moduleTask.Value;
             try
             {
-                return await module.InvokeAsync<string>("sendCoins", input);
+                var result = await module.InvokeAsync<string>("sendCoins", input);
+                return JsonSerializer.Deserialize<BlockcoreWalletSendFundsOut?>(result);
             }
             catch (Exception ex)
             {

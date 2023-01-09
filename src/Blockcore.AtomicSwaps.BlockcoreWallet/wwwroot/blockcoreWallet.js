@@ -23,8 +23,8 @@ export async function sendCoins(input) {
 
     var data = JSON.parse(input)
     const result = await provider.request({
-        method: 'sendtransaction',
-        params: [{ data: data }],
+        method: 'transaction.send',
+        params: [data],
     });
     console.log('Result:', result);
     return JSON.stringify(result);

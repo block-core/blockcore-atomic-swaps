@@ -22,6 +22,6 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 		ValueTask<string> DIDSupportedMethods();
 		ValueTask<string> DIDRequest(string[] methods);
 		ValueTask<string> SignMessage(string msg);
-        ValueTask<string> SendCoins(BlockcoreWalletSendFunds data);
+        ValueTask<BlockcoreWalletSendFundsOut?> SendCoins(BlockcoreWalletSendFunds data);
     }
 }

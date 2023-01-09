@@ -1,5 +1,6 @@
 ﻿using Blockcore.AtomicSwaps.BlockcoreWallet;
 using Blockcore.AtomicSwaps.Server.Controllers;
+using NBitcoin;
 
 namespace Blockcore.AtomicSwaps.Client.Services
 {
@@ -12,7 +13,8 @@ namespace Blockcore.AtomicSwaps.Client.Services
 
         Task<string> ConnectWallet(WalletAccounts walletAccounts);
 
-        Task<string> SendCoins(BlockcoreWalletSendFunds blockcoreWalletSendFunds);
+        Task<BlockcoreWalletSendFundsOut?> SendCoins(BlockcoreWalletSendFunds blockcoreWalletSendFunds);
+        Task<(string? Error, uint256? Secret, uint160? SecretHash)> GenerateSecretHash(WalletAccount walletAccount, string sessionId);
     }
 
     public class WalletConnectInput

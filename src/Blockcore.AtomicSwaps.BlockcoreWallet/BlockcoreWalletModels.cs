@@ -10,13 +10,24 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
     public class BlockcoreWalletSendFundsRecipients
     {
         public string address { get; set; } = null!;
-
         public long amount { get; set; }
+        public string hint { get; set; } = string.Empty;
     }
     public class BlockcoreWalletSendFunds
     {
-        public List<BlockcoreWalletSendFundsRecipients> recipents { get; set; } = new();
+        public List<BlockcoreWalletSendFundsRecipients> recipients { get; set; } = new();
+
+        public string data { get; set; }
+        public string feeRate { get; set; }
+        public string network { get; set; }
     }
+
+    public class BlockcoreWalletSendFundsOut
+    {
+        public string transactionId { get; set; }
+        public string transactionHex { get; set; }
+    }
+
     public class BlockcoreWalletMessageOut
     {
         public string key { get; set; }

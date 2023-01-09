@@ -364,7 +364,7 @@
         if (swap.CoinSeller.SenderPubkey != mypubkey)
             throw new Exception("seller pubkey was changed");
 
-        BuildSideSwap1(swap.CoinSeller, DateTime.UtcNow.AddHours(48));
+        await BuildSideSwap1(swap.CoinSeller, DateTime.UtcNow.AddHours(48));
 
         await PostSwap(swap);
 
@@ -413,10 +413,13 @@
 
         BlockcoreWalletSendFunds sendTo = new()
         {
-            recipents = new()
+            network = swapSessionCoin.CoinSymbol,
+            feeRate = "medium",
+            recipients = new()
             {
                 new()
                 {
+                    hint = "swap address",
                     address = swapSessionCoin.SwapAddress,
                     amount = swapSessionCoin.Amount,
                 }
@@ -425,9 +428,8 @@
 
         var trxContext = await WalletService.SendCoins(sendTo);
 
-        swapSessionCoin.SwapTransactionHash = trxContext;
-        //swapSessionCoin.SwapTransactionHex = trxContext;
-
+        swapSessionCoin.SwapTransactionHash = trxContext.transactionId;
+        swapSessionCoin.SwapTransactionHex = trxContext.transactionHex;
     }
 
     private async Task BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
@@ -448,14 +450,15 @@
         var walletAccount = walletConnectInput.WalletApiMessage.response.accounts.First(a => a.networkType == network.CoinTicker);
 
         var fee = network.MinRelayTxFee * 3;
-        if (!SwapsConfiguration.FindInputs(network, storage, swapSessionCoin.Amount, fee, out List<UtxoData> balancesList))
+        if (!SwapsConfiguration.FindInputs1(network, storage, swapSessionCoin.Amount, fee, walletConnectInput, out List<UtxoData> balancesList))
         {
             error = "not enough balance";
             return;
         }
 
-        var utxos = SwapsConfiguration.AddPrivateKeys(network, storage, balancesList);
-        
+        //var utxos = SwapsConfiguration.AddPrivateKeys(network, storage, balancesList);
+        var utxos = SwapsConfiguration.ConvertToUtxo(network, balancesList); ;
+
         PubKey pubKey = SwapsConfiguration.GetNextAvailableAddress(network, storage);
 
         //RedeemType redeemType = HdOperations.GetPurpose(accountInfo.Path) == 44 ? RedeemType.P2SH :
@@ -560,12 +563,16 @@
             throw new Exception("seller pubkey was changed");
 
         Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
+      
+        var account = _walletAccounts.GetAccount(swap.CoinSeller.CoinSymbol);
+        var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(account, swap.SwapSessionId);
+        if (!string.IsNullOrEmpty(errorOut))
+        {
+            error = errorOut;
+            return;
+        }
 
-        var res = await WalletConnector.SignMessageAnyAccount(swap.SwapSessionId);
-        var data = JsonSerializer.Deserialize<WalletResultMessage<string>>(res);
-
-        var sharedSecret = SwapsConfiguration.GenerateSecret(data.signature, swap.SwapSessionId);
-        var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
+        //var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
 
         ExchangeSwapFund(swap.CoinBuyer, sharedSecret, extendedKey.PrivateKey);
 

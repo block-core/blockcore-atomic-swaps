@@ -85,6 +85,60 @@ namespace Blockcore.AtomicSwaps.Shared
             return (signTransaction, swapScript, swapAddress);
         }
 
+        public static Transaction CreateSwapSpendUnsignedTransaction(
+            Network network,
+            Transaction swapTransaction,
+            Script sendToPublicKey,
+            FeeRate feeRate)
+        {
+            var swapSpendTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
+            IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs().Last(); // the swap is always the last output
+            TxIn swapSpentInput = swapSpendTransaction.AddInput(swapTransaction, (int)swapOutput.N);
+            TxOut swapSpendTransactionTxOut = swapSpendTransaction.AddOutput(Money.Coins(0), sendToPublicKey);
+
+            Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
+            Money send = swapOutput.TxOut.Value - fee;
+            swapSpendTransactionTxOut.Value = send;
+            
+            return swapSpendTransaction;
+        }
+
+        public static Transaction SignSwapSpendUnsignedTransaction(
+            Network network,
+            Transaction swapTransaction,
+            Transaction swapSpendUnsignedTransaction,
+            Script redeemScript,
+            uint256 sharedSecret,
+            Key receiverPrivateKey)
+        {
+            IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs().Last(); // the swap is always the last output
+            TxIn swapSpentInput = swapSpendUnsignedTransaction.Inputs.Single();
+
+            uint256 sighash = swapSpendUnsignedTransaction.GetSignatureHash(network, new Coin(swapTransaction, swapOutput.TxOut).ToScriptCoin(redeemScript));
+            TransactionSignature signature = receiverPrivateKey.Sign(sighash, SigHash.All);
+
+            swapSpentInput.ScriptSig = SwapScripts.GetAtomicSwapExchangeScriptSig(signature, sharedSecret, redeemScript);
+
+            Transaction swapSpendTransaction = swapSpendUnsignedTransaction; // assign for readability
+
+            TransactionBuilder builder = new TransactionBuilder(network);
+            builder.AddCoins(swapTransaction);
+            var verifyresult = builder.Verify(swapSpendTransaction, out TransactionPolicyError[] result);
+
+            if (result.Any())
+            {
+                StringBuilder sb = new();
+                foreach (var policyError in result)
+                {
+                    sb.AppendLine(policyError.ToString());
+                }
+
+                throw new Exception(sb.ToString());
+            }
+
+            return swapSpendTransaction;
+        }
+
         public static Transaction CreateSwapSpendTransaction(
             Network network,
             Transaction swapTransaction,
@@ -124,6 +178,65 @@ namespace Blockcore.AtomicSwaps.Shared
             }
 
             return swapSpendTransaction;
+        }
+
+        public static Transaction CreateSwapRecoveryUnsignedTransaction(
+           Network network,
+           Transaction swapTransaction,
+           Script sendToPublicKey,
+           FeeRate feeRate,
+           DateTime lockTime)
+        {
+            var recoverTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
+            IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs().Last(); // the swap is always the last output
+            TxIn recoverInput = recoverTransaction.AddInput(swapTransaction, (int)swapOutput.N);
+            TxOut recoverTransactionTxOut = recoverTransaction.AddOutput(Money.Coins(0), sendToPublicKey);
+
+            Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
+            Money send = swapOutput.TxOut.Value - fee;
+            recoverTransactionTxOut.Value = send;
+
+            var locktime = Utils.DateTimeToUnixTime(lockTime);
+            recoverTransaction.LockTime = locktime;
+            recoverInput.Sequence = new Sequence(locktime);
+
+            return recoverTransaction;
+        }
+
+        public static Transaction SignSwapRecoveryUnsignedTransaction(
+            Network network,
+            Transaction swapTransaction,
+            Transaction unsignedRecoverTransaction,
+            Script redeemScript,
+            Key senderPrivateKey)
+        {
+
+            IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs().Last(); // the swap is always the last output
+            TxIn recoverInput = unsignedRecoverTransaction.Inputs.Single();
+
+            uint256 sighash = unsignedRecoverTransaction.GetSignatureHash(network, new Coin(swapTransaction, swapOutput.TxOut).ToScriptCoin(redeemScript));
+            TransactionSignature signature = senderPrivateKey.Sign(sighash, SigHash.All);
+
+            recoverInput.ScriptSig = SwapScripts.GetAtomicSwapRecoverScriptSig(signature, redeemScript);
+
+            Transaction recoverTransaction = unsignedRecoverTransaction; // assign for readability
+
+            TransactionBuilder builder = new TransactionBuilder(network);
+            builder.AddCoins(swapTransaction);
+            var verifyresult = builder.Verify(recoverTransaction, out TransactionPolicyError[] result);
+
+            if (result.Any())
+            {
+                StringBuilder sb = new();
+                foreach (var policyError in result)
+                {
+                    sb.AppendLine(policyError.ToString());
+                }
+
+                throw new Exception(sb.ToString());
+            }
+
+            return recoverTransaction;
         }
 
         public static Transaction CreateSwapRecoveryTransaction(

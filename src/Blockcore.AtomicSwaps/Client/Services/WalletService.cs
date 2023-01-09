@@ -4,6 +4,9 @@ using Blockcore.AtomicSwaps.Server.Controllers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Blockcore.AtomicSwaps.BlockcoreWallet;
+using Blockcore.Builder;
+using Blockcore.Utilities;
+using NBitcoin;
 
 namespace Blockcore.AtomicSwaps.Client.Services
 {
@@ -27,7 +30,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
             return ConnectWallet(new WalletConnectInput { WalletAccounts = walletAccounts });
         }
 
-        public async Task<string> SendCoins(BlockcoreWalletSendFunds blockcoreWalletSendFunds)
+        public async Task<BlockcoreWalletSendFundsOut?> SendCoins(BlockcoreWalletSendFunds blockcoreWalletSendFunds)
         {
             try
             {
@@ -105,6 +108,40 @@ namespace Blockcore.AtomicSwaps.Client.Services
             }
 
             return string.Empty;
+        }
+
+        public async Task<(string? Error, uint256? Secret, uint160? SecretHash)> GenerateSecretHash(WalletAccount walletAccount, string sessionId)
+        {
+            Guard.NotNull(walletAccount, nameof(walletAccount));
+            Guard.NotEmpty(sessionId, nameof(sessionId));
+
+            try
+            {
+                var res = await _walletConnector.GetSwapSecret(walletAccount.Pubkey, walletAccount.WalletId, walletAccount.AccountId, sessionId);
+                _logger.LogInformation(res);
+
+                var data = JsonSerializer.Deserialize<WalletResultMessage<WalletApiMessageSecret>>(res);
+
+                if (data?.response?.secret == null)
+                {
+                    return ($"Failed to generate the secret", null, null);
+                }
+
+                var sharedSecret = new uint256(data.response.secret);//  SwapsConfiguration.GenerateSecret(data.signature, sessionId);
+                var sharedSecretHash = NBitcoin.Crypto.Hashes.Hash160(sharedSecret.ToBytes());
+
+                return (null, sharedSecret, sharedSecretHash);
+            }
+            catch (NoBlockcoreWalletException nbwe)
+            {
+                return ("Not wallet found please install the wallet at blockcore.net", null, null);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+                return (e.Message, null, null);
+
+            }
         }
     }
 }

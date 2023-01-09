@@ -107,7 +107,7 @@ else
 
     @if (!_walletAccounts.Connected)
     {
-        <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">"Connect Wallet"</button>
+        <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">Connect Wallet</button>
     }
     else
     {
@@ -217,7 +217,7 @@ else
 		}
 
 	    var sessionId = Guid.NewGuid().ToString("N");
-	    var (errorOut, sharedSecret, sharedSecretHash) = await GenerateSecretHash(account, sessionId);
+	    var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(account, sessionId);
 
         if (!string.IsNullOrEmpty(errorOut))
 	    {
@@ -261,41 +261,5 @@ else
     private async Task ConnectWallet()
     {
         error = await WalletService.ConnectWallet(_walletAccounts);
-    }
-
-    private async Task<(string? Error, uint256? Secret, uint160? SecretHash)> GenerateSecretHash(WalletAccount walletAccount, string sessionId)
-    {
-        Guard.NotNull(_walletAccounts, nameof(_walletAccounts));
-
-        try
-        {
-            var res = await WalletConnector.GetSwapSecret(walletAccount.Pubkey, walletAccount.WalletId, walletAccount.AccountId, sessionId);
-            Logger.LogInformation(res);
-
-            var data = JsonSerializer.Deserialize<WalletResultMessage<WalletApiMessageSecret>>(res);
-
-            if (data?.response?.secret == null)
-            {
-                error = $"Failed to generate the secret";
-                return (error, null, null);
-            }
-
-            var sharedSecret = new uint256(data.response.secret);//  SwapsConfiguration.GenerateSecret(data.signature, sessionId);
-            var sharedSecretHash = Hashes.Hash160(sharedSecret.ToBytes());
-            
-            return (null, sharedSecret, sharedSecretHash);
-        }
-        catch (NoBlockcoreWalletException nbwe)
-        {
-            error = "Not wallet found please install the wallet at blockcore.net";
-            return (error, null, null);
-        }
-        catch (Exception e)
-        {
-            error = e.Message;
-            Console.WriteLine(e);
-        }
-
-        return (error, null, null);
     }
 }
