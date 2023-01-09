@@ -133,3 +133,70 @@ public class TransactionData
     public List<Output> outputs { get; set; }
 }
 
+
+
+
+
+public class WalletAccounts
+{
+    public Dictionary<string, WalletAccount> Accounts { get; set; } = new();
+
+    /// <summary>
+    /// BCIP3 wallet key.
+    /// </summary>
+    public string WalletPubKey { get; set; }
+
+    /// <summary>
+    /// If the WalletPubKey exists then we have connected to a wallet in the past.
+    /// </summary>
+    public bool Connected => !string.IsNullOrEmpty(WalletPubKey);
+
+    public bool HasAccountKey(string pubkey)
+    {
+	    return Accounts.Values.Any(a => a.Pubkey == pubkey);
+    }
+
+    public WalletAccount GetAccount(string coinSymbol)
+    {
+        return Accounts[coinSymbol];
+    }
+}
+
+public class WalletAccount
+{
+    public string Pubkey { get; set; }
+    public string Address { get; set; }
+    public string PubkeyPath { get; set; }
+    public string CoinSymbol { get; set; }
+    public long Balance { get; set; }
+    public string WalletId { get; set; }
+    public string AccountId { get; set; }
+
+    // We need this to know if this is a P2SH or a P2WSH account
+    public int AccountPurpose { get; set; }
+}
+
+public class WalletResultMessage<T> where T: class
+{
+    public string key { get; set; }
+    public string signature { get; set; }
+    public T response { get; set; }
+    public string content { get; set; }
+    public string network { get; set; }
+    public string walletId { get; set; }
+    public string accountId { get; set; }
+}
+
+
+public class WalletApiMessageKeys
+{
+    public string publicKey { get; set; }
+    public string privateKey { get; set; }
+}
+
+public class WalletApiMessageSecret
+{
+    public string secret { get; set; }
+}
+
+// Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);

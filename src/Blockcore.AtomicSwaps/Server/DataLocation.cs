@@ -29,9 +29,11 @@ namespace Blockcore.AtomicSwaps.Server
 			}
 			else
 			{
-				options.Value.DirectoryPath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) 
-				                              ?? Path.Combine(Directory.GetCurrentDirectory());
-			}
+                var directory = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) 
+                                ?? Path.Combine(Directory.GetCurrentDirectory());
+
+                options.Value.DirectoryPath = directory;// Path.Combine(directory, "swaps");
+            }
 		}
 
 		private static string CreateDefaultDataDirectories(string appName)

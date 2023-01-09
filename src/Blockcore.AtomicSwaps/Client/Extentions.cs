@@ -1,4 +1,5 @@
-﻿using Blockcore.AtomicSwaps.Server.Controllers;
+﻿using Blockcore.AtomicSwaps.Client.Services;
+using Blockcore.AtomicSwaps.Server.Controllers;
 using Blockcore.AtomicSwaps.Shared;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
@@ -17,6 +18,12 @@ namespace Blockcore.AtomicSwaps.Client
             if (network.CoinTicker == "CRS") return true;
 
             return false;
+        }
+
+        public static void ThorwIfError(this string error)
+        {
+            if (!string.IsNullOrEmpty(error))
+                throw new Exception(error);
         }
     }
 }
