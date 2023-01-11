@@ -65,6 +65,16 @@ namespace Blockcore.AtomicSwaps.Client
             return pubKey;
         }
 
+        public static string GetNextAvailableAddress1(Networks.Network network, WalletConnectInput walletConnectInputs)
+        {
+            Guard.NotNull(walletConnectInputs, nameof(walletConnectInputs));
+            Guard.NotNull(walletConnectInputs.WalletApiMessage, nameof(walletConnectInputs.WalletApiMessage));
+
+            var account = walletConnectInputs.WalletApiMessage.response.accounts.First(f => f.networkType == network.CoinTicker);
+
+            return account.state.receive.Last().address;
+        }
+
         public static bool FindInputs1(Networks.Network network, Storage storage, long targetAmount, long fee, WalletConnectInput walletConnectInputs, out List<UtxoData> balancesList)
         {
            // AccountInfo? accountInfo = storage.GetAccountInfo(network.CoinTicker);

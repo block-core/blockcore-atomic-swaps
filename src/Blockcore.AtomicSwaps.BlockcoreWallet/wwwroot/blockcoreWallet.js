@@ -30,6 +30,18 @@ export async function sendCoins(input) {
     return JSON.stringify(result);
 }
 
+export async function swapCoins(input) {
+    const provider = globalThis.blockcore;
+
+    var data = JSON.parse(input)
+    const result = await provider.request({
+        method: 'atomicswaps.send',
+        params: [data],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result.response);
+}
+
 export async function getWallet(key) {
     const provider = globalThis.blockcore;
 
@@ -45,7 +57,7 @@ export async function getSwapKey(key, walletId, accountId, includePrivateKey) {
     const provider = globalThis.blockcore;
 
     const result = await provider.request({
-        method: 'atomicswaps.keyhandler',
+        method: 'atomicswaps.key',
         params: [{ key: key, walletId: walletId, accountId: accountId, includePrivateKey: includePrivateKey }],
     });
     console.log('Result:', result);
@@ -56,7 +68,7 @@ export async function getSwapSecret(key, walletId, accountId, message) {
     const provider = globalThis.blockcore;
 
     const result = await provider.request({
-        method: 'atomicswaps.secrethandler',
+        method: 'atomicswaps.secret',
         params: [{ key: key, walletId: walletId, accountId: accountId, message: message }],
     });
     console.log('Result:', result);

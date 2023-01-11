@@ -28,6 +28,26 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
         public string transactionHex { get; set; }
     }
 
+    public class BlockcoreWalletSwapCoins
+    {
+        public string walletId { get; set; }
+        public string accountId { get; set; }
+        public string swapTrxHex { get; set; }
+        public string trxToSignHex { get; set; }
+        public string redeemScriptHex { get; set; }
+        public string secretHashHex { get; set; }
+        public string network { get; set; }
+        public string message { get; set; }
+    }
+
+    public class BlockcoreWalletSwapCoinsOut
+    {
+        public string privateKey { get; set; }
+        public string transactionId { get; set; }
+        public string transactionHex { get; set; }
+
+    }
+
     public class BlockcoreWalletMessageOut
     {
         public string key { get; set; }

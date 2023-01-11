@@ -44,6 +44,21 @@ namespace Blockcore.AtomicSwaps.Client.Services
             }
         }
 
+
+        public async Task<BlockcoreWalletSwapCoinsOut?> SwapCoins(BlockcoreWalletSwapCoins blockcoreWalletSwapCoins)
+        {
+            try
+            {
+                var res = await _walletConnector.SwapCoins(blockcoreWalletSwapCoins);
+                return res;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+                throw;
+            }
+        }
+
         public async Task<string> ConnectWallet(WalletConnectInput walletConnectInput)
         {
             try

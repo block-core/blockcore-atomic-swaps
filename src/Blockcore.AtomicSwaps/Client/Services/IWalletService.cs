@@ -14,6 +14,9 @@ namespace Blockcore.AtomicSwaps.Client.Services
         Task<string> ConnectWallet(WalletAccounts walletAccounts);
 
         Task<BlockcoreWalletSendFundsOut?> SendCoins(BlockcoreWalletSendFunds blockcoreWalletSendFunds);
+
+        Task<BlockcoreWalletSwapCoinsOut?> SwapCoins(BlockcoreWalletSwapCoins blockcoreWalletSwapCoins);
+
         Task<(string? Error, uint256? Secret, uint160? SecretHash)> GenerateSecretHash(WalletAccount walletAccount, string sessionId);
     }
 

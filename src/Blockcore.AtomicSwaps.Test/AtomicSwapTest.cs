@@ -99,7 +99,7 @@ namespace Blockcore.AtomicSwaps.Test
         }
 
         [Fact]
-        public void PerformAnAtomicSwapPArtialSigs()
+        public void PerformAnAtomicSwapPartialSigs()
         {
             // in this example we swap coins from strax to city
             // the seller is on the city chain and offers to sell 10 city for 1 strax
@@ -144,7 +144,7 @@ namespace Blockcore.AtomicSwaps.Test
             var swapSpendUnsignedTransaction = SwapBuilder.CreateSwapSpendUnsignedTransaction(
                 cityNetwork,
                 swapTransaction.Transaction,
-                receiverKeyCITY.PubKey.GetAddress(cityNetwork).ScriptPubKey,
+                receiverKeyCITY.PubKey.GetAddress(cityNetwork).ToString(),
                 new FeeRate(Money.Satoshis(cityNetwork.MinTxFee * 3)));
 
             var swapSpendTransaction = SwapBuilder.SignSwapSpendUnsignedTransaction(
@@ -164,7 +164,7 @@ namespace Blockcore.AtomicSwaps.Test
             var swapRecoverUnsignedTransaction = SwapBuilder.CreateSwapRecoveryUnsignedTransaction(
                 cityNetwork,
                 swapTransaction.Transaction,
-                senderKeyCITY.PubKey.GetAddress(cityNetwork).ScriptPubKey,
+                senderKeyCITY.PubKey.GetAddress(cityNetwork).ToString(),
                 new FeeRate(Money.Satoshis(cityNetwork.MinTxFee * 3)),
                 DateTime.UtcNow.AddHours(48));
 

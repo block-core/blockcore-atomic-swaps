@@ -48,8 +48,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
             await _storageService.Add(session);
         }
-
-
+        
         [HttpPost]
         [Route("update")]
         public async Task<IActionResult> UpdateSession(SwapSession data)
