@@ -265,7 +265,6 @@
 
     string SharedSecret { get; set; }
 
-    //string mypubkey;
     string mypubkeySellerSide;
     string mypubkeyBuyerSide;
 
@@ -279,13 +278,11 @@
     WalletAccounts _walletAccounts = new();
 
     private bool hasWallet;
-    List<string> NetworkList;
 
     protected override async Task OnInitializedAsync()
     {
         hasWallet = await WalletConnector.HasBlockcoreWallet();
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
-        NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
         string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
 
@@ -406,7 +403,7 @@
         var account = _walletAccounts.GetAccount(network.CoinTicker);
 
         RedeemType redeemType = account.AccountPurpose == 44 ? RedeemType.P2SH :
-            account.AccountPurpose == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
+            account.AccountPurpose == 84 ? RedeemType.WitnessV0 : RedeemType.P2SH;
 
         var swapAddressContext = SwapBuilder.CreateSwapAddress(network,
             uint160.Parse(swap.SharedSecretHash),
@@ -441,61 +438,61 @@
         swapSessionCoin.SwapTransactionHex = trxContext.transactionHex;
     }
 
-    private async Task BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
-    {
-        ExtKey.UseBCForHMACSHA512 = true;
-        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+    //private async Task BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
+    //{
+    //    ExtKey.UseBCForHMACSHA512 = true;
+    //    NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
+    //    Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
 
-        swapSessionCoin.RecoveryLockTime = recoveryLockTime;
+    //    swapSessionCoin.RecoveryLockTime = recoveryLockTime;
 
-        // refresh the account balances
-        var walletConnectInput = new WalletConnectInput { WalletAccounts = _walletAccounts };
-        var errorRes = await WalletService.ConnectWallet(walletConnectInput);
-        errorRes.ThorwIfError();
+    //    // refresh the account balances
+    //    var walletConnectInput = new WalletConnectInput { WalletAccounts = _walletAccounts };
+    //    var errorRes = await WalletService.ConnectWallet(walletConnectInput);
+    //    errorRes.ThorwIfError();
 
-        var account = _walletAccounts.GetAccount(network.CoinTicker);
-        var walletAccount = walletConnectInput.WalletApiMessage.response.accounts.First(a => a.networkType == network.CoinTicker);
+    //    var account = _walletAccounts.GetAccount(network.CoinTicker);
+    //    var walletAccount = walletConnectInput.WalletApiMessage.response.accounts.First(a => a.networkType == network.CoinTicker);
 
-        var fee = network.MinRelayTxFee * 3;
-        if (!SwapsConfiguration.FindInputs1(network, storage, swapSessionCoin.Amount, fee, walletConnectInput, out List<UtxoData> balancesList))
-        {
-            error = "not enough balance";
-            return;
-        }
+    //    var fee = network.MinRelayTxFee * 3;
+    //    if (!SwapsConfiguration.FindInputs1(network, storage, swapSessionCoin.Amount, fee, walletConnectInput, out List<UtxoData> balancesList))
+    //    {
+    //        error = "not enough balance";
+    //        return;
+    //    }
 
-        //var utxos = SwapsConfiguration.AddPrivateKeys(network, storage, balancesList);
-        var utxos = SwapsConfiguration.ConvertToUtxo(network, balancesList); ;
+    //    //var utxos = SwapsConfiguration.AddPrivateKeys(network, storage, balancesList);
+    //    var utxos = SwapsConfiguration.ConvertToUtxo(network, balancesList); ;
 
-        PubKey pubKey = SwapsConfiguration.GetNextAvailableAddress(network, storage);
+    //    PubKey pubKey = SwapsConfiguration.GetNextAvailableAddress(network, storage);
 
-        //RedeemType redeemType = HdOperations.GetPurpose(accountInfo.Path) == 44 ? RedeemType.P2SH :
-        //    HdOperations.GetPurpose(accountInfo.Path) == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
+    //    //RedeemType redeemType = HdOperations.GetPurpose(accountInfo.Path) == 44 ? RedeemType.P2SH :
+    //    //    HdOperations.GetPurpose(accountInfo.Path) == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
 
-        RedeemType redeemType = walletAccount.purpose == 44 ? RedeemType.P2SH :
-            walletAccount.purpose == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
+    //    RedeemType redeemType = walletAccount.purpose == 44 ? RedeemType.P2SH :
+    //        walletAccount.purpose == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
 
-        var change = redeemType == RedeemType.P2SH ? 
-            pubKey.GetAddress(network).ScriptPubKey : 
-            pubKey.GetSegwitAddress(network).ScriptPubKey;
+    //    var change = redeemType == RedeemType.P2SH ? 
+    //        pubKey.GetAddress(network).ScriptPubKey : 
+    //        pubKey.GetSegwitAddress(network).ScriptPubKey;
 
-        var transactionContext = SwapBuilder.CreateSwapTransaction(network,
-            uint160.Parse(swap.SharedSecretHash),
-            new PubKey(swapSessionCoin.SenderPubkey),
-            change,
-            new PubKey(swapSessionCoin.ReceiverPubkey),
-            swapSessionCoin.RecoveryLockTime.Value, 
-            swapSessionCoin.Amount, 
-            utxos, 
-            new FeeRate(new Money(fee)),
-            redeemType);
+    //    var transactionContext = SwapBuilder.CreateSwapTransaction(network,
+    //        uint160.Parse(swap.SharedSecretHash),
+    //        new PubKey(swapSessionCoin.SenderPubkey),
+    //        change,
+    //        new PubKey(swapSessionCoin.ReceiverPubkey),
+    //        swapSessionCoin.RecoveryLockTime.Value, 
+    //        swapSessionCoin.Amount, 
+    //        utxos, 
+    //        new FeeRate(new Money(fee)),
+    //        redeemType);
 
-        swapSessionCoin.SwapTransactionHex = transactionContext.Transaction.ToHex(network.Consensus.ConsensusFactory);
-        swapSessionCoin.SwapTransactionHash = transactionContext.Transaction.GetHash().ToString();
-        swapSessionCoin.SwapRedeemScriptHex = transactionContext.RedeemScript.ToHex();
-        swapSessionCoin.SwapAddress = transactionContext.SwapAddress;
-    }
+    //    swapSessionCoin.SwapTransactionHex = transactionContext.Transaction.ToHex(network.Consensus.ConsensusFactory);
+    //    swapSessionCoin.SwapTransactionHash = transactionContext.Transaction.GetHash().ToString();
+    //    swapSessionCoin.SwapRedeemScriptHex = transactionContext.RedeemScript.ToHex();
+    //    swapSessionCoin.SwapAddress = transactionContext.SwapAddress;
+    //}
 
     private async Task RefreshSwap()
     {
