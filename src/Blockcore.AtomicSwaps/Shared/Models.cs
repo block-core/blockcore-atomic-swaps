@@ -6,6 +6,9 @@ public class SwapSessionCoin
     public string? ReceiverPubkey { get; set; }
     public string CoinSymbol { get; set; }
     public long Amount { get; set; }
+    public long NetworkFee { get; set; }
+    public long ServiceFee { get; set; }
+    public string? ServiceAddress { get; set; }
     public string? SwapTransactionHex { get; set; }
     public string? SwapRedeemScriptHex { get; set; }
     public string? SwapTransactionHash { get; set; }

@@ -234,8 +234,24 @@ else
 	        Created = DateTime.UtcNow,
 	        Status = SwapsDataStatus.Available,
 	        SharedSecretHash = sharedSecretHash.ToString(),
-	        CoinSeller = new SwapSessionCoin { CoinSymbol = SwapFrom, Amount = amountToSellSats.Satoshi, SenderPubkey = accountSellerSide.Pubkey },
-	        CoinBuyer = new SwapSessionCoin { CoinSymbol = SwapTo, Amount = amountToBuySats.Satoshi, ReceiverPubkey = accountBuyerSide.Pubkey }
+	        CoinSeller = new SwapSessionCoin
+	        {
+	            CoinSymbol = SwapFrom,
+	            Amount = amountToSellSats.Satoshi,
+	            SenderPubkey = accountSellerSide.Pubkey,
+	            NetworkFee = SwapsConfiguration.GetNetworkFee(SwapFrom),
+	            ServiceFee = SwapsConfiguration.GetServiceData(SwapFrom).ServiceFee,
+	            ServiceAddress = SwapsConfiguration.GetServiceData(SwapFrom).ServiceAddress,
+	        },
+	        CoinBuyer = new SwapSessionCoin
+	        {
+	            CoinSymbol = SwapTo,
+	            Amount = amountToBuySats.Satoshi,
+	            ReceiverPubkey = accountBuyerSide.Pubkey,
+	            NetworkFee = SwapsConfiguration.GetNetworkFee(SwapTo),
+	            ServiceFee = SwapsConfiguration.GetServiceData(SwapTo).ServiceFee,
+	            ServiceAddress = SwapsConfiguration.GetServiceData(SwapTo).ServiceAddress,
+	        }
 	    };
 
         await Http.PostAsJsonAsync($"api/SwapCoordinator/create", session);

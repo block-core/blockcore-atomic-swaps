@@ -89,17 +89,16 @@ namespace Blockcore.AtomicSwaps.Shared
             Network network,
             Transaction swapTransaction,
             string sendToAddress,
-            FeeRate feeRate)
+            Money fee)
         {
             IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs()
                 .First(s => s.TxOut.ScriptPubKey.IsScriptType(ScriptType.P2SH) || s.TxOut.ScriptPubKey.IsScriptType(ScriptType.P2WSH));
 
             var swapSpendTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
-           // IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs().Last(); // the swap is always the last output
             TxIn swapSpentInput = swapSpendTransaction.AddInput(swapTransaction, (int)swapOutput.N);
             TxOut swapSpendTransactionTxOut = swapSpendTransaction.AddOutput(Money.Coins(0), new BitcoinPubKeyAddress(sendToAddress, network));
 
-            Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
+           // Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
             Money send = swapOutput.TxOut.Value - fee;
             swapSpendTransactionTxOut.Value = send;
             
@@ -189,7 +188,7 @@ namespace Blockcore.AtomicSwaps.Shared
            Network network,
            Transaction swapTransaction,
            string sendToAddress,
-           FeeRate feeRate,
+           Money fee,
            DateTime lockTime)
         {
             IndexedTxOut swapOutput = swapTransaction.Outputs.AsIndexedOutputs()
@@ -199,7 +198,7 @@ namespace Blockcore.AtomicSwaps.Shared
             TxIn recoverInput = recoverTransaction.AddInput(swapTransaction, (int)swapOutput.N);
             TxOut recoverTransactionTxOut = recoverTransaction.AddOutput(Money.Coins(0), new BitcoinPubKeyAddress(sendToAddress, network));
 
-            Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
+            //Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
             Money send = swapOutput.TxOut.Value - fee;
             recoverTransactionTxOut.Value = send;
 

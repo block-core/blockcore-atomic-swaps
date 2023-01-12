@@ -96,6 +96,11 @@
 
     <h3>Step 3 - seller swaps</h3>
 
+    <p><strong>Seller sends @Money.Satoshis(swap.CoinSeller.Amount + swap.CoinSeller.NetworkFee + swap.CoinSeller.ServiceFee) @swap.CoinSeller.CoinSymbol</strong></p>
+    <p>Swap amount = @Money.Satoshis(swap.CoinSeller.Amount) @swap.CoinSeller.CoinSymbol</p>
+    <p>Network fee = @Money.Satoshis(swap.CoinSeller.NetworkFee) @swap.CoinSeller.CoinSymbol</p>
+    <p>Service fee = @Money.Satoshis(swap.CoinSeller.ServiceFee) @swap.CoinSeller.CoinSymbol</p>
+
     @if (swap.CoinSeller.SwapTransactionHash != null)
     {
         <p>seller swap chain @swap.CoinSeller.CoinSymbol trx id -  @swap.CoinSeller.SwapTransactionHash</p>
@@ -129,6 +134,11 @@
     @*=========================Step4 - buyer creates swap trx ========================*@
 
     <h3>Step 4 - buyer swaps</h3>
+
+    <p><strong>Buyer sends @Money.Satoshis(swap.CoinBuyer.Amount + swap.CoinBuyer.NetworkFee + swap.CoinBuyer.ServiceFee) @swap.CoinBuyer.CoinSymbol</strong></p>
+    <p>Swap amount = @Money.Satoshis(swap.CoinBuyer.Amount) @swap.CoinBuyer.CoinSymbol</p>
+    <p>Network fee = @Money.Satoshis(swap.CoinBuyer.NetworkFee) @swap.CoinBuyer.CoinSymbol</p>
+    <p>Service fee = @Money.Satoshis(swap.CoinBuyer.ServiceFee) @swap.CoinBuyer.CoinSymbol</p>
 
     @if (swap.CoinBuyer.SwapTransactionHash != null)
     {
@@ -167,6 +177,8 @@
 
     <h3>Step 5 - seller claims coins (reveal secret)</h3>
 
+    <p><strong>Seller receives @Money.Satoshis(swap.CoinBuyer.Amount) @swap.CoinBuyer.CoinSymbol</strong></p>
+
     @if (@swap.CoinBuyer.ExchangeTransactionHash != null)
     {
         <p>Seller Exchange chain @swap.CoinBuyer.CoinSymbol trx id - @swap.CoinBuyer.ExchangeTransactionHash</p>
@@ -192,6 +204,8 @@
 
             <h4>Seller claims recover trx (timeout)</h4>
 
+            <p><strong>Seller takes back @Money.Satoshis(swap.CoinSeller.Amount) @swap.CoinSeller.CoinSymbol</strong></p>
+
             if (swap.CoinSeller.SenderRecoveryTransactionHash == null)
             {
                 <button class="btn btn-danger" @onclick="SellerRecoverFunds1">Recover Seller Funds</button>
@@ -208,6 +222,8 @@
     @*=========================Step6 - buyer creates exchange trx (discover secret) ========================*@
 
     <h3>Step 6 - buyer claims coins (discover secret)</h3>
+
+    <p><strong>Buyer receives @Money.Satoshis(swap.CoinSeller.Amount) @swap.CoinSeller.CoinSymbol</strong></p>
 
     @if (swap.CoinSeller.ExchangeTransactionHash != null)
     {
@@ -240,6 +256,8 @@
             <br/>
 
             <h4>Buyer claims recover trx (timeout)</h4>
+
+            <p><strong>Buyer takes back @Money.Satoshis(swap.CoinBuyer.Amount) @swap.CoinBuyer.CoinSymbol</strong></p>
 
             if (swap.CoinBuyer.SenderRecoveryTransactionHash == null)
             {
@@ -415,8 +433,6 @@
         swapSessionCoin.SwapRedeemScriptHex = swapAddressContext.RedeemScript.ToHex();
         swapSessionCoin.SwapAddress = swapAddressContext.SwapAddress;
 
-        var fee = network.MinRelayTxFee * 3;
-
         BlockcoreWalletSendFunds sendTo = new()
         {
             network = swapSessionCoin.CoinSymbol,
@@ -427,7 +443,7 @@
                 {
                     hint = "swap address",
                     address = swapSessionCoin.SwapAddress,
-                    amount = swapSessionCoin.Amount + fee,
+                    amount = swapSessionCoin.Amount + swapSessionCoin.NetworkFee,
                 }
             }
         };
@@ -736,13 +752,11 @@
         var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
         var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
 
-        long fee = network.MinRelayTxFee * 3;
-
         var unsignedExchangeTransaction = SwapBuilder.CreateSwapSpendUnsignedTransaction(
             network,
             transaciton,
             sendToAddress,
-            new FeeRate(new Money(fee)));
+            new Money(swapSessionCoin.NetworkFee));
 
         var swapCoinsInput = new BlockcoreWalletSwapCoins
         {
@@ -970,13 +984,11 @@
         var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
         var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
 
-        long fee = network.MinRelayTxFee * 3;
-
         var unsignedRecoverTransaction = SwapBuilder.CreateSwapRecoveryUnsignedTransaction(
             network,
             transaciton,
             sendToAddress,
-            new FeeRate(new Money(fee)),
+            new Money(swapSessionCoin.NetworkFee),
             swapSessionCoin.RecoveryLockTime!.Value);
 
         var swapCoinsInput = new BlockcoreWalletSwapCoins

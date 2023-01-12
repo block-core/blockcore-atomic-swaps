@@ -42,6 +42,16 @@ namespace Blockcore.AtomicSwaps.Client
             return ver != null ? $"{ver.Major}.{ver.Minor}.{ver.Build}" : string.Empty;
         }
 
+        public long GetNetworkFee(string symbol)
+        {
+            return Networks[symbol].MinRelayTxFee * 3;
+        }
+
+        public (long ServiceFee, string ServiceAddress) GetServiceData(string symbol)
+        {
+            return (0, string.Empty);
+        }
+
         public static uint256 GenerateSecret(string payload, string sessionsId)
         {
             //var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
