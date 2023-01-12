@@ -197,6 +197,9 @@ else
 
 		var totalBalanceInSwaps = myswaps.Sum(s =>
 		{
+            if (s.Status == SwapsDataStatus.Complete)
+                return 0;
+
             if (s.CoinSeller.SenderPubkey == accountSellerSide.Pubkey)
                 return s.CoinSeller.Amount ;
 

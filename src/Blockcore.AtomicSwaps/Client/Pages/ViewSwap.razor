@@ -94,7 +94,7 @@
 
     @*=========================Step3 - seller creates swap trx ========================*@
 
-    <h3>Step3 - seller swaps</h3>
+    <h3>Step 3 - seller swaps</h3>
 
     @if (swap.CoinSeller.SwapTransactionHash != null)
     {
@@ -128,7 +128,7 @@
 
     @*=========================Step4 - buyer creates swap trx ========================*@
 
-    <h3>Step4 - buyer swaps</h3>
+    <h3>Step 4 - buyer swaps</h3>
 
     @if (swap.CoinBuyer.SwapTransactionHash != null)
     {
@@ -165,7 +165,7 @@
 
     @*=========================Step5 - seller creates exchange trx (reveal secret) ========================*@
 
-    <h3>Step5 - seller claims coins (reveal secret)</h3>
+    <h3>Step 5 - seller claims coins (reveal secret)</h3>
 
     @if (@swap.CoinBuyer.ExchangeTransactionHash != null)
     {
@@ -180,18 +180,34 @@
         if (BuyerSwapTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHash != null &&
             SellerSwapTransactionConfirmations > 0 && swap.CoinSeller.SwapTransactionHash != null)
         {
-            if (swap.CoinBuyer.ExchangeTransactionHash == null)
+            if (swap.CoinBuyer.ExchangeTransactionHash == null && swap.CoinSeller.SenderRecoveryTransactionHash == null)
             {
                 <button class="btn btn-success" @onclick="SellerExchangeFunds1">Claim Seller Coins</button>
             }
         }
-    }
 
+        if (swap.CoinSeller.SwapTransactionHash != null && swap.CoinSeller.ExchangeTransactionHash == null && swap.CoinSeller.RecoveryLockTime < DateTime.UtcNow)
+        {
+            <br />
+
+            <h4>Seller claims recover trx (timeout)</h4>
+
+            if (swap.CoinSeller.SenderRecoveryTransactionHash == null)
+            {
+                <button class="btn btn-danger" @onclick="SellerRecoverFunds1">Recover Seller Funds</button>
+            }
+            else
+            {
+                <P class="text-warning"><strong>SELLER RECOVER SUCCESS</strong></P>
+            }
+        }
+    }
+    
     <hr />
 
     @*=========================Step6 - buyer creates exchange trx (discover secret) ========================*@
 
-    <h3>Step6 - buyer claims coins (discover secret)</h3>
+    <h3>Step 6 - buyer claims coins (discover secret)</h3>
 
     @if (swap.CoinSeller.ExchangeTransactionHash != null)
     {
@@ -206,7 +222,7 @@
         @if (BuyerSwapTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHash != null &&
             SellerSwapTransactionConfirmations > 0 && swap.CoinSeller.SwapTransactionHash != null)
         {
-            @if (swap.CoinSeller.ExchangeTransactionHex == null)
+            @if (swap.CoinSeller.ExchangeTransactionHash == null && swap.CoinBuyer.SenderRecoveryTransactionHash == null)
             {
                 if (string.IsNullOrEmpty(SharedSecret))
                 {
@@ -218,32 +234,21 @@
                 }
             }
         }
-    }
-    <hr />
 
-    @*=========================Step7 - buyer claims recover trx (timeout) ========================*@
-
-    <h3>Step7 - buyer claims recover trx (timeout)</h3>
-
-    @if (swap.CoinBuyer.SenderPubkey == mypubkeyBuyerSide)
-    {
-        if (swap.CoinBuyer.SwapTransactionHash != null && swap.CoinBuyer.RecoveryLockTime < DateTime.UtcNow)
+        if (swap.CoinBuyer.SwapTransactionHash != null && swap.CoinBuyer.ExchangeTransactionHash == null && swap.CoinBuyer.RecoveryLockTime < DateTime.UtcNow)
         {
-            <button class="btn btn-danger" @onclick="BuyerRecoverFunds">Recover Buyer Funds</button>
-        }
-    }
+            <br/>
 
-    <hr />
+            <h4>Buyer claims recover trx (timeout)</h4>
 
-    @*=========================Step8 - seller claims recover trx (timeout) ========================*@
-
-    <h3>Step8 - seller claims recover trx (timeout)</h3>
-    
-    @if (swap.CoinSeller.SenderPubkey == mypubkeySellerSide)
-    {
-        if (swap.CoinSeller.SwapTransactionHash != null && swap.CoinSeller.RecoveryLockTime < DateTime.UtcNow)
-        {
-            <button class="btn btn-danger" @onclick="SellerRecoverFunds">Recover Seller Funds</button>
+            if (swap.CoinBuyer.SenderRecoveryTransactionHash == null)
+            {
+                <button class="btn btn-danger" @onclick="BuyerRecoverFunds1">Recover Buyer Funds</button>
+            }
+            else
+            {
+                <P class="text-warning"><strong>BUYER RECOVER SUCCESS</strong></P>
+            }
         }
     }
 
@@ -380,6 +385,7 @@
             throw new Exception("buyer pubkey was changed");
 
         await BuildSideSwap1(swap.CoinBuyer, swap.CoinSeller.RecoveryLockTime.Value.AddHours(-24));
+
 
         await PostSwap(swap);
 
@@ -557,83 +563,83 @@
         }
     }
 
-    private async Task SellerExchangeFunds()
-    {
-        ExtKey.UseBCForHMACSHA512 = true;
-        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+    //private async Task SellerExchangeFunds()
+    //{
+    //    ExtKey.UseBCForHMACSHA512 = true;
+    //    NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        if (swap.CoinBuyer.ReceiverPubkey != mypubkeyBuyerSide)
-            throw new Exception("seller pubkey was changed");
+    //    if (swap.CoinBuyer.ReceiverPubkey != mypubkeyBuyerSide)
+    //        throw new Exception("seller pubkey was changed");
 
-        Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
+    //    Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
       
-        var account = _walletAccounts.GetAccount(swap.CoinSeller.CoinSymbol);
-        var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(account, swap.SwapSessionId);
-        if (!string.IsNullOrEmpty(errorOut))
-        {
-            error = errorOut;
-            return;
-        }
+    //    var account = _walletAccounts.GetAccount(swap.CoinSeller.CoinSymbol);
+    //    var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(account, swap.SwapSessionId);
+    //    if (!string.IsNullOrEmpty(errorOut))
+    //    {
+    //        error = errorOut;
+    //        return;
+    //    }
 
-        var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
+    //    var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
 
-        ExchangeSwapFund(swap.CoinBuyer, sharedSecret, extendedKey.PrivateKey);
+    //    ExchangeSwapFund(swap.CoinBuyer, sharedSecret, extendedKey.PrivateKey);
 
-        await PostSwap(swap);
+    //    await PostSwap(swap);
 
-        await this.RefreshSwap();
+    //    await this.RefreshSwap();
 
-        await this.BlockchainApiService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.ExchangeTransactionHex);
-    }
+    //    await this.BlockchainApiService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.ExchangeTransactionHex);
+    //}
 
-    private async Task BuyerExchangeFunds()
-    {
-        ExtKey.UseBCForHMACSHA512 = true;
-        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+    //private async Task BuyerExchangeFunds()
+    //{
+    //    ExtKey.UseBCForHMACSHA512 = true;
+    //    NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        if (swap.CoinSeller.ReceiverPubkey != mypubkeySellerSide)
-            throw new Exception("buyer pubkey was changed");
+    //    if (swap.CoinSeller.ReceiverPubkey != mypubkeySellerSide)
+    //        throw new Exception("buyer pubkey was changed");
 
-        if (string.IsNullOrEmpty(this.SharedSecret))
-            throw new Exception("Missing shared secret");
+    //    if (string.IsNullOrEmpty(this.SharedSecret))
+    //        throw new Exception("Missing shared secret");
 
-        var walletWrods = storage.GetWalletWords();
-        var extendedKey = HdOperations.GetExtendedKey(walletWrods);
+    //    var walletWrods = storage.GetWalletWords();
+    //    var extendedKey = HdOperations.GetExtendedKey(walletWrods);
 
-        ExchangeSwapFund(swap.CoinSeller, new uint256(this.SharedSecret), extendedKey.PrivateKey);
+    //    ExchangeSwapFund(swap.CoinSeller, new uint256(this.SharedSecret), extendedKey.PrivateKey);
 
-        swap.Status = SwapsDataStatus.Complete;
+    //    swap.Status = SwapsDataStatus.Complete;
 
-        await PostSwap(swap);
+    //    await PostSwap(swap);
 
-        await this.RefreshSwap();
+    //    await this.RefreshSwap();
 
-        await this.BlockchainApiService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.ExchangeTransactionHex);
-    }
+    //    await this.BlockchainApiService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.ExchangeTransactionHex);
+    //}
 
-    private void ExchangeSwapFund(SwapSessionCoin swapSessionCoin, uint256 sharedSecret, Key privateKey)
-    {
-       Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
+    //private void ExchangeSwapFund(SwapSessionCoin swapSessionCoin, uint256 sharedSecret, Key privateKey)
+    //{
+    //   Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
 
-        var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
-        var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
+    //    var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
+    //    var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
 
-        long fee = network.MinRelayTxFee * 3;
+    //    long fee = network.MinRelayTxFee * 3;
 
-        PubKey pubKey = SwapsConfiguration.GetNextAvailableAddress(network, storage);
+    //    PubKey pubKey = SwapsConfiguration.GetNextAvailableAddress(network, storage);
 
-        var exchangeTransaction = SwapBuilder.CreateSwapSpendTransaction(
-            network,
-            transaciton,
-            redeemScript,
-            sharedSecret,
-            pubKey.GetAddress(network).ScriptPubKey,
-            privateKey,
-            new FeeRate(new Money(fee)));
+    //    var exchangeTransaction = SwapBuilder.CreateSwapSpendTransaction(
+    //        network,
+    //        transaciton,
+    //        redeemScript,
+    //        sharedSecret,
+    //        pubKey.GetAddress(network).ScriptPubKey,
+    //        privateKey,
+    //        new FeeRate(new Money(fee)));
 
-        swapSessionCoin.ExchangeTransactionHex = exchangeTransaction.ToHex(network.Consensus.ConsensusFactory);
-        swapSessionCoin.ExchangeTransactionHash = exchangeTransaction.GetHash().ToString();
-    }
+    //    swapSessionCoin.ExchangeTransactionHex = exchangeTransaction.ToHex(network.Consensus.ConsensusFactory);
+    //    swapSessionCoin.ExchangeTransactionHash = exchangeTransaction.GetHash().ToString();
+    //}
 
     private async Task SellerExchangeFunds1()
     {
@@ -677,6 +683,8 @@
         //account = _walletAccounts.GetAccount(swap.CoinBuyer.CoinSymbol);
 
         await ExchangeSwapFund1(swap.CoinBuyer, sharedSecret, address, account);
+
+        swap.Status = SwapsDataStatus.Complete;
 
         await PostSwap(swap);
 
@@ -822,18 +830,98 @@
         }
     }
 
-    private async Task SellerRecoverFunds()
+    //private async Task SellerRecoverFunds()
+    //{
+    //    ExtKey.UseBCForHMACSHA512 = true;
+    //    NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+    //    if (swap.CoinSeller.SenderPubkey != mypubkeySellerSide)
+    //        throw new Exception("buyer pubkey was changed");
+
+    //    var walletWrods = storage.GetWalletWords();
+    //    var extendedKey = HdOperations.GetExtendedKey(walletWrods);
+
+    //    RecoverFunds(swap.CoinSeller, extendedKey.PrivateKey);
+
+    //    await PostSwap(swap);
+
+    //    await this.RefreshSwap();
+
+    //    await this.BlockchainApiService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.SenderRecoveryTransactionHex);
+    //}
+
+    //private async Task BuyerRecoverFunds()
+    //{
+    //    ExtKey.UseBCForHMACSHA512 = true;
+    //    NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+    //    if (swap.CoinBuyer.SenderPubkey != mypubkeyBuyerSide)
+    //        throw new Exception("buyer pubkey was changed");
+
+    //    var walletWrods = storage.GetWalletWords();
+    //    var extendedKey = HdOperations.GetExtendedKey(walletWrods);
+
+    //    RecoverFunds(swap.CoinBuyer, extendedKey.PrivateKey);
+
+    //    await PostSwap(swap);
+
+    //    await this.RefreshSwap();
+
+    //    await this.BlockchainApiService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.SenderRecoveryTransactionHex);
+    //}
+
+    //private void RecoverFunds(SwapSessionCoin swapSessionCoin, Key privateKey)
+    //{
+    //    //if (mypubkey != swapSessionCoin.SenderPubkey)
+    //    //    throw new Exception("Invalid key");
+
+    //    Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
+
+    //    var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
+    //    var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
+
+    //    long fee = network.MinRelayTxFee * 3;
+
+    //    PubKey pubKey = SwapsConfiguration.GetNextAvailableAddress(network, storage);
+
+    //    var recoveryTransaction = SwapBuilder.CreateSwapRecoveryTransaction(
+    //        network,
+    //        transaciton,
+    //        redeemScript,
+    //        pubKey.GetAddress(network).ScriptPubKey,
+    //        privateKey,
+    //        new FeeRate(new Money(fee)),
+    //        swapSessionCoin.RecoveryLockTime!.Value);
+
+    //    swapSessionCoin.SenderRecoveryTransactionHex = recoveryTransaction.ToHex(network.Consensus.ConsensusFactory);
+    //    swapSessionCoin.SenderRecoveryTransactionHash = recoveryTransaction.GetHash().ToString();
+    //}
+
+    private async Task SellerRecoverFunds1()
     {
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
         if (swap.CoinSeller.SenderPubkey != mypubkeySellerSide)
-            throw new Exception("buyer pubkey was changed");
+            throw new Exception("seller pubkey was changed");
 
-        var walletWrods = storage.GetWalletWords();
-        var extendedKey = HdOperations.GetExtendedKey(walletWrods);
+        Networks.Network network = SwapsConfiguration.Networks[swap.CoinSeller.CoinSymbol];
 
-        RecoverFunds(swap.CoinSeller, extendedKey.PrivateKey);
+        var walletConnecet = new WalletConnectInput { WalletAccounts = _walletAccounts };
+        var errorRes = await WalletService.ConnectWallet(walletConnecet);
+        if (!string.IsNullOrEmpty(errorRes))
+        {
+            error = errorRes;
+            return;
+        }
+
+        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
+
+        var account = _walletAccounts.GetAccount(swap.CoinSeller.CoinSymbol);
+
+        await RecoverFunds1(swap.CoinSeller, address, account);
+
+        swap.Status = SwapsDataStatus.Complete;
 
         await PostSwap(swap);
 
@@ -842,7 +930,7 @@
         await this.BlockchainApiService.Broadcast(swap.CoinSeller.CoinSymbol, swap.CoinSeller.SenderRecoveryTransactionHex);
     }
 
-    private async Task BuyerRecoverFunds()
+    private async Task BuyerRecoverFunds1()
     {
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
@@ -850,10 +938,23 @@
         if (swap.CoinBuyer.SenderPubkey != mypubkeyBuyerSide)
             throw new Exception("buyer pubkey was changed");
 
-        var walletWrods = storage.GetWalletWords();
-        var extendedKey = HdOperations.GetExtendedKey(walletWrods);
+        Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
 
-        RecoverFunds(swap.CoinBuyer, extendedKey.PrivateKey);
+        var walletConnecet = new WalletConnectInput { WalletAccounts = _walletAccounts };
+        var errorRes = await WalletService.ConnectWallet(walletConnecet);
+        if (!string.IsNullOrEmpty(errorRes))
+        {
+            error = errorRes;
+            return;
+        }
+
+        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
+
+        var account = _walletAccounts.GetAccount(swap.CoinBuyer.CoinSymbol);
+
+        await RecoverFunds1(swap.CoinBuyer, address, account);
+
+        swap.Status = SwapsDataStatus.Complete;
 
         await PostSwap(swap);
 
@@ -862,7 +963,7 @@
         await this.BlockchainApiService.Broadcast(swap.CoinBuyer.CoinSymbol, swap.CoinBuyer.SenderRecoveryTransactionHex);
     }
 
-    private void RecoverFunds(SwapSessionCoin swapSessionCoin, Key privateKey)
+    private async Task RecoverFunds1(SwapSessionCoin swapSessionCoin, string sendToAddress, WalletAccount account)
     {
         //if (mypubkey != swapSessionCoin.SenderPubkey)
         //    throw new Exception("Invalid key");
@@ -874,18 +975,51 @@
 
         long fee = network.MinRelayTxFee * 3;
 
-        PubKey pubKey = SwapsConfiguration.GetNextAvailableAddress(network, storage);
-
-        var recoveryTransaction = SwapBuilder.CreateSwapRecoveryTransaction(
+        var unsignedRecoverTransaction = SwapBuilder.CreateSwapRecoveryUnsignedTransaction(
             network,
             transaciton,
-            redeemScript,
-            pubKey.GetAddress(network).ScriptPubKey,
-            privateKey,
+            sendToAddress,
             new FeeRate(new Money(fee)),
             swapSessionCoin.RecoveryLockTime!.Value);
 
-        swapSessionCoin.SenderRecoveryTransactionHex = recoveryTransaction.ToHex(network.Consensus.ConsensusFactory);
-        swapSessionCoin.SenderRecoveryTransactionHash = recoveryTransaction.GetHash().ToString();
+        var swapCoinsInput = new BlockcoreWalletSwapCoins
+        {
+            walletId = account.WalletId,
+            accountId = account.AccountId,
+            network = network.CoinTicker,
+            swapTrxHex = swapSessionCoin.SwapTransactionHex,
+            redeemScriptHex = swapSessionCoin.SwapRedeemScriptHex,
+            secretHashHex = null, // this means it is recover not swap
+            trxToSignHex = unsignedRecoverTransaction.ToHex(network.Consensus.ConsensusFactory),
+            message = $"Recover {Money.Satoshis(swapSessionCoin.Amount)} {swapSessionCoin.CoinSymbol} to {sendToAddress}"
+        };
+
+        var result = await WalletService.SwapCoins(swapCoinsInput);
+
+        if (result == null)
+            throw new Exception("Failed to call SwapCoins api method on the wallet");
+
+        if (string.IsNullOrEmpty(result.transactionId))
+        {
+            if (string.IsNullOrEmpty(result.privateKey))
+                throw new Exception("Private key was not provided by wallet");
+
+            var privkey = new Key(Encoders.Hex.DecodeData(result.privateKey));
+
+            var recoveryTransaction = SwapBuilder.SignSwapRecoveryUnsignedTransaction(
+                network,
+                transaciton,
+                unsignedRecoverTransaction,
+                redeemScript,
+                privkey);
+
+            swapSessionCoin.SenderRecoveryTransactionHex = recoveryTransaction.ToHex(network.Consensus.ConsensusFactory);
+            swapSessionCoin.SenderRecoveryTransactionHash = recoveryTransaction.GetHash().ToString();
+        }
+        else
+        {
+            swapSessionCoin.SenderRecoveryTransactionHex = result.transactionHex;
+            swapSessionCoin.SenderRecoveryTransactionHash = result.transactionId;
+        }
     }
 }
