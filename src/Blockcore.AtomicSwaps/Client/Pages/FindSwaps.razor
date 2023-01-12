@@ -66,12 +66,9 @@
     private bool hasWallet;
 	WalletAccounts? _walletAccounts;
 
-	string mypubkey;
 	private async Task Fetch()
 	{
-		mypubkey = storage.GetWalletPubkey();
-
-		this.swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
+	    this.swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
 	}
 
 	protected override async Task OnInitializedAsync()

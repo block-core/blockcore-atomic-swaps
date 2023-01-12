@@ -34,19 +34,9 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 
         [HttpPost]
         [Route("create")]
-        public async Task CreateSession(CreateSwapSession data)
+        public async Task CreateSession(SwapSession data)
         {
-            SwapSession session = new()
-            {
-                SwapSessionId = data.SwapSessionId,
-                Created = DateTime.UtcNow,
-                Status = SwapsDataStatus.Available,
-                SharedSecretHash = data.SharedSecretHash,
-                CoinSeller = new SwapSessionCoin { CoinSymbol = data.FromCoinSymbol, Amount = data.AmountToSell, SenderPubkey = data.SenderPubkey },
-                CoinBuyer = new SwapSessionCoin { CoinSymbol = data.ToCoinSymbol, Amount = data.AmountToBuy, ReceiverPubkey = data.SenderPubkey }
-            };
-
-            await _storageService.Add(session);
+            await _storageService.Add(data);
         }
         
         [HttpPost]

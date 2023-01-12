@@ -38,9 +38,9 @@
 
     <h4>Swap @Money.Satoshis(swap.CoinSeller.Amount) @swap.CoinSeller.CoinSymbol for @Money.Satoshis(swap.CoinBuyer.Amount) @swap.CoinBuyer.CoinSymbol</h4>
 
-    @if (mypubkey == null){<p><strong>Not my swap</strong></p>}
-    else if (swap.CoinSeller.SenderPubkey == mypubkey){<p class="text-success"><strong> I am the seller</strong></p>}
-    else if (swap.CoinBuyer.SenderPubkey == mypubkey){<p class="text-success"><strong>I am the buyer</strong></p>}
+    @if (mypubkeyBuyerSide == null && mypubkeySellerSide == null){<p><strong>Not my swap</strong></p>}
+    else if (swap.CoinSeller.SenderPubkey == mypubkeySellerSide){<p class="text-success"><strong> I am the seller</strong></p>}
+    else if (swap.CoinBuyer.SenderPubkey == mypubkeyBuyerSide){<p class="text-success"><strong>I am the buyer</strong></p>}
     else{<p><strong>Not my swap</strong></p>}
 
     <button class="btn btn-primary" @onclick="RefreshSwap">Refresh Swap</button>
@@ -58,7 +58,7 @@
     <p>Seller Pubkey - @swap.CoinSeller.SenderPubkey</p>
     <p>Shared secret hash - @swap.SharedSecretHash</p>
     
-    @if (swap.CoinSeller.SenderPubkey == mypubkey && swap.CoinBuyer.SenderPubkey == null)
+    @if (swap.CoinSeller.SenderPubkey == mypubkeySellerSide && swap.CoinBuyer.SenderPubkey == null)
     {
         <button class="btn btn-danger" @onclick="DeleteSwap">Delete Swap</button>
     }
@@ -71,7 +71,7 @@
     
     <p>Buyer Pubkey - @swap.CoinBuyer.SenderPubkey</p>
 
-    @if (swap.CoinSeller.SenderPubkey != mypubkey && swap.CoinBuyer.SenderPubkey == null)
+    @if (swap.CoinSeller.SenderPubkey != mypubkeySellerSide && swap.CoinBuyer.SenderPubkey == null)
     {
         if (hasWallet)
         {
@@ -116,7 +116,7 @@
         </div>
     }
 
-    @if (swap.CoinSeller.SenderPubkey == mypubkey)
+    @if (swap.CoinSeller.SenderPubkey == mypubkeySellerSide)
     {
         @if (swap.CoinBuyer.SenderPubkey != null && swap.CoinSeller.SwapTransactionHash == null)
         {
@@ -150,7 +150,7 @@
         </div>
     }
 
-    @if (swap.CoinBuyer.SenderPubkey == mypubkey)
+    @if (swap.CoinBuyer.SenderPubkey == mypubkeyBuyerSide)
     {
         @if (swap.CoinSeller.SwapTransactionHash != null)
         {
@@ -175,7 +175,7 @@
         <P class="text-success"><strong>SELLER EXCHANGE SUCCESS</strong></P>
     }
 
-    @if (swap.CoinSeller.SenderPubkey == mypubkey)
+    @if (swap.CoinSeller.SenderPubkey == mypubkeySellerSide)
     {
         if (BuyerSwapTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHash != null &&
             SellerSwapTransactionConfirmations > 0 && swap.CoinSeller.SwapTransactionHash != null)
@@ -201,7 +201,7 @@
         <P class="text-success"><strong>BUYER EXCHANGE SUCCESS</strong></P>
     }
     
-    @if (swap.CoinBuyer.SenderPubkey == mypubkey)
+    @if (swap.CoinBuyer.SenderPubkey == mypubkeyBuyerSide)
     {
         @if (BuyerSwapTransactionConfirmations > 0 && swap.CoinBuyer.SwapTransactionHash != null &&
             SellerSwapTransactionConfirmations > 0 && swap.CoinSeller.SwapTransactionHash != null)
@@ -225,7 +225,7 @@
 
     <h3>Step7 - buyer claims recover trx (timeout)</h3>
 
-    @if (swap.CoinBuyer.SenderPubkey == mypubkey)
+    @if (swap.CoinBuyer.SenderPubkey == mypubkeyBuyerSide)
     {
         if (swap.CoinBuyer.SwapTransactionHash != null && swap.CoinBuyer.RecoveryLockTime < DateTime.UtcNow)
         {
@@ -239,7 +239,7 @@
 
     <h3>Step8 - seller claims recover trx (timeout)</h3>
     
-    @if (swap.CoinSeller.SenderPubkey == mypubkey)
+    @if (swap.CoinSeller.SenderPubkey == mypubkeySellerSide)
     {
         if (swap.CoinSeller.SwapTransactionHash != null && swap.CoinSeller.RecoveryLockTime < DateTime.UtcNow)
         {
@@ -260,7 +260,9 @@
 
     string SharedSecret { get; set; }
 
-    string mypubkey;
+    //string mypubkey;
+    string mypubkeySellerSide;
+    string mypubkeyBuyerSide;
 
     int SellerSwapTransactionConfirmations;
     int BuyerSwapTransactionConfirmations;
@@ -294,12 +296,12 @@
             WriteIndented = true
         });
 
-        if (swap?.CoinSeller?.SenderPubkey != null && _walletAccounts.HasAccountKey(swap.CoinSeller.SenderPubkey))
-            mypubkey = swap.CoinSeller.SenderPubkey;
+        var accountSellerSide = _walletAccounts.TryGetAccount(swap.CoinSeller.CoinSymbol);
+        var accountBuyerSide = _walletAccounts.TryGetAccount(swap.CoinBuyer.CoinSymbol);
 
-        if (swap?.CoinBuyer?.SenderPubkey != null && _walletAccounts.HasAccountKey(swap.CoinBuyer.SenderPubkey))
-            mypubkey = swap.CoinBuyer.SenderPubkey;
-            
+        mypubkeySellerSide = accountSellerSide?.Pubkey;
+        mypubkeyBuyerSide = accountBuyerSide?.Pubkey;
+
         await this.RefreshConfirmations();
     }
 
@@ -308,7 +310,7 @@
         // this method is of course problematic because anyone can delete using an api call
         // we need to add pubkey validation to each request to the api
 
-        if (swap.CoinSeller.SenderPubkey == mypubkey || swap.CoinBuyer.SenderPubkey == mypubkey)
+        if (swap.CoinSeller.SenderPubkey == mypubkeySellerSide || swap.CoinBuyer.SenderPubkey == mypubkeyBuyerSide)
         {
             await Http.DeleteAsync($"api/SwapCoordinator/delete/{swapSession}");
         }
@@ -340,11 +342,9 @@
         Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
         var account = _walletAccounts.GetAccount(network.CoinTicker);
 
-        mypubkey = account.Pubkey;
-
         swap.Status = SwapsDataStatus.InProgress;
-        swap.CoinBuyer.SenderPubkey = mypubkey;
-        swap.CoinSeller.ReceiverPubkey = mypubkey;
+        swap.CoinBuyer.SenderPubkey = mypubkeyBuyerSide;
+        swap.CoinSeller.ReceiverPubkey = mypubkeySellerSide;
 
         var myswaps = storage.GetSwaps();
 
@@ -362,7 +362,7 @@
     
     private async Task BuildSellerSwap()
     {
-        if (swap.CoinSeller.SenderPubkey != mypubkey)
+        if (swap.CoinSeller.SenderPubkey != mypubkeySellerSide)
             throw new Exception("seller pubkey was changed");
 
         await BuildSideSwap1(swap.CoinSeller, DateTime.UtcNow.AddHours(48));
@@ -376,7 +376,7 @@
 
     private async Task BuildBuyerSwap()
     {
-        if (swap.CoinBuyer.SenderPubkey != mypubkey)
+        if (swap.CoinBuyer.SenderPubkey != mypubkeyBuyerSide)
             throw new Exception("buyer pubkey was changed");
 
         await BuildSideSwap1(swap.CoinBuyer, swap.CoinSeller.RecoveryLockTime.Value.AddHours(-24));
@@ -562,7 +562,7 @@
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        if (swap.CoinBuyer.ReceiverPubkey != mypubkey)
+        if (swap.CoinBuyer.ReceiverPubkey != mypubkeyBuyerSide)
             throw new Exception("seller pubkey was changed");
 
         Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
@@ -591,7 +591,7 @@
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        if (swap.CoinSeller.ReceiverPubkey != mypubkey)
+        if (swap.CoinSeller.ReceiverPubkey != mypubkeySellerSide)
             throw new Exception("buyer pubkey was changed");
 
         if (string.IsNullOrEmpty(this.SharedSecret))
@@ -613,11 +613,7 @@
 
     private void ExchangeSwapFund(SwapSessionCoin swapSessionCoin, uint256 sharedSecret, Key privateKey)
     {
-        // double check the keys
-        if (mypubkey != swapSessionCoin.ReceiverPubkey)
-            throw new Exception("Invalid key");
-
-        Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
+       Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
 
         var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
         var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
@@ -644,7 +640,7 @@
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        if (swap.CoinBuyer.ReceiverPubkey != mypubkey)
+        if (swap.CoinBuyer.ReceiverPubkey != mypubkeyBuyerSide)
             throw new Exception("seller pubkey was changed");
 
         Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
@@ -677,7 +673,7 @@
         // right now we use one pubkey (the pubkey that initiated the swap) for both network, 
         // we need to use the pubkey of the respective network
 
-        account = _walletAccounts.GetAccount(swap.CoinSeller.CoinSymbol);
+        account = _walletAccounts.GetAccount(swap.CoinBuyer.CoinSymbol);
         //account = _walletAccounts.GetAccount(swap.CoinBuyer.CoinSymbol);
 
         await ExchangeSwapFund1(swap.CoinBuyer, sharedSecret, address, account);
@@ -694,7 +690,7 @@
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        if (swap.CoinSeller.ReceiverPubkey != mypubkey)
+        if (swap.CoinSeller.ReceiverPubkey != mypubkeySellerSide)
             throw new Exception("buyer pubkey was changed");
 
         if (string.IsNullOrEmpty(this.SharedSecret))
@@ -712,7 +708,7 @@
 
         var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
 
-        var account = _walletAccounts.GetAccount(swap.CoinBuyer.CoinSymbol);
+        var account = _walletAccounts.GetAccount(swap.CoinSeller.CoinSymbol);
 
         await ExchangeSwapFund1(swap.CoinSeller, new uint256(this.SharedSecret), address, account);
 
@@ -727,8 +723,8 @@
 
     private async Task ExchangeSwapFund1(SwapSessionCoin swapSessionCoin, uint256 sharedSecret, string sendToAddress, WalletAccount account)
     {
-        if (mypubkey != swapSessionCoin.ReceiverPubkey)
-            throw new Exception("Invalid key");
+        //if (mypubkeyBuyerSide != swapSessionCoin.ReceiverPubkey)
+        //    throw new Exception("Invalid key");
 
         Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
 
@@ -831,7 +827,7 @@
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        if (swap.CoinSeller.SenderPubkey != mypubkey)
+        if (swap.CoinSeller.SenderPubkey != mypubkeySellerSide)
             throw new Exception("buyer pubkey was changed");
 
         var walletWrods = storage.GetWalletWords();
@@ -851,7 +847,7 @@
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        if (swap.CoinBuyer.SenderPubkey != mypubkey)
+        if (swap.CoinBuyer.SenderPubkey != mypubkeyBuyerSide)
             throw new Exception("buyer pubkey was changed");
 
         var walletWrods = storage.GetWalletWords();
@@ -868,8 +864,8 @@
 
     private void RecoverFunds(SwapSessionCoin swapSessionCoin, Key privateKey)
     {
-        if (mypubkey != swapSessionCoin.SenderPubkey)
-            throw new Exception("Invalid key");
+        //if (mypubkey != swapSessionCoin.SenderPubkey)
+        //    throw new Exception("Invalid key");
 
         Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
 

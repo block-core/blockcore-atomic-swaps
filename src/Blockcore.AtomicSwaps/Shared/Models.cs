@@ -29,17 +29,6 @@ public class SwapSession
     public string Status { get; set; }
 }
 
-public class CreateSwapSession
-{
-    public string SwapSessionId { get; set; }
-    public string SenderPubkey { get; set; }
-    public string FromCoinSymbol { get; set; }
-    public string ToCoinSymbol { get; set; }
-    public long AmountToSell { get; set; }
-    public long AmountToBuy { get; set; }
-    public string SharedSecretHash { get; set; }
-}
-
 public class AddressBalance
 {
     public string address { get; set; }
@@ -159,6 +148,13 @@ public class WalletAccounts
     public WalletAccount GetAccount(string coinSymbol)
     {
         return Accounts[coinSymbol];
+    }
+
+    public WalletAccount? TryGetAccount(string coinSymbol)
+    {
+        Accounts.TryGetValue(coinSymbol, out WalletAccount? account);
+        
+        return account;
     }
 }
 

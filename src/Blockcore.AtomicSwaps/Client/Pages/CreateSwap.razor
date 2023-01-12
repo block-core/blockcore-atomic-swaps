@@ -7,6 +7,7 @@
 @using System.Text.Json
 @using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions
 @using Blockcore.AtomicSwaps.Client.Services
+@using Blockcore.AtomicSwaps.Shared
 
 @inject HttpClient Http
 @inject Storage storage;
@@ -173,11 +174,12 @@ else
 	        return;
 	    }
 
-	    var account = _walletAccounts.GetAccount(SwapFrom);
+	    var accountSellerSide = _walletAccounts.GetAccount(SwapFrom);
+	    var accountBuyerSide = _walletAccounts.GetAccount(SwapTo);
 
 	    var amountToSellSats = Money.Coins(amountToSell);
 	    var amountToBuySats = Money.Coins(amountToBuy);
-		var totalBalance = Money.Satoshis(account.Balance);
+        var totalBalance = Money.Satoshis(accountSellerSide.Balance);
 
 		if (totalBalance < amountToSellSats)
 		{
@@ -193,14 +195,12 @@ else
 			storage.SetSwaps(myswaps);
 		}
 
-	    var pubkey = account.Pubkey;
-
 		var totalBalanceInSwaps = myswaps.Sum(s =>
 		{
-            if(s.CoinSeller.SenderPubkey == pubkey)
+            if (s.CoinSeller.SenderPubkey == accountSellerSide.Pubkey)
                 return s.CoinSeller.Amount ;
 
-            if (s.CoinBuyer.SenderPubkey == pubkey)
+            if (s.CoinBuyer.SenderPubkey == accountBuyerSide.Pubkey)
                 return s.CoinBuyer.Amount;
 
             return 0;
@@ -208,7 +208,7 @@ else
 
 	    var totalBalanceInSwapsSats = Money.Satoshis(totalBalanceInSwaps);
 
-		Logger.LogInformation($"accountInfo.TotalBalance={account.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
+        Logger.LogInformation($"accountInfo.TotalBalance={accountSellerSide.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
 
 		if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
 		{
@@ -217,7 +217,7 @@ else
 		}
 
 	    var sessionId = Guid.NewGuid().ToString("N");
-	    var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(account, sessionId);
+        var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(accountSellerSide, sessionId);
 
         if (!string.IsNullOrEmpty(errorOut))
 	    {
@@ -225,24 +225,23 @@ else
 	        return;
 	    }
 
-	    var postBody = new CreateSwapSession
+	    SwapSession session = new()
 	    {
-	        SenderPubkey = pubkey,
-	        FromCoinSymbol = SwapFrom,
-	        AmountToSell = amountToSellSats.Satoshi,
-	        ToCoinSymbol = SwapTo,
-	        AmountToBuy = amountToBuySats.Satoshi,
 	        SwapSessionId = sessionId,
-	        SharedSecretHash = sharedSecretHash.ToString()
+	        Created = DateTime.UtcNow,
+	        Status = SwapsDataStatus.Available,
+	        SharedSecretHash = sharedSecretHash.ToString(),
+	        CoinSeller = new SwapSessionCoin { CoinSymbol = SwapFrom, Amount = amountToSellSats.Satoshi, SenderPubkey = accountSellerSide.Pubkey },
+	        CoinBuyer = new SwapSessionCoin { CoinSymbol = SwapTo, Amount = amountToBuySats.Satoshi, ReceiverPubkey = accountBuyerSide.Pubkey }
 	    };
 
-		await Http.PostAsJsonAsync($"api/SwapCoordinator/create", postBody);
+        await Http.PostAsJsonAsync($"api/SwapCoordinator/create", session);
 
-		var swap = await Http.GetFromJsonAsync<SwapSession?>($"api/SwapCoordinator/session/{postBody.SwapSessionId}");
+        var swap = await Http.GetFromJsonAsync<SwapSession?>($"api/SwapCoordinator/session/{session.SwapSessionId}");
 
 		if(swap ==null)
 		{
-		    error = $"swap not created correctly session = {postBody.SwapSessionId}";
+            error = $"swap not created correctly session = {session.SwapSessionId}";
 		    return;
 		}
 
