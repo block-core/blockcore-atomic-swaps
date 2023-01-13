@@ -24,7 +24,11 @@
 
 <p>This component allow to create new swaps.</p>
 
-<p class="alert-danger">@error</p>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <MudAlert Class="mt-3 mb-3" Severity="Severity.Error">@error</MudAlert>
+}
 
 @if (!hasWallet)
 {
@@ -108,11 +112,11 @@ else
 
     @if (!_walletAccounts.Connected)
     {
-        <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">Connect Wallet</button>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" disabled="@busy" @onclick="ConnectWallet">Connect Wallet</MudButton>
     }
     else
     {
-        <button class="btn btn-primary" @onclick="CreateNewSwap">Create Swap</button>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="CreateNewSwap">Create Swap</MudButton>
     }
 }
 
