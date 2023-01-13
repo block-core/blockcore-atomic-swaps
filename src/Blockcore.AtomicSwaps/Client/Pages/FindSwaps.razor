@@ -12,47 +12,51 @@
 
 <PageTitle>Find Atomic Swaps</PageTitle>
 
-<h1>Find Atomic Swaps</h1>
 
-<p>This component helps find available swaps.</p>
+<MudText Typo="Typo.h3">Find Atomic Swaps</MudText>
+<MudText Class="mb-8">This component helps find available swaps.</MudText>
 
-<button class="btn btn-primary" @onclick="Fetch">Fetch Swaps</button>
+<MudButton Color="Color.Info" Variant="Variant.Filled" @onclick="Fetch">Fetch Swaps</MudButton>
 
-<p class="alert-danger">@error</p>
+@if (!string.IsNullOrEmpty(error))
+{
+	<MudAlert Class="mt-3 mb-3" Severity="Severity.Error">@error</MudAlert>
+}
 
 @if (swaps != null)
 {
 
-	<table class="table table-bordered">
-		<thead>
-			<tr>
-				<th>Swap Id</th>
-				<th>Seller</th>
-				<th>Buyer</th>
-				<th>Date</th>
-				<th>Is Mine</th>
-				<th>Status</th>
-			</tr>
-		</thead>
-		<tbody>
-			@foreach (var swap in swaps)
-			{
-				<tr>
-					<td>@swap.SwapSessionId</td>
-					<td>@Money.Satoshis(swap.CoinSeller.Amount) - @swap.CoinSeller.CoinSymbol</td>
-					<td>@Money.Satoshis(swap.CoinBuyer.Amount) - @swap.CoinBuyer.CoinSymbol</td>
-					<td>@swap.Created </td>
-					<td>@(_walletAccounts.HasAccountKey(swap.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(swap.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</td>
-					<td>@swap.Status </td>
-					<td><button class="btn btn-info" @onclick="() => this.ViewSwap(swap.SwapSessionId)">Details</button> </td>
-				</tr>
-			}
-		</tbody>
-	</table>
+
+	<MudTable Items="@swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+		<HeaderContent>
+			<MudTh>Swap Id</MudTh>
+			<MudTh>Seller</MudTh>
+			<MudTh>Buyer</MudTh>
+			<MudTh>Date</MudTh>
+			<MudTh>Is Mine</MudTh>
+			<MudTh>Status</MudTh>
+			<MudTh></MudTh>
+		</HeaderContent>
+		<RowTemplate>
+			<MudTd DataLabel="Swap Id">@context.SwapSessionId</MudTd>
+			<MudTd DataLabel="Seller">@Money.Satoshis(context.CoinSeller.Amount) - @context.CoinSeller.CoinSymbol</MudTd>
+			<MudTd DataLabel="Buyer">@Money.Satoshis(context.CoinBuyer.Amount) - @context.CoinBuyer.CoinSymbol</MudTd>
+			<MudTd DataLabel="Date">@context.Created </MudTd>
+			<MudTd DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(context.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</MudTd>
+				<MudTd DataLabel="Status">@context.Status </MudTd>
+				<MudTd DataLabel="Details">
+					<MudButton Color="Color.Info" Variant="Variant.Filled" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
+				</MudTd>
+			</RowTemplate>
+		</MudTable>
+
+
 }
 
 @code {
-	private List<SwapSession> swaps;
+	private IEnumerable<SwapSession> swaps = new List<SwapSession>();
+	private bool _loading;
+
 	Networks.Network network;
 	List<string> NetworkList;
 
@@ -74,7 +78,7 @@
 		}
 		catch (Exception ex)
 		{
-			
+
 		}
 
 	}
