@@ -1,13 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using Blockcore.AtomicSwaps.Shared;
-using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using NBitcoin;
-using NBitcoin.DataEncoders;
-using NBitcoin.Policy;
+using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace Blockcore.AtomicSwaps.Test
@@ -145,7 +140,7 @@ namespace Blockcore.AtomicSwaps.Test
                 cityNetwork,
                 swapTransaction.Transaction,
                 receiverKeyCITY.PubKey.GetAddress(cityNetwork).ToString(),
-                new FeeRate(Money.Satoshis(cityNetwork.MinTxFee * 3)));
+                Money.Satoshis(cityNetwork.MinTxFee * 3));
 
             var swapSpendTransaction = SwapBuilder.SignSwapSpendUnsignedTransaction(
                 cityNetwork,
@@ -165,7 +160,7 @@ namespace Blockcore.AtomicSwaps.Test
                 cityNetwork,
                 swapTransaction.Transaction,
                 senderKeyCITY.PubKey.GetAddress(cityNetwork).ToString(),
-                new FeeRate(Money.Satoshis(cityNetwork.MinTxFee * 3)),
+                Money.Satoshis(cityNetwork.MinTxFee * 3),
                 DateTime.UtcNow.AddHours(48));
 
 
