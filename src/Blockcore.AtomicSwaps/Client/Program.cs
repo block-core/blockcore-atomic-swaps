@@ -19,7 +19,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.Configure<WebApiLoggerOptions>(options => builder.Configuration.GetSection("WebApiLogger").Bind(options));
 builder.Services.AddLogging(configure =>
 {
-	configure.AddWebApiLogger();
+    configure.AddWebApiLogger();
 });
 builder.Services.AddSingleton(sp => new SwapsConfiguration());
 
@@ -32,7 +32,10 @@ builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
 builder.Services.AddScoped<LayoutService>();
 
 builder.Services.AddScoped<IBlockchainApiService, BlockchainApiService>();
+
 builder.Services.AddScoped<IWalletService, WalletService>();
+
+builder.Services.AddScoped<ISnackbarService, SnackbarService>();
 
 builder.Services.AddBlockcoreWallet();
 

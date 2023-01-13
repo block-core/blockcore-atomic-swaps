@@ -17,6 +17,7 @@
 @inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService
 @inject IWalletService WalletService
+@inject ISnackbarService SnackbarService
 
 <PageTitle>Create Swap</PageTitle>
 
@@ -24,11 +25,6 @@
 
 <p>This component allow to create new swaps.</p>
 
-
-@if (!string.IsNullOrEmpty(error))
-{
-    <MudAlert Class="mt-3 mb-3" Severity="Severity.Error">@error</MudAlert>
-}
 
 @if (!hasWallet)
 {
@@ -121,39 +117,40 @@ else
 }
 
 @code {
-	private List<SwapSession> swaps;
+    private List<SwapSession> swaps;
 
-	string error;
+    string error;
 
-	string SwapFrom = "STRAX";
-	string SwapTo = "CITY";
+    string SwapFrom = "STRAX";
+    string SwapTo = "CITY";
 
-	long amountToSell = 1;
-	long amountToBuy = 2;
+    long amountToSell = 1;
+    long amountToBuy = 2;
     private bool hasWallet;
     private bool busy = false;
 
     WalletAccounts _walletAccounts = new();
     List<string> _networkList = new();
 
-	protected override async Task OnInitializedAsync()
-	{
-	    hasWallet = await WalletConnector.HasBlockcoreWallet();
+    protected override async Task OnInitializedAsync()
+    {
+        hasWallet = await WalletConnector.HasBlockcoreWallet();
         _networkList = SwapsConfiguration.Networks.Keys.ToList();
-	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
-	}
+        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+    }
 
-	protected async Task CreateNewSwap()
-	{
-	    ExtKey.UseBCForHMACSHA512 = true;
-	    NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+    protected async Task CreateNewSwap()
+    {
+        ExtKey.UseBCForHMACSHA512 = true;
+        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-		// check that the user has enough money
-		error = string.Empty;
-	    if (SwapFrom == SwapTo)
-	    {
-	        error = "Cant swap to the same network"; 
-	        return;
+        // check that the user has enough money
+        error = string.Empty;
+        if (SwapFrom == SwapTo)
+        {
+            error = "Cant swap to the same network";
+            await SnackbarService.ShowErrorMessage(error, Defaults.Classes.Position.BottomEnd);
+            return;
 	    }
 
 		Networks.Network network = SwapsConfiguration.Networks[SwapFrom];
@@ -163,18 +160,21 @@ else
 	    if (!string.IsNullOrEmpty(errorRes))
 	    {
 	        error = errorRes;
+            await SnackbarService.ShowErrorMessage(error, Defaults.Classes.Position.BottomEnd);
             return;
 	    }
         
         if (!_walletAccounts.Accounts.ContainsKey(SwapFrom))
 	    {
             error = $"The coin {SwapFrom} network is not found in wallet";
+            await SnackbarService.ShowErrorMessage(error, Defaults.Classes.Position.BottomEnd);
 	        return;
 	    }
 
 	    if (!_walletAccounts.Accounts.ContainsKey(SwapTo))
 	    {
             error = $"The coin {SwapTo} network is not found in wallet";
+            await SnackbarService.ShowErrorMessage(error, Defaults.Classes.Position.BottomEnd);
 	        return;
 	    }
 
@@ -188,6 +188,7 @@ else
 		if (totalBalance < amountToSellSats)
 		{
 			error = "You do not have enough funds";
+            await SnackbarService.ShowErrorMessage(error, Defaults.Classes.Position.BottomEnd);
 			return;
 		}
 
@@ -220,6 +221,7 @@ else
 		if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
 		{
 			error = "funds are used in other swaps no funds left to make a swap";
+            await SnackbarService.ShowErrorMessage(error, Defaults.Classes.Position.BottomEnd);
 			return;
 		}
 
@@ -229,6 +231,7 @@ else
         if (!string.IsNullOrEmpty(errorOut))
 	    {
 	        error = errorOut;
+            await SnackbarService.ShowErrorMessage(error, Defaults.Classes.Position.BottomEnd);
 	        return;
 	    }
 
@@ -265,6 +268,7 @@ else
 		if(swap ==null)
 		{
             error = $"swap not created correctly session = {session.SwapSessionId}";
+            await SnackbarService.ShowErrorMessage(error, Defaults.Classes.Position.BottomEnd);
 		    return;
 		}
 
@@ -283,5 +287,6 @@ else
     private async Task ConnectWallet()
     {
         error = await WalletService.ConnectWallet(_walletAccounts);
+        await SnackbarService.ShowErrorMessage(error, Defaults.Classes.Position.BottomEnd);
     }
 }
