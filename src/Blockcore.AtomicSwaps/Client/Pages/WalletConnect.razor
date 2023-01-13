@@ -20,7 +20,10 @@
 }
 else
 {
-    <p class="alert-danger">@error</p>
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <MudAlert Class="mt-3 mb-3" Severity="Severity.Error">@error</MudAlert>
+    }
 
     <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">@(_walletAccounts.Connected ? "Refresh" : "Connect")</button>
 
@@ -28,26 +31,19 @@ else
     {
         <p>Wallet key - @_walletAccounts.WalletPubKey</p>
 
-        <table class="table table-bordered">
-            <thead>
-            <tr>
-                <th>Coin</th>
-                <th>Pubkey</th>
-                <th>Balance</th>
-            </tr>
-            </thead>
-            <tbody>
 
-                @foreach (var walletAccount in _walletAccounts.Accounts)
-            {
-                <tr>
-                    <td>@walletAccount.Value.CoinSymbol</td>
-                    <td>@walletAccount.Value.Pubkey</td>
-                    <td>@Money.Satoshis(walletAccount.Value.Balance).ToUnit(MoneyUnit.BTC) @walletAccount.Value.CoinSymbol</td>
-                </tr>
-            }
-            </tbody>
-        </table>
+        <MudTable Items="@_walletAccounts.Accounts" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Coin</MudTh>
+                <MudTh>Pubkey</MudTh>
+                <MudTh>Balance</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Coin">@context.Value.CoinSymbol</MudTd>
+                <MudTd DataLabel="Pubkey">@context.Value.Pubkey</MudTd>
+                <MudTd DataLabel="Balance">@Money.Satoshis(context.Value.Balance).ToUnit(MoneyUnit.BTC) @context.Value.CoinSymbol</MudTd>
+            </RowTemplate>
+        </MudTable>
     }
     else
     {
@@ -59,13 +55,15 @@ else
 <p>@loadingStatus</p>
 
 @code {
+    private bool _loading;
+    private WalletAccounts _walletAccounts = new WalletAccounts();
+
     private bool busy = false;
     private bool hasWallet;
     string error;
 
     string loadingStatus = string.Empty;
 
-    WalletAccounts _walletAccounts = new();
     List<string> _networkList = new();
 
     protected override async Task OnInitializedAsync()
