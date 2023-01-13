@@ -42,12 +42,12 @@
 					<td>@Money.Satoshis(swap.CoinSeller.Amount) - @swap.CoinSeller.CoinSymbol</td>
 					<td>@Money.Satoshis(swap.CoinBuyer.Amount) - @swap.CoinBuyer.CoinSymbol</td>
 					<td>@swap.Created </td>
-                    <td>@(_walletAccounts.HasAccountKey(swap.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(swap.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</td>
+					<td>@(_walletAccounts.HasAccountKey(swap.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(swap.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</td>
 					<td>@swap.Status </td>
 					<td><button class="btn btn-info" @onclick="() => this.ViewSwap(swap.SwapSessionId)">Details</button> </td>
 				</tr>
 			}
-        </tbody>
+		</tbody>
 	</table>
 }
 
@@ -63,27 +63,35 @@
 
 	long amountToSell = 1;
 	long amountToBuy = 10;
-    private bool hasWallet;
+	private bool hasWallet;
 	WalletAccounts? _walletAccounts;
 
 	private async Task Fetch()
 	{
-	    this.swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
+		try
+		{
+			this.swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
+		}
+		catch (Exception ex)
+		{
+			
+		}
+
 	}
 
 	protected override async Task OnInitializedAsync()
 	{
-	    NetworkList = SwapsConfiguration.Networks.Keys.ToList();
+		NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
-	    if (await WalletConnector.HasBlockcoreWallet() == false)
-	    {
-	        hasWallet = false;
-	        return;
-	    }
+		if (await WalletConnector.HasBlockcoreWallet() == false)
+		{
+			hasWallet = false;
+			return;
+		}
 
-	    hasWallet = true;
+		hasWallet = true;
 
-	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+		_walletAccounts = storage.GetOrCreate<WalletAccounts>();
 
 		await this.Fetch();
 	}
