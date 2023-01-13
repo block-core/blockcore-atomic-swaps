@@ -18,6 +18,63 @@ export async function signMessageAnyAccount(value) {
     //var verify = bitcoinMessage.verify(value, result.key, result.signature);
 }
 
+export async function sendCoins(input) {
+    const provider = globalThis.blockcore;
+
+    var data = JSON.parse(input)
+    const result = await provider.request({
+        method: 'transaction.send',
+        params: [data],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result);
+}
+
+export async function swapCoins(input) {
+    const provider = globalThis.blockcore;
+
+    var data = JSON.parse(input)
+    const result = await provider.request({
+        method: 'atomicswaps.send',
+        params: [data],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result.response);
+}
+
+export async function getWallet(key) {
+    const provider = globalThis.blockcore;
+
+    const result = await provider.request({
+        method: 'wallets',
+        params: [{ key: key }],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result);
+}
+
+export async function getSwapKey(key, walletId, accountId, includePrivateKey) {
+    const provider = globalThis.blockcore;
+
+    const result = await provider.request({
+        method: 'atomicswaps.key',
+        params: [{ key: key, walletId: walletId, accountId: accountId, includePrivateKey: includePrivateKey }],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result);
+}
+
+export async function getSwapSecret(key, walletId, accountId, message) {
+    const provider = globalThis.blockcore;
+
+    const result = await provider.request({
+        method: 'atomicswaps.secret',
+        params: [{ key: key, walletId: walletId, accountId: accountId, message: message }],
+    });
+    console.log('Result:', result);
+    return JSON.stringify(result);
+}
+
 export async function signMessageAnyAccountJson(value) {
     const message = JSON.parse(value);
 

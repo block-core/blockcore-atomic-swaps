@@ -1,118 +1,123 @@
 ﻿@page "/createswap"
-@using Blockcore.AtomicSwaps.Shared
-@using Blockcore.Consensus.BlockInfo
 @using Blockcore.AtomicSwaps.Server.Controllers
+@using Blockcore.Utilities
 @using NBitcoin
 @using NBitcoin.Crypto
+@using Blockcore.AtomicSwaps.BlockcoreWallet
+@using System.Text.Json
+@using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions
+@using Blockcore.AtomicSwaps.Client.Services
+@using Blockcore.AtomicSwaps.Shared
+
 @inject HttpClient Http
 @inject Storage storage;
-@inject GlobalData globalData;
+@inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
 @inject ILogger<CreateSwap> Logger;
+@inject IBlockcoreWalletConnector WalletConnector
+@inject IBlockchainApiService BlockchainApiService
+@inject IWalletService WalletService
 
 <PageTitle>Create Swap</PageTitle>
 
 <h1>Create Swap</h1>
 
-
-
 <p>This component allow to create new swaps.</p>
-
-<p>Create Swap.</p>
-
-
-
-<div class="row g-3 align-items-center mb-2">
-	<div class="col-2">
-		<label for="SwapFrom" class="col-form-label">From</label>
-	</div>
-	<div class="col-4">
-		<select class="form-select" @bind="SwapFrom" type="text">
-			<option value="" selected disabled>Please select</option>
-			@{
-				@foreach (var prp in NetworkList)
-				{
-					<option value="@prp">@prp</option>
-				}
-			}
-		</select>
-	</div>
-	<div class="col-auto">
-		<span class="form-text">
-			seller
-		</span>
-	</div>
-</div>
-
-
-<div class="row g-3 align-items-center mb-2 mt-2">
-	<div class="col-2">
-		<label for="Amount" class="col-form-label">Amount</label>
-	</div>
-	<div class="col-4">
-		<input class="form-control" @bind="amountToSell" />
-	</div>
-	<div class="col-auto">
-		<span  class="form-text">
-			@SwapFrom
-		</span>
-	</div>
-</div>
-
-<hr />
-
-
-
-<div class="row g-3 align-items-center mb-2">
-	<div class="col-2">
-			<label for="SwapTo" class="col-form-label">To</label>
-	</div>
-	<div class="col-4">
-			<select class="form-select" @bind="SwapTo" type="text">
-				<option value="" selected disabled>Please select</option>
-				@{
-					@foreach (var prp in NetworkList)
-					{
-						<option value="@prp">@prp</option>
-					}
-				}
-			</select>
-	</div>
-	<div class="col-auto">
-		<span  class="form-text">
-			Buyer
-		</span>
-	</div>
-</div>
-
-
-
- 
-<div class="row g-3 align-items-center mb-5 mt-2">
-	<div class="col-2">
-		<label for="Amount" class="col-form-label">Amount</label>
-	</div>
-	<div class="col-4">
-		<input class="form-control" @bind="amountToBuy" />
-	</div>
-	<div class="col-auto">
-		<span class="form-text">
-			@SwapTo
-		</span>
-	</div>
-</div>
-
-
-<button class="btn btn-primary" @onclick="CreateNewSwap">Create Swap</button>
-
-
 
 <p class="alert-danger">@error</p>
 
+@if (!hasWallet)
+{
+    <p>Not wallet found please install the wallet at blockcore.net</p>
+}
+else
+{
+    <div class="row g-3 align-items-center mb-2">
+        <div class="col-2">
+            <label for="SwapFrom" class="col-form-label">From</label>
+        </div>
+        <div class="col-4">
+            <select class="form-select" @bind="SwapFrom" type="text">
+                <option value="" selected disabled>Please select</option>
+                @{
+                    @foreach (var prp in _networkList)
+                    {
+                        <option value="@prp">@prp</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <span class="form-text">
+                seller
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-3 align-items-center mb-2 mt-2">
+        <div class="col-2">
+            <label for="Amount" class="col-form-label">Amount</label>
+        </div>
+        <div class="col-4">
+            <input class="form-control" @bind="amountToSell"/>
+        </div>
+        <div class="col-auto">
+            <span class="form-text">
+                @SwapFrom
+            </span>
+        </div>
+    </div>
+
+    <hr/>
+
+    <div class="row g-3 align-items-center mb-2">
+        <div class="col-2">
+            <label for="SwapTo" class="col-form-label">To</label>
+        </div>
+        <div class="col-4">
+            <select class="form-select" @bind="SwapTo" type="text">
+                <option value="" selected disabled>Please select</option>
+                @{
+                    @foreach (var prp in _networkList)
+                    {
+                        <option value="@prp">@prp</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <span class="form-text">
+                Buyer
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-3 align-items-center mb-5 mt-2">
+        <div class="col-2">
+            <label for="Amount" class="col-form-label">Amount</label>
+        </div>
+        <div class="col-4">
+            <input class="form-control" @bind="amountToBuy"/>
+        </div>
+        <div class="col-auto">
+            <span class="form-text">
+                @SwapTo
+            </span>
+        </div>
+    </div>
+
+    @if (!_walletAccounts.Connected)
+    {
+        <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">Connect Wallet</button>
+    }
+    else
+    {
+        <button class="btn btn-primary" @onclick="CreateNewSwap">Create Swap</button>
+    }
+}
+
 @code {
 	private List<SwapSession> swaps;
-	Networks.Network network;
-	List<string> NetworkList;
 
 	string error;
 
@@ -121,12 +126,17 @@
 
 	long amountToSell = 1;
 	long amountToBuy = 2;
+    private bool hasWallet;
+    private bool busy = false;
 
-	string mypubkey;
+    WalletAccounts _walletAccounts = new();
+    List<string> _networkList = new();
 
 	protected override async Task OnInitializedAsync()
 	{
-		NetworkList = globalData.Networks.Keys.ToList();
+	    hasWallet = await WalletConnector.HasBlockcoreWallet();
+        _networkList = SwapsConfiguration.Networks.Keys.ToList();
+	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
 	}
 
 	protected async Task CreateNewSwap()
@@ -136,20 +146,40 @@
 
 		// check that the user has enough money
 		error = string.Empty;
-		if (SwapFrom == SwapTo) { error = "Cant swap to the same network"; return; }
+	    if (SwapFrom == SwapTo)
+	    {
+	        error = "Cant swap to the same network"; 
+	        return;
+	    }
 
-		Networks.Network network = globalData.Networks[SwapFrom];
-		AccountInfo? accountInfo = storage.GetAccountInfo(SwapFrom);
+		Networks.Network network = SwapsConfiguration.Networks[SwapFrom];
 
-		if (accountInfo == null)
-		{
-			error = "Please scan the wallet";
-			return;
-		}
+	    var errorRes = await WalletService.ConnectWallet(_walletAccounts);
+
+	    if (!string.IsNullOrEmpty(errorRes))
+	    {
+	        error = errorRes;
+            return;
+	    }
+        
+        if (!_walletAccounts.Accounts.ContainsKey(SwapFrom))
+	    {
+            error = $"The coin {SwapFrom} network is not found in wallet";
+	        return;
+	    }
+
+	    if (!_walletAccounts.Accounts.ContainsKey(SwapTo))
+	    {
+            error = $"The coin {SwapTo} network is not found in wallet";
+	        return;
+	    }
+
+	    var accountSellerSide = _walletAccounts.GetAccount(SwapFrom);
+	    var accountBuyerSide = _walletAccounts.GetAccount(SwapTo);
 
 	    var amountToSellSats = Money.Coins(amountToSell);
 	    var amountToBuySats = Money.Coins(amountToBuy);
-	    var totalBalance = Money.Satoshis(accountInfo.TotalBalance);
+        var totalBalance = Money.Satoshis(accountSellerSide.Balance);
 
 		if (totalBalance < amountToSellSats)
 		{
@@ -165,14 +195,15 @@
 			storage.SetSwaps(myswaps);
 		}
 
-		var pubkey = storage.GetWalletPubkey();
-
 		var totalBalanceInSwaps = myswaps.Sum(s =>
 		{
-            if(s.CoinSeller.SenderPubkey == pubkey)
+            if (s.Status == SwapsDataStatus.Complete)
+                return 0;
+
+            if (s.CoinSeller.SenderPubkey == accountSellerSide.Pubkey)
                 return s.CoinSeller.Amount ;
 
-            if (s.CoinBuyer.SenderPubkey == pubkey)
+            if (s.CoinBuyer.SenderPubkey == accountBuyerSide.Pubkey)
                 return s.CoinBuyer.Amount;
 
             return 0;
@@ -180,7 +211,7 @@
 
 	    var totalBalanceInSwapsSats = Money.Satoshis(totalBalanceInSwaps);
 
-		Logger.LogInformation($"accountInfo.TotalBalance={accountInfo.TotalBalance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
+        Logger.LogInformation($"accountInfo.TotalBalance={accountSellerSide.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
 
 		if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
 		{
@@ -189,28 +220,47 @@
 		}
 
 	    var sessionId = Guid.NewGuid().ToString("N");
-	    var sharedSecret = GlobalData.GenerateSecret(network, storage, sessionId);
-	    var sharedSecretHash = Hashes.Hash160(sharedSecret.ToBytes());
+        var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(accountSellerSide, sessionId);
 
-		var postBody = new CreateSwapSession
-			{
-				SenderPubkey = pubkey,
-				FromCoinSymbol = SwapFrom,
-				AmountToSell = amountToSellSats.Satoshi,
-				ToCoinSymbol = SwapTo,
-				AmountToBuy = amountToBuySats.Satoshi,
-				SwapSessionId = sessionId,
-				SharedSecretHash = sharedSecretHash.ToString()
-				
-			};
+        if (!string.IsNullOrEmpty(errorOut))
+	    {
+	        error = errorOut;
+	        return;
+	    }
 
-		await Http.PostAsJsonAsync($"api/SwapCoordinator/create", postBody);
+	    SwapSession session = new()
+	    {
+	        SwapSessionId = sessionId,
+	        Created = DateTime.UtcNow,
+	        Status = SwapsDataStatus.Available,
+	        SharedSecretHash = sharedSecretHash.ToString(),
+	        CoinSeller = new SwapSessionCoin
+	        {
+	            CoinSymbol = SwapFrom,
+	            Amount = amountToSellSats.Satoshi,
+	            SenderPubkey = accountSellerSide.Pubkey,
+	            NetworkFee = SwapsConfiguration.GetNetworkFee(SwapFrom),
+	            ServiceFee = SwapsConfiguration.GetServiceData(SwapFrom).ServiceFee,
+	            ServiceAddress = SwapsConfiguration.GetServiceData(SwapFrom).ServiceAddress,
+	        },
+	        CoinBuyer = new SwapSessionCoin
+	        {
+	            CoinSymbol = SwapTo,
+	            Amount = amountToBuySats.Satoshi,
+	            ReceiverPubkey = accountBuyerSide.Pubkey,
+	            NetworkFee = SwapsConfiguration.GetNetworkFee(SwapTo),
+	            ServiceFee = SwapsConfiguration.GetServiceData(SwapTo).ServiceFee,
+	            ServiceAddress = SwapsConfiguration.GetServiceData(SwapTo).ServiceAddress,
+	        }
+	    };
 
-		var swap = await Http.GetFromJsonAsync<SwapSession?>($"api/SwapCoordinator/session/{postBody.SwapSessionId}");
+        await Http.PostAsJsonAsync($"api/SwapCoordinator/create", session);
+
+        var swap = await Http.GetFromJsonAsync<SwapSession?>($"api/SwapCoordinator/session/{session.SwapSessionId}");
 
 		if(swap ==null)
 		{
-		    error = $"swap not created correctly session = {postBody.SwapSessionId}";
+            error = $"swap not created correctly session = {session.SwapSessionId}";
 		    return;
 		}
 
@@ -225,5 +275,9 @@
 	{
 		NavigationManager.NavigateTo($"viewswap/{session}");
 	}
-
+    
+    private async Task ConnectWallet()
+    {
+        error = await WalletService.ConnectWallet(_walletAccounts);
+    }
 }

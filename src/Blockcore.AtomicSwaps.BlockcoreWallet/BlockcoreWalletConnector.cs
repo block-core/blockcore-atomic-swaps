@@ -15,14 +15,14 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 	// This class can be registered as scoped DI service and then injected into Blazor
 	// components for use.
 
-	public class BlockcoreWalletService : IAsyncDisposable, IBlockcoreWalletService
+	public class BlockcoreWalletConnector : IAsyncDisposable, IBlockcoreWalletConnector
 	{
 		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
 
 		//public static event Func<Task>? ConnectEvent;
 		//public static event Func<Task>? DisconnectEvent;
 
-		public BlockcoreWalletService(IJSRuntime jsRuntime)
+		public BlockcoreWalletConnector(IJSRuntime jsRuntime)
 		{
 			moduleTask = new(() => LoadScripts(jsRuntime).AsTask());
 		}
@@ -74,12 +74,90 @@ namespace Blockcore.AtomicSwaps.BlockcoreWallet
 			}
 		}
 
-		public async ValueTask<string> SignMessageAnyAccount(string value)
+        public async ValueTask<BlockcoreWalletSendFundsOut?> SendCoins(BlockcoreWalletSendFunds data)
+        {
+            var input = JsonSerializer.Serialize(data);
+            var module = await moduleTask.Value;
+            try
+            {
+                var result = await module.InvokeAsync<string>("sendCoins", input);
+                return JsonSerializer.Deserialize<BlockcoreWalletSendFundsOut?>(result);
+            }
+            catch (Exception ex)
+            {
+                HandleExceptions(ex);
+                throw;
+            }
+        }
+
+        public async ValueTask<BlockcoreWalletSwapCoinsOut?> SwapCoins(BlockcoreWalletSwapCoins data)
+        {
+            var input = JsonSerializer.Serialize(data);
+            var module = await moduleTask.Value;
+            try
+            {
+                var result = await module.InvokeAsync<string>("swapCoins", input);
+                return JsonSerializer.Deserialize<BlockcoreWalletSwapCoinsOut?>(result);
+            }
+            catch (Exception ex)
+            {
+                HandleExceptions(ex);
+                throw;
+            }
+        }
+
+        public async ValueTask<BlockcoreWalletMessageOut?> GetWallet(string? key = null)
+        {
+            var module = await moduleTask.Value;
+            try
+            {
+                var result = await module.InvokeAsync<string>("getWallet", key);
+                return JsonSerializer.Deserialize<BlockcoreWalletMessageOut?>(result);
+
+            }
+            catch (Exception ex)
+            {
+                HandleExceptions(ex);
+                throw;
+            }
+        }
+
+        public async ValueTask<string> GetSwapKey(string key, string walletId, string accountId, bool includePrivateKey)
+        {
+            var module = await moduleTask.Value;
+            try
+            {
+                return await module.InvokeAsync<string>("getSwapKey", key, walletId, accountId, includePrivateKey);
+            }
+            catch (Exception ex)
+            {
+                HandleExceptions(ex);
+                throw;
+            }
+        }
+
+        public async ValueTask<string> GetSwapSecret(string key, string walletId, string accountId, string message)
+        {
+            var module = await moduleTask.Value;
+            try
+            {
+                return await module.InvokeAsync<string>("getSwapSecret", key, walletId, accountId, message);
+            }
+            catch (Exception ex)
+            {
+                HandleExceptions(ex);
+                throw;
+            }
+        }
+
+        public async ValueTask<string> SignMessageAnyAccount(string value)
 		{
 			var module = await moduleTask.Value;
 			try
 			{
 				return await module.InvokeAsync<string>("signMessageAnyAccount", value);
+
+
 			}
 			catch (Exception ex)
 			{

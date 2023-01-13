@@ -1,0 +1,82 @@
+﻿@page "/walletconnect"
+@using Blockcore.AtomicSwaps.Server.Controllers
+@using NBitcoin
+@using Blockcore.AtomicSwaps.BlockcoreWallet
+@using Blockcore.AtomicSwaps.Client.Services
+
+@inject Storage storage;
+@inject SwapsConfiguration SwapsConfiguration;
+@inject ILogger<WalletConnect> Logger;
+@inject IBlockcoreWalletConnector WalletConnector
+@inject IWalletService WalletService
+
+<PageTitle>Wallet and balances</PageTitle>
+
+<h1>Connected Wallets</h1>
+
+@if (!hasWallet)
+{
+    <p>Not wallet found please install the wallet at blockcore.net</p>
+}
+else
+{
+    <p class="alert-danger">@error</p>
+
+    <button class="btn btn-primary  mb-3 mt-3" disabled="@busy" @onclick="ConnectWallet">@(_walletAccounts.Connected ? "Refresh" : "Connect")</button>
+
+    @if (_walletAccounts.Connected)
+    {
+        <p>Wallet key - @_walletAccounts.WalletPubKey</p>
+
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Coin</th>
+                <th>Pubkey</th>
+                <th>Balance</th>
+            </tr>
+            </thead>
+            <tbody>
+
+                @foreach (var walletAccount in _walletAccounts.Accounts)
+            {
+                <tr>
+                    <td>@walletAccount.Value.CoinSymbol</td>
+                    <td>@walletAccount.Value.Pubkey</td>
+                    <td>@Money.Satoshis(walletAccount.Value.Balance).ToUnit(MoneyUnit.BTC) @walletAccount.Value.CoinSymbol</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>Please add accounts</p>
+    }
+}
+
+<br/>
+<p>@loadingStatus</p>
+
+@code {
+    private bool busy = false;
+    private bool hasWallet;
+    string error;
+
+    string loadingStatus = string.Empty;
+
+    WalletAccounts _walletAccounts = new();
+    List<string> _networkList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasWallet = await WalletConnector.HasBlockcoreWallet();
+        _networkList = SwapsConfiguration.Networks.Keys.ToList();
+        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+    }
+
+    private async Task ConnectWallet()
+    {
+        error = await WalletService.ConnectWallet(_walletAccounts);
+    }
+}
