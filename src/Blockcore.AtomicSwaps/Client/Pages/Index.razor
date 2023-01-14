@@ -17,18 +17,13 @@
 
 <PageTitle>Blockcore Atomic Swaps</PageTitle>
 
-<h1>Blockcore Atomic Swaps</h1>
+<MudText Align="Align.Center" Typo="Typo.h4">Blockcore Atomic Swaps</MudText>
+<MudText Align="Align.Center" Class="mb-8 mt-8">This component helps find available swaps.</MudText>
 
-<MudAlert Severity="Severity.Normal">This component demonstrates swaps data from the server.</MudAlert>
-
-@if (!string.IsNullOrEmpty(error))
-{
-	<MudAlert Class="mt-3 mb-3" Severity="Severity.Error">@error</MudAlert>
-}
 
 @if (hasWallet == false)
 {
-    <p><strong>No Wallet Found, to start swapping coins go to the wallet tab </strong></p>
+	<MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">Not wallet found please install the wallet at blockcore.net</MudAlert>
 }
    
 

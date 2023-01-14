@@ -100,11 +100,15 @@ a, .btn-link {
         content: var(--blazor-load-percentage-text, "Loading");
     }
 
-.loading-text {
+.loading-text h2 {
     position: absolute;
     top: 40vh;
     width: 100%;
-    text-align: center
+    text-align: center;
+}
+
+.loading-text h2 {
+    text-shadow: -5px 0px 5px rgba(0, 0, 0, 0.5);
 }
 
 .swap-logo {
