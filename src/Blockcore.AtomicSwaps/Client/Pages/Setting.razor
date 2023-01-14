@@ -1,0 +1,25 @@
+﻿@page "/settings"
+
+@using Blockcore.AtomicSwaps.Shared
+@using Blockcore.Consensus.BlockInfo
+@using Blockcore.AtomicSwaps.Server.Controllers
+@using NBitcoin
+@using NBitcoin.Crypto
+@using Blockcore.AtomicSwaps.BlockcoreWallet
+@using Blockcore.AtomicSwaps.Client.Services
+@inject HttpClient Http
+@inject Storage storage;
+@inject SwapsConfiguration SwapsConfiguration;
+@inject NavigationManager NavigationManager;
+@inject ILogger<Index> Logger;
+@inject IBlockcoreWalletConnector WalletConnector
+@inject IBlockchainApiService BlockchainApiService
+
+<PageTitle>Settings</PageTitle>
+
+<MudText Align="Align.Center" Typo="Typo.h4">Settings</MudText>
+<MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
+
+@code {
+
+}

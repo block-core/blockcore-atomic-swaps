@@ -21,102 +21,73 @@
 
 <PageTitle>Create Swap</PageTitle>
 
-<h1>Create Swap</h1>
-
-<p>This component allow to create new swaps.</p>
-
+<MudText Align="Align.Center" Typo="Typo.h4">Create Swap</MudText>
+<MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
 
 @if (!hasWallet)
 {
-	<p>Not wallet found please install the wallet at blockcore.net</p>
+		<MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">Not wallet found please install the wallet at blockcore.net</MudAlert>
 }
 else
 {
-	<div class="row g-3 align-items-center mb-2">
-		<div class="col-2">
-			<label for="SwapFrom" class="col-form-label">From</label>
-		</div>
-		<div class="col-4">
-			<select class="form-select" @bind="SwapFrom" type="text">
-				<option value="" selected disabled>Please select</option>
-				@{
-					@foreach (var prp in _networkList)
-					{
-						<option value="@prp">@prp</option>
-					}
+		<MudGrid Spacing="@spacing" Justify="Justify.Center">
+			<MudItem sm="12" xl="8" xs="12" lg="8">
+				<MudPaper Class="pa-4">
+					<MudGrid Spacing="@spacing" Justify="Justify.Center">
+						<MudItem sm="6" xl="6" xs="12"> 
+							<MudSelect T="string" @bind-Value="SwapFrom" Adornment="Adornment.Start" Label="From" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Wallet" AdornmentColor="Color.Warning" Placeholder="Please Select">
+							@foreach (var prp in _networkList)
+							{
+										<MudSelectItem Value="@prp"/>
+							}
+							</MudSelect>
+						</MudItem>
+						<MudItem sm="6" xl="6" xs="12">
+							<MudNumericField @bind-Value="amountToSell" HideSpinButtons="true" Min="0" Label="Amount" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Numbers" AdornmentColor="Color.Info" HelperText="@SwapFrom" />
+						</MudItem>
+					</MudGrid>
+				</MudPaper>
+			</MudItem>
+		</MudGrid>
+		<MudGrid Spacing="@spacing" Justify="Justify.Center">
+			<MudItem sm="12" xl="8" xs="12" lg="8">
+				<MudPaper Class="pa-4">
+					<MudGrid Spacing="@spacing" Justify="Justify.Center">
+						<MudItem sm="6" xl="6" xs="12">
+							<MudSelect T="string" @bind-Value="SwapTo" Adornment="Adornment.Start" Label="To" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Wallet" AdornmentColor="Color.Secondary" Placeholder="Please Select">
+							@foreach (var prp in _networkList)
+							{
+										<MudSelectItem Value="@prp" />
+							}
+							</MudSelect>
+						</MudItem>
+						<MudItem sm="6" xl="6" xs="12">
+							<MudNumericField @bind-Value="amountToBuy" HideSpinButtons="true" Min="0" Label="Amount" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Numbers" AdornmentColor="Color.Info" HelperText="@SwapTo" />
+						</MudItem>
+					</MudGrid>
+				</MudPaper>
+			</MudItem>
+		</MudGrid>
+
+		<MudGrid Spacing="@spacing" Justify="Justify.Center">
+			<MudItem sm="12" xl="8" xs="12" lg="8">
+				<MudPaper Class="pa-4">
+				@if (!_walletAccounts.Connected)
+				{
+							<MudButton FullWidth Color="Color.Primary" Variant="Variant.Filled" disabled="@busy" @onclick="ConnectWallet">Connect Wallet</MudButton>
 				}
-			</select>
-		</div>
-		<div class="col-auto">
-			<span class="form-text">
-				seller
-			</span>
-		</div>
-	</div>
-
-	<div class="row g-3 align-items-center mb-2 mt-2">
-		<div class="col-2">
-			<label for="Amount" class="col-form-label">Amount</label>
-		</div>
-		<div class="col-4">
-			<input class="form-control" @bind="amountToSell" />
-		</div>
-		<div class="col-auto">
-			<span class="form-text">
-				@SwapFrom
-			</span>
-		</div>
-	</div>
-
-	<hr />
-
-	<div class="row g-3 align-items-center mb-2">
-		<div class="col-2">
-			<label for="SwapTo" class="col-form-label">To</label>
-		</div>
-		<div class="col-4">
-			<select class="form-select" @bind="SwapTo" type="text">
-				<option value="" selected disabled>Please select</option>
-				@{
-					@foreach (var prp in _networkList)
-					{
-						<option value="@prp">@prp</option>
-					}
+				else
+				{
+							<MudButton FullWidth Color="Color.Primary" Variant="Variant.Filled" @onclick="CreateNewSwap">Create Swap</MudButton>
 				}
-			</select>
-		</div>
-		<div class="col-auto">
-			<span class="form-text">
-				Buyer
-			</span>
-		</div>
-	</div>
-
-	<div class="row g-3 align-items-center mb-5 mt-2">
-		<div class="col-2">
-			<label for="Amount" class="col-form-label">Amount</label>
-		</div>
-		<div class="col-4">
-			<input class="form-control" @bind="amountToBuy" />
-		</div>
-		<div class="col-auto">
-			<span class="form-text">
-				@SwapTo
-			</span>
-		</div>
-	</div>
-
-	@if (!_walletAccounts.Connected)
-	{
-		<MudButton Color="Color.Primary" Variant="Variant.Filled" disabled="@busy" @onclick="ConnectWallet">Connect Wallet</MudButton>
-	}
-	else
-	{
-		<MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="CreateNewSwap">Create Swap</MudButton>
-	}
+				</MudPaper>
+			</MudItem>
+		</MudGrid>
 }
 
 @code {
+	public int spacing { get; set; } = 3;
+
 	private List<SwapSession> swaps;
 
 	string error;

@@ -1,29 +1,35 @@
-﻿@page "/findswaps"
+﻿@page "/myswaps"
 
-@using Blockcore.AtomicSwaps.Client.Services;
+@using Blockcore.AtomicSwaps.Shared
+@using Blockcore.Consensus.BlockInfo
 @using Blockcore.AtomicSwaps.Server.Controllers
 @using NBitcoin
+@using NBitcoin.Crypto
 @using Blockcore.AtomicSwaps.BlockcoreWallet
+@using Blockcore.AtomicSwaps.Client.Services
 @inject HttpClient Http
 @inject Storage storage;
 @inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
-@inject ILogger<Index> Logger;
+@inject ILogger<MySwaps> Logger;
 @inject IBlockcoreWalletConnector WalletConnector
-@inject ISnackbarService SnackbarService
+@inject IBlockchainApiService BlockchainApiService
 
-<PageTitle>Find Atomic Swaps</PageTitle>
+<PageTitle>My Swaps</PageTitle>
 
-<MudText Align="Align.Center" Typo="Typo.h4">Find Atomic Swaps</MudText>
+<MudText Align="Align.Center" Typo="Typo.h4">My Swaps</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8">This component helps find available swaps.</MudText>
 
-<MudButton Color="Color.Info" Variant="Variant.Filled" @onclick="Fetch" Class="mt-5 mb-5">Fetch Swaps</MudButton>
 
-@if (swaps != null)
+@if (hasWallet == false)
 {
+	<MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">Not wallet found please install the wallet at blockcore.net</MudAlert>
+}
+   
 
-
-	<MudTable Items="@swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+@if (myswaps != null)
+{
+	<MudTable Items="@myswaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
 		<HeaderContent>
 			<MudTh>Swap Id</MudTh>
 			<MudTh>Seller</MudTh>
@@ -40,19 +46,18 @@
 			<MudTd DataLabel="Date">@context.Created </MudTd>
 			<MudTd DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(context.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</MudTd>
 				<MudTd DataLabel="Status">@context.Status </MudTd>
-				<MudTd DataLabel="Details">
-					<MudButton Color="Color.Info" Variant="Variant.Filled" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
-				</MudTd>
+				<MudTd DataLabel="Details"><button class="btn btn-info" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</button> </MudTd>
 			</RowTemplate>
-		</MudTable>
+	</MudTable>
 }
 
 @code {
-	private IEnumerable<SwapSession> swaps = new List<SwapSession>();
+	private IEnumerable<SwapSession> myswaps = new List<SwapSession>();
 	private bool _loading;
 
 	Networks.Network network;
 	List<string> NetworkList;
+	private bool hasWallet;
 
 	string error;
 
@@ -61,37 +66,45 @@
 
 	long amountToSell = 1;
 	long amountToBuy = 10;
-	private bool hasWallet;
 	WalletAccounts? _walletAccounts;
 
 	private async Task Fetch()
 	{
-		try
-		{
-			this.swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
-		}
-		catch (Exception ex)
-		{
-			error = ex.Message;
-			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-		}
+		myswaps = storage.GetSwaps();
 
+	    if (myswaps != null)
+	    {
+	        foreach (var myswap in myswaps.ToList())
+	        {
+	            if (myswap.Status is SwapsDataStatus.Available or SwapsDataStatus.InProgress)
+	            {
+	                var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{myswap.SwapSessionId}");
+
+	                if (myswap.Status != swap.Status)
+	                {
+	                    myswaps.ToList().Remove(myswap);
+						myswaps.ToList().Add(swap);
+						storage.SetSwaps(myswaps.ToList());
+	                }
+	            }
+	        }
+	    }
 	}
-
+	
 	protected override async Task OnInitializedAsync()
 	{
 		NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
-		if (await WalletConnector.HasBlockcoreWallet() == false)
-		{
-			hasWallet = false;
-			return;
-		}
+	    if (await WalletConnector.HasBlockcoreWallet() == false)
+	    {
+	        hasWallet = false;
+	        return;
+	    }
 
-		hasWallet = true;
+	    hasWallet = true;
 
-		_walletAccounts = storage.GetOrCreate<WalletAccounts>();
-
+	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+		
 		await this.Fetch();
 	}
 

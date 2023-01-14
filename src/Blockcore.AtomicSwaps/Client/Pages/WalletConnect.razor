@@ -12,11 +12,12 @@
 
 <PageTitle>Wallet and balances</PageTitle>
 
-<h1>Connected Wallets</h1>
+<MudText Align="Align.Center" Typo="Typo.h4">Connected Wallets</MudText>
+<MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
 
 @if (!hasWallet)
 {
-    <p>Not wallet found please install the wallet at blockcore.net</p>
+    <MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">Not wallet found please install the wallet at blockcore.net</MudAlert>
 }
 else
 {

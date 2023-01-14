@@ -5,17 +5,24 @@
 <MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.ExtraSmall" />
 <MudSnackbarProvider />
 
-
 <MudLayout>
 	<MudAppBar Elevation="0" Style="border-bottom: 1px solid">
 		<MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+
 		<MudText class="w-100 text-warning fw-bold">WARNING ALPHA SOFTWARE</MudText>
+
 		<MudSpacer />
+
+		<MudTooltip Duration="1000" Text="Settings">
+			<MudIconButton Icon="@Icons.Material.Outlined.Settings" Color="Color.Inherit" Link="/settings" />
+		</MudTooltip>
 
 		<MudTooltip Duration="1000" Text="@(LayoutService.IsDarkMode ? "Switch to Light Theme" : "Switch to Dark Theme")">
 			<MudIconButton Icon="@(LayoutService.IsDarkMode ? @Icons.Rounded.LightMode : @Icons.Material.Outlined.DarkMode)" Color="Color.Inherit" OnClick="@LayoutService.ToggleDarkMode" />
 		</MudTooltip>
+
 		<MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/block-core/blockcore-atomic-swaps" Target="_blank" />
+
 	</MudAppBar>
 	<MudDrawer @bind-Open="_drawerOpen" Elevation="1" Style="border-right: 1px solid">
 		<MudDrawerHeader>
@@ -28,9 +35,10 @@
 		<NavMenu />
 	</MudDrawer>
 	<MudMainContent>
-		<MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
+		<MudContainer MaxWidth="MaxWidth.Large" Class="my-8 pb-8">
 			@Body
 		</MudContainer>
+
 	</MudMainContent>
 	<MudAppBar Elevation="1" Style="top: auto; bottom: 0; border-top: 1px solid">
 		version - @SwapsConfiguration.GetVersion()
