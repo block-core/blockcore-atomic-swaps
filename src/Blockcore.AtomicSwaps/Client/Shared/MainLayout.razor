@@ -6,7 +6,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-	<MudAppBar Elevation="0" Style="border-bottom: 1px solid">
+	<MudAppBar Elevation="1">
 		<MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
 
 		<MudText class="w-100 text-warning fw-bold">WARNING ALPHA SOFTWARE</MudText>
@@ -24,9 +24,8 @@
 		<MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/block-core/blockcore-atomic-swaps" Target="_blank" />
 
 	</MudAppBar>
-	<MudDrawer @bind-Open="_drawerOpen" Elevation="1" Style="border-right: 1px solid">
+	<MudDrawer @bind-Open="_drawerOpen" Elevation="0">
 		<MudDrawerHeader>
-
 			<a href="/" class="d-flex me-4">
 				<img src="/logo.png" class="swap-logo" />
 				<h5 class="brand-text">Atomic Swaps</h5>
@@ -35,13 +34,11 @@
 		<NavMenu />
 	</MudDrawer>
 	<MudMainContent>
-		<MudContainer MaxWidth="MaxWidth.Large" Class="my-8 pb-8">
+		<MudContainer MaxWidth="MaxWidth.Large" Class="my-8 pb-1 fade-in">
 			@Body
 		</MudContainer>
-
 	</MudMainContent>
-	<MudAppBar Elevation="1" Style="top: auto; bottom: 0; border-top: 1px solid">
+@*	<MudAppBar Style="top: auto; bottom: 0;">
 		version - @SwapsConfiguration.GetVersion()
-	</MudAppBar>
-
+	</MudAppBar>*@
 </MudLayout>

@@ -30,19 +30,21 @@ else
 
     @if (_walletAccounts.Connected)
     {
-        <p>Wallet key - @_walletAccounts.WalletPubKey</p>
-
-
         <MudTable Items="@_walletAccounts.Accounts" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Your Wallet</MudText>
+                <MudSpacer />
+                <MudTooltip Duration="1000" Text="Refresh">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Refresh" Color="Color.Info" disabled="@busy" @onclick="ConnectWallet" />
+                </MudTooltip>
+            </ToolBarContent>
             <HeaderContent>
                 <MudTh>Coin</MudTh>
-                <MudTh>Pubkey</MudTh>
-                <MudTh>Balance</MudTh>
+                <MudTh Class="text-end">Balance</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Coin">@context.Value.CoinSymbol</MudTd>
-                <MudTd DataLabel="Pubkey">@context.Value.Pubkey</MudTd>
-                <MudTd DataLabel="Balance">@Money.Satoshis(context.Value.Balance).ToUnit(MoneyUnit.BTC) @context.Value.CoinSymbol</MudTd>
+                <MudTd Class="text-one-line" DataLabel="Coin">@context.Value.CoinSymbol</MudTd>
+                <MudTd Class="text-one-line text-end" DataLabel="Balance">@Money.Satoshis(context.Value.Balance).ToUnit(MoneyUnit.BTC) @context.Value.CoinSymbol</MudTd>
             </RowTemplate>
         </MudTable>
     }
@@ -78,4 +80,5 @@ else
     {
         error = await WalletService.ConnectWallet(_walletAccounts);
     }
+
 }

@@ -46,21 +46,24 @@ namespace Blockcore.AtomicSwaps.Client
 		{
 			Black = "#110e2d",
 			AppbarText = "#424242",
+			Background = "#f5f8fa",
 			AppbarBackground = "rgba(255,255,255,0.8)",
-			DrawerBackground = "#ffffff",
-			GrayLight = "#e8e8e8",
-			GrayLighter = "#f9f9f9"
+			DrawerBackground = "#1e1e2d",
+			DrawerIcon = "#92929f",
+			DrawerText = "#92929f",
+			GrayLight = "#2a2833",
+			GrayLighter = "#1e1e2d"
 		};
 
 		private static readonly PaletteDark SwapsDarkPalette = new()
 		{
 			Primary = "#7e6fff",
 			Surface = "#1e1e2d",
-			Background = "#1a1a27",
+			Background = "#151521",
 			BackgroundGrey = "#151521",
 			AppbarText = "#92929f",
 			AppbarBackground = "rgba(26,26,39,0.8)",
-			DrawerBackground = "#1a1a27",
+			DrawerBackground = "#1e1e2d",
 			ActionDefault = "#74718e",
 			ActionDisabled = "#9999994d",
 			ActionDisabledBackground = "#605f6d4d",

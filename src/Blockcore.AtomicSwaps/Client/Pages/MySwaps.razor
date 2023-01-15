@@ -31,23 +31,23 @@
 {
 	<MudTable Items="@myswaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
 		<HeaderContent>
-			<MudTh>Swap Id</MudTh>
-			<MudTh>Seller</MudTh>
-			<MudTh>Buyer</MudTh>
+			<MudTh>From</MudTh>
+			<MudTh>To</MudTh>
 			<MudTh>Date</MudTh>
 			<MudTh>Is Mine</MudTh>
 			<MudTh>Status</MudTh>
 			<MudTh></MudTh>
 		</HeaderContent>
-		<RowTemplate>
-			<MudTd DataLabel="Swap Id">@context.SwapSessionId</MudTd>
-			<MudTd DataLabel="Seller">@Money.Satoshis(context.CoinSeller.Amount) - @context.CoinSeller.CoinSymbol</MudTd>
-			<MudTd DataLabel="Buyer">@Money.Satoshis(context.CoinBuyer.Amount) - @context.CoinBuyer.CoinSymbol</MudTd>
-			<MudTd DataLabel="Date">@context.Created </MudTd>
-			<MudTd DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(context.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</MudTd>
-				<MudTd DataLabel="Status">@context.Status </MudTd>
-				<MudTd DataLabel="Details"><button class="btn btn-info" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</button> </MudTd>
-			</RowTemplate>
+			<RowTemplate>
+				<MudTd Class="text-one-line" DataLabel="Seller">@Money.Satoshis(context.CoinSeller.Amount) - @context.CoinSeller.CoinSymbol</MudTd>
+				<MudTd Class="text-one-line" DataLabel="Buyer">@Money.Satoshis(context.CoinBuyer.Amount) - @context.CoinBuyer.CoinSymbol</MudTd>
+				<MudTd Class="text-one-line" DataLabel="Date">@context.Created </MudTd>
+				<MudTd Class="text-one-line" DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(context.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</MudTd>
+					<MudTd Class="text-one-line" DataLabel="Status">@context.Status </MudTd>
+					<MudTd DataLabel="Details">
+						<MudButton Color="Color.Info" Variant="Variant.Filled" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
+					</MudTd>
+				</RowTemplate>
 	</MudTable>
 }
 

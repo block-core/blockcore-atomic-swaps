@@ -18,99 +18,51 @@
 <PageTitle>Blockcore Atomic Swaps</PageTitle>
 
 <MudText Align="Align.Center" Typo="Typo.h4">Blockcore Atomic Swaps</MudText>
-<MudText Align="Align.Center" Class="mb-8 mt-8">This component helps find available swaps.</MudText>
+<MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
 
 
-@if (hasWallet == false)
-{
-	<MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">Not wallet found please install the wallet at blockcore.net</MudAlert>
-}
+<MudPaper Class="pa-4 mb-3">
+	<MudStack Row="true">
+		<MudAvatar Color="Color.Transparent"  Style="background-color:transparent !important" Image="https://chains.blockcore.net/assets/CITY/icon.png" Size="Size.Large" />
+		<MudStack Justify="Justify.Center" Spacing="0">
+			<MudText Typo="Typo.body1">CITY</MudText>
+			<MudText Typo="Typo.body2">City chain</MudText>
+		</MudStack>
+	</MudStack>
+</MudPaper>
+
+<MudPaper Class="pa-4 mb-3">
+	<MudStack Row="true">
+		<MudAvatar Color="Color.Transparent"  Style="background-color:transparent !important" Image="https://chains.blockcore.net/assets/STRAX/icon.png" Size="Size.Large" />
+		<MudStack Justify="Justify.Center" Spacing="0">
+			<MudText Typo="Typo.body1">STRAX</MudText>
+			<MudText Typo="Typo.body2">Stratis</MudText>
+		</MudStack>
+	</MudStack>
+</MudPaper>
    
+<MudPaper Class="pa-4 mb-3">
+	<MudStack Row="true">
+		<MudAvatar Color="Color.Transparent" Style="background-color:transparent !important" Image="https://chains.blockcore.net/assets/SBC/icon.png" Size="Size.Large" />
+		<MudStack Justify="Justify.Center" Spacing="0">
+			<MudText Typo="Typo.body1">SBC</MudText>
+			<MudText Typo="Typo.body2">Senior blockchain</MudText>
+		</MudStack>
+	</MudStack>
+</MudPaper>
 
-@if (myswaps != null)
-{
-	<MudTable Items="@myswaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
-		<HeaderContent>
-			<MudTh>Swap Id</MudTh>
-			<MudTh>Seller</MudTh>
-			<MudTh>Buyer</MudTh>
-			<MudTh>Date</MudTh>
-			<MudTh>Is Mine</MudTh>
-			<MudTh>Status</MudTh>
-			<MudTh></MudTh>
-		</HeaderContent>
-		<RowTemplate>
-			<MudTd DataLabel="Swap Id">@context.SwapSessionId</MudTd>
-			<MudTd DataLabel="Seller">@Money.Satoshis(context.CoinSeller.Amount) - @context.CoinSeller.CoinSymbol</MudTd>
-			<MudTd DataLabel="Buyer">@Money.Satoshis(context.CoinBuyer.Amount) - @context.CoinBuyer.CoinSymbol</MudTd>
-			<MudTd DataLabel="Date">@context.Created </MudTd>
-			<MudTd DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.CoinSeller.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(context.CoinBuyer.SenderPubkey) ? "I am buyer" : "not my swap")</MudTd>
-				<MudTd DataLabel="Status">@context.Status </MudTd>
-				<MudTd DataLabel="Details"><button class="btn btn-info" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</button> </MudTd>
-			</RowTemplate>
-	</MudTable>
-}
+<MudPaper Class="pa-4 mb-3">
+	<MudStack Row="true">
+		<MudAvatar Color="Color.Transparent"  Style="background-color:transparent !important" Image="https://chains.blockcore.net/assets/RSC/icon.png" Size="Size.Large" />
+		<MudStack Justify="Justify.Center" Spacing="0">
+			<MudText Typo="Typo.body1">RSC</MudText>
+			<MudText Typo="Typo.body2">Royal sports city</MudText>
+		</MudStack>
+	</MudStack>
+</MudPaper>
+ 
 
 @code {
-	private IEnumerable<SwapSession> myswaps = new List<SwapSession>();
-	private bool _loading;
-
-	Networks.Network network;
-	List<string> NetworkList;
-	private bool hasWallet;
-
-	string error;
-
-	string SwapFrom = "STRAX";
-	string SwapTo = "CITY";
-
-	long amountToSell = 1;
-	long amountToBuy = 10;
-	WalletAccounts? _walletAccounts;
-
-	private async Task Fetch()
-	{
-		myswaps = storage.GetSwaps();
-
-	    if (myswaps != null)
-	    {
-	        foreach (var myswap in myswaps.ToList())
-	        {
-	            if (myswap.Status is SwapsDataStatus.Available or SwapsDataStatus.InProgress)
-	            {
-	                var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{myswap.SwapSessionId}");
-
-	                if (myswap.Status != swap.Status)
-	                {
-	                    myswaps.ToList().Remove(myswap);
-						myswaps.ToList().Add(swap);
-						storage.SetSwaps(myswaps.ToList());
-	                }
-	            }
-	        }
-	    }
-	}
 	
-	protected override async Task OnInitializedAsync()
-	{
-		NetworkList = SwapsConfiguration.Networks.Keys.ToList();
-
-	    if (await WalletConnector.HasBlockcoreWallet() == false)
-	    {
-	        hasWallet = false;
-	        return;
-	    }
-
-	    hasWallet = true;
-
-	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
-		
-		await this.Fetch();
-	}
-
-	protected async Task ViewSwap(string session)
-	{
-		NavigationManager.NavigateTo($"viewswap/{session}");
-	}
 
 }

@@ -102,8 +102,7 @@ a, .btn-link {
 
 .loading-text h2 {
     position: absolute;
-    top: 40vh;
-    width: 100%;
+    inset: calc(45vh + 3.25rem) 0 auto 0.2rem;
     text-align: center;
 }
 
@@ -133,9 +132,28 @@ a, .btn-link {
         color: #5a47ff !important;
     }
 
-.footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    color: white;
+.header {
+    backdrop-filter: blur(20px);
+    box-shadow: inset 0px -1px 1px #e7ebf0;
+}
+
+.text-one-line {
+    clear: both;
+    /*display: inline-block;*/
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.fade-in {
+    animation: fadeIn 2s;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
