@@ -158,8 +158,8 @@ else
 			return;
 		}
 
-		var accountSellerSide = _walletAccounts.GetAccount(swapFrom);
-		var accountBuyerSide = _walletAccounts.GetAccount(swapTo);
+		var accountSellerSide = _walletAccounts.FindAccount(swapFrom);
+		var accountBuyerSide = _walletAccounts.FindAccount(swapTo);
 
 		var amountToSellSats = Money.Coins(amountToSell);
 		var amountToBuySats = Money.Coins(amountToBuy);
