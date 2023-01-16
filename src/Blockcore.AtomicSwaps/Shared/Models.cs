@@ -147,6 +147,10 @@ public class WalletAccounts
     {
 	    return Accounts.Values.Any(a => a.Pubkey == pubkey);
     }
+    public bool HasCoin(string coinSymbol)
+    {
+        return Accounts.Values.Any(a => a.CoinSymbol == coinSymbol);
+    }
 
     public WalletAccount GetAccountByKey(string pubkey)
     {
