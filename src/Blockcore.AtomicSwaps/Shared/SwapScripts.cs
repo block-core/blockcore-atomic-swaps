@@ -11,7 +11,24 @@ namespace Blockcore.AtomicSwaps.Shared
     {
         public static uint256 GetSecretFromScriptSig(Transaction transaciton)
         {
-            var secretBytes = transaciton.Inputs[0].ScriptSig.ToOps()[1].PushData;
+            byte[] secretBytes = null;
+
+            var input = transaciton.Inputs[0];
+
+            if (!string.IsNullOrEmpty(input.WitScript.ToString()))
+            {
+                var witscript = input.WitScript;
+                var script = witscript.ToScript();
+                var ops = script.ToOps();
+                var data1 = ops[1];
+                var data = data1.PushData;
+
+                secretBytes = data;//transaciton.Inputs[0].WitScript.ToScript().ToOps()[1].PushData;
+            }
+            else
+            {
+                secretBytes = transaciton.Inputs[0].ScriptSig.ToOps()[1].PushData;
+            }
 
             var secret = new uint256(secretBytes);
 

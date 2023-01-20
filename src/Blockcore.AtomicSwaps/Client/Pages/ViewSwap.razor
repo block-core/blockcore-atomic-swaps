@@ -482,6 +482,13 @@
 
         swapSessionCoin.SwapTransactionHash = trxContext.transactionId;
         swapSessionCoin.SwapTransactionHex = trxContext.transactionHex;
+
+        if (trxContext.transactionId == null || trxContext.transactionHex == null)
+        {
+            error = "transactionId was null, something went wrong";
+            Logger.LogWarning("trxid was null");
+            Logger.LogWarning("trxhex=" + trxContext.transactionHex);
+        }
     }
 
     //private async Task BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
@@ -835,6 +842,7 @@
             var secret = SwapScripts.GetSecretFromScriptSig(transaciton);
 
             this.SharedSecret = secret.ToString();
+            return;
         }
 
         var indexer = SwapsConfiguration.Indexers.First(f => f.Symbol == swap.CoinBuyer.CoinSymbol);
