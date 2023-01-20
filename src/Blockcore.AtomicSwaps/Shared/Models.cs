@@ -147,23 +147,31 @@ public class WalletAccounts
     {
 	    return Accounts.Values.Any(a => a.Pubkey == pubkey);
     }
-
-    public WalletAccount GetAccount(string coinSymbol)
+    public bool HasCoin(string coinSymbol)
     {
-        return Accounts[coinSymbol];
+        return Accounts.Values.Any(a => a.CoinSymbol == coinSymbol);
     }
 
-    public WalletAccount? TryGetAccount(string coinSymbol)
+    public WalletAccount GetAccountByKey(string pubkey)
     {
-        Accounts.TryGetValue(coinSymbol, out WalletAccount? account);
-        
-        return account;
+        return Accounts.Values.First(a => a.Pubkey == pubkey);
+    }
+
+    public WalletAccount? TryGetAccountByKey(string pubkey)
+    {
+        return Accounts.Values.FirstOrDefault(a => a.Pubkey == pubkey);
+    }
+
+    public WalletAccount FindAccount(string coinSymbol)
+    {
+        return Accounts.Values.OrderByDescending(a => a.Balance).First(a => a.CoinSymbol == coinSymbol);
     }
 }
 
 public class WalletAccount
 {
     public string Pubkey { get; set; }
+    public string Name { get; set; }
     public string Address { get; set; }
     public string PubkeyPath { get; set; }
     public string CoinSymbol { get; set; }

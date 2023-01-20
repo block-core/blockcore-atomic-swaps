@@ -39,10 +39,12 @@ else
                 </MudTooltip>
             </ToolBarContent>
             <HeaderContent>
+                <MudTh>Name</MudTh>
                 <MudTh>Coin</MudTh>
                 <MudTh Class="text-end">Balance</MudTh>
             </HeaderContent>
             <RowTemplate>
+                <MudTd Class="text-one-line" DataLabel="Name">@context.Value.Name</MudTd>
                 <MudTd Class="text-one-line" DataLabel="Coin">@context.Value.CoinSymbol</MudTd>
                 <MudTd Class="text-one-line text-end" DataLabel="Balance">@Money.Satoshis(context.Value.Balance).ToUnit(MoneyUnit.BTC) @context.Value.CoinSymbol</MudTd>
             </RowTemplate>

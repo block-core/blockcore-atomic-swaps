@@ -316,11 +316,35 @@
             WriteIndented = true
         });
 
-        var accountSellerSide = _walletAccounts.TryGetAccount(swap.CoinSeller.CoinSymbol);
-        var accountBuyerSide = _walletAccounts.TryGetAccount(swap.CoinBuyer.CoinSymbol);
+        if (swap != null)
+        {
+            Guard.NotNull(swap.CoinSeller, nameof(swap.CoinSeller));
+            Guard.NotNull(swap.CoinBuyer, nameof(swap.CoinBuyer));
 
-        mypubkeySellerSide = accountSellerSide?.Pubkey;
-        mypubkeyBuyerSide = accountBuyerSide?.Pubkey;
+            // if I am the seller this is where my keys will be found
+            if (swap.CoinSeller.SenderPubkey != null)
+            {
+                Guard.NotNull(swap.CoinBuyer.ReceiverPubkey, nameof(swap.CoinBuyer.ReceiverPubkey));
+
+                var accountSellerSide = _walletAccounts.TryGetAccountByKey(swap.CoinSeller.SenderPubkey);
+                mypubkeySellerSide = accountSellerSide?.Pubkey;
+
+                var accountBuyerSide = _walletAccounts.TryGetAccountByKey(swap.CoinBuyer.ReceiverPubkey);
+                mypubkeyBuyerSide = accountBuyerSide?.Pubkey;
+            }
+
+            // if I am the buyer this is where my keys will be found   
+            if (mypubkeySellerSide == null && swap.CoinBuyer.SenderPubkey!= null)
+            {
+                Guard.NotNull(swap.CoinSeller.ReceiverPubkey, nameof(swap.CoinSeller.ReceiverPubkey));
+
+                var accountSellerSide = _walletAccounts.TryGetAccountByKey(swap.CoinSeller.ReceiverPubkey);
+                mypubkeySellerSide = accountSellerSide?.Pubkey;
+
+                var accountBuyerSide = _walletAccounts.TryGetAccountByKey(swap.CoinBuyer.SenderPubkey);
+                mypubkeyBuyerSide = accountBuyerSide?.Pubkey;
+            }
+        }
 
         await this.RefreshConfirmations();
     }
@@ -359,8 +383,14 @@
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-        Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
-        var account = _walletAccounts.GetAccount(network.CoinTicker);
+        Guard.Assert(mypubkeySellerSide == null);
+        Guard.Assert(mypubkeyBuyerSide == null);
+        
+        var accountSeller = _walletAccounts.FindAccount(swap.CoinSeller.CoinSymbol);
+        var accountBuyer = _walletAccounts.FindAccount(swap.CoinBuyer.CoinSymbol);
+
+        mypubkeyBuyerSide = accountBuyer.Pubkey;
+        mypubkeySellerSide = accountSeller.Pubkey;
 
         swap.Status = SwapsDataStatus.InProgress;
         swap.CoinBuyer.SenderPubkey = mypubkeyBuyerSide;
@@ -418,7 +448,7 @@
 
         swapSessionCoin.RecoveryLockTime = recoveryLockTime;
         
-        var account = _walletAccounts.GetAccount(network.CoinTicker);
+        var account = _walletAccounts.GetAccountByKey(swapSessionCoin.SenderPubkey);
 
         RedeemType redeemType = account.AccountPurpose == 44 ? RedeemType.P2SH :
             account.AccountPurpose == 84 ? RedeemType.WitnessV0 : RedeemType.P2SH;
@@ -664,7 +694,7 @@
 
         Networks.Network network = SwapsConfiguration.Networks[swap.CoinBuyer.CoinSymbol];
 
-        var account = _walletAccounts.GetAccount(swap.CoinSeller.CoinSymbol);
+        var account = _walletAccounts.GetAccountByKey(swap.CoinSeller.SenderPubkey);
         var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(account, swap.SwapSessionId);
         if (!string.IsNullOrEmpty(errorOut))
         {
@@ -685,15 +715,9 @@
             return;
         }
 
-        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
-        //var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
+        account = _walletAccounts.GetAccountByKey(swap.CoinBuyer.ReceiverPubkey);
 
-        // todo: change the swap pubkey to reflect the coin type:
-        // right now we use one pubkey (the pubkey that initiated the swap) for both network, 
-        // we need to use the pubkey of the respective network
-
-        account = _walletAccounts.GetAccount(swap.CoinBuyer.CoinSymbol);
-        //account = _walletAccounts.GetAccount(swap.CoinBuyer.CoinSymbol);
+        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
 
         await ExchangeSwapFund1(swap.CoinBuyer, sharedSecret, address, account);
 
@@ -727,9 +751,9 @@
             return;
         }
 
-        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
+        var account = _walletAccounts.GetAccountByKey(swap.CoinSeller.ReceiverPubkey);
 
-        var account = _walletAccounts.GetAccount(swap.CoinSeller.CoinSymbol);
+        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
 
         await ExchangeSwapFund1(swap.CoinSeller, new uint256(this.SharedSecret), address, account);
 
@@ -926,9 +950,9 @@
             return;
         }
 
-        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
+        var account = _walletAccounts.GetAccountByKey(swap.CoinSeller.SenderPubkey);
 
-        var account = _walletAccounts.GetAccount(swap.CoinSeller.CoinSymbol);
+        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
 
         await RecoverFunds1(swap.CoinSeller, address, account);
 
@@ -959,9 +983,9 @@
             return;
         }
 
-        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
+        var account = _walletAccounts.GetAccountByKey(swap.CoinBuyer.SenderPubkey);
 
-        var account = _walletAccounts.GetAccount(swap.CoinBuyer.CoinSymbol);
+        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
 
         await RecoverFunds1(swap.CoinBuyer, address, account);
 

@@ -144,22 +144,22 @@ else
 			return;
 		}
 
-		if (!_walletAccounts.Accounts.ContainsKey(swapFrom))
+		if (!_walletAccounts.HasCoin(swapFrom))
 		{
 			error = $"The coin {swapFrom} network is not found in wallet";
 			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
 			return;
 		}
 
-		if (!_walletAccounts.Accounts.ContainsKey(swapTo))
+		if (!_walletAccounts.HasCoin(swapTo))
 		{
 			error = $"The coin {swapTo} network is not found in wallet";
 			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
 			return;
 		}
 
-		var accountSellerSide = _walletAccounts.GetAccount(swapFrom);
-		var accountBuyerSide = _walletAccounts.GetAccount(swapTo);
+		var accountSellerSide = _walletAccounts.FindAccount(swapFrom);
+		var accountBuyerSide = _walletAccounts.FindAccount(swapTo);
 
 		var amountToSellSats = Money.Coins(amountToSell);
 		var amountToBuySats = Money.Coins(amountToBuy);

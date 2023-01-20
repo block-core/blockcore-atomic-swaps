@@ -1,12 +1,9 @@
-using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions;
-using Blockcore.AtomicSwaps.Client.Pages;
-using Blockcore.AtomicSwaps.Server.Controllers;
-using System.Net.Http.Json;
-using System.Text.Json;
 using Blockcore.AtomicSwaps.BlockcoreWallet;
-using Blockcore.Builder;
+using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions;
+using Blockcore.AtomicSwaps.Server.Controllers;
 using Blockcore.Utilities;
 using NBitcoin;
+using System.Text.Json;
 
 namespace Blockcore.AtomicSwaps.Client.Services
 {
@@ -84,10 +81,11 @@ namespace Blockcore.AtomicSwaps.Client.Services
 
                 foreach (var walletAccount in walletConnectInput.WalletApiMessage.response.accounts)
                 {
-                    if (walletConnectInput.WalletAccounts.Accounts.TryGetValue(walletAccount.networkType, out WalletAccount account))
+                    if (walletConnectInput.WalletAccounts.Accounts.TryGetValue(walletAccount.id, out WalletAccount account))
                     {
                         // refresh the balance
                         account.Balance = walletAccount.history.balance;
+                        account.Name = walletAccount.name;
                     }
                     else
                     {
@@ -99,6 +97,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
                         WalletAccount newAccount = new WalletAccount
                         {
                             Pubkey = keys.response.publicKey,
+                            Name = walletAccount.name,
                             CoinSymbol = walletAccount.networkType,
                             WalletId = walletConnectInput.WalletApiMessage.response.wallet.id,
                             AccountId = walletAccount.id,
@@ -106,7 +105,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
                             AccountPurpose = walletAccount.purpose
                         };
 
-                        walletConnectInput.WalletAccounts.Accounts.Add(newAccount.CoinSymbol, newAccount);
+                        walletConnectInput.WalletAccounts.Accounts.Add(newAccount.AccountId, newAccount);
                     }
                 }
 
