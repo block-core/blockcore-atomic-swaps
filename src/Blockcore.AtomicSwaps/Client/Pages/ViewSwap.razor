@@ -334,7 +334,7 @@
             }
 
             // if I am the buyer this is where my keys will be found   
-            if (swap.CoinBuyer.SenderPubkey!= null)
+            if (mypubkeySellerSide == null && swap.CoinBuyer.SenderPubkey!= null)
             {
                 Guard.NotNull(swap.CoinSeller.ReceiverPubkey, nameof(swap.CoinSeller.ReceiverPubkey));
 
@@ -715,15 +715,9 @@
             return;
         }
 
-        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
-        //var extendedKey = ExtKey.Parse(storage.GetWalletPrivkey(), network);
-
-        // todo: change the swap pubkey to reflect the coin type:
-        // right now we use one pubkey (the pubkey that initiated the swap) for both network, 
-        // we need to use the pubkey of the respective network
-
         account = _walletAccounts.GetAccountByKey(swap.CoinBuyer.ReceiverPubkey);
-        //account = _walletAccounts.GetAccount(swap.CoinBuyer.CoinSymbol);
+
+        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
 
         await ExchangeSwapFund1(swap.CoinBuyer, sharedSecret, address, account);
 
@@ -757,9 +751,9 @@
             return;
         }
 
-        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
-
         var account = _walletAccounts.GetAccountByKey(swap.CoinSeller.ReceiverPubkey);
+
+        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
 
         await ExchangeSwapFund1(swap.CoinSeller, new uint256(this.SharedSecret), address, account);
 
@@ -956,9 +950,9 @@
             return;
         }
 
-        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
-
         var account = _walletAccounts.GetAccountByKey(swap.CoinSeller.SenderPubkey);
+
+        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
 
         await RecoverFunds1(swap.CoinSeller, address, account);
 
@@ -989,9 +983,9 @@
             return;
         }
 
-        var address = SwapsConfiguration.GetNextAvailableAddress1(network, walletConnecet);
-
         var account = _walletAccounts.GetAccountByKey(swap.CoinBuyer.SenderPubkey);
+
+        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
 
         await RecoverFunds1(swap.CoinBuyer, address, account);
 

@@ -75,12 +75,12 @@ namespace Blockcore.AtomicSwaps.Client
             return pubKey;
         }
 
-        public static string GetNextAvailableAddress1(Networks.Network network, WalletConnectInput walletConnectInputs)
+        public static string GetNextAvailableAddress1(WalletConnectInput walletConnectInputs, WalletAccount walletAccount)
         {
             Guard.NotNull(walletConnectInputs, nameof(walletConnectInputs));
             Guard.NotNull(walletConnectInputs.WalletApiMessage, nameof(walletConnectInputs.WalletApiMessage));
 
-            var account = walletConnectInputs.WalletApiMessage.response.accounts.First(f => f.networkType == network.CoinTicker);
+            var account = walletConnectInputs.WalletApiMessage.response.accounts.Single(f => f.id == walletAccount.AccountId);
 
             return account.state.receive.Last().address;
         }
