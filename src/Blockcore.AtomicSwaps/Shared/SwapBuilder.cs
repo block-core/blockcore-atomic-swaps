@@ -96,7 +96,7 @@ namespace Blockcore.AtomicSwaps.Shared
 
             var swapSpendTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
             TxIn swapSpentInput = swapSpendTransaction.AddInput(swapTransaction, (int)swapOutput.N);
-            TxOut swapSpendTransactionTxOut = swapSpendTransaction.AddOutput(Money.Coins(0), new BitcoinPubKeyAddress(sendToAddress, network));
+            TxOut swapSpendTransactionTxOut = swapSpendTransaction.AddOutput(Money.Coins(0), BitcoinAddress.Create(sendToAddress, network));
 
            // Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
             Money send = swapOutput.TxOut.Value - fee;
@@ -203,7 +203,7 @@ namespace Blockcore.AtomicSwaps.Shared
 
             var recoverTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
             TxIn recoverInput = recoverTransaction.AddInput(swapTransaction, (int)swapOutput.N);
-            TxOut recoverTransactionTxOut = recoverTransaction.AddOutput(Money.Coins(0), new BitcoinPubKeyAddress(sendToAddress, network));
+            TxOut recoverTransactionTxOut = recoverTransaction.AddOutput(Money.Coins(0), BitcoinAddress.Create(sendToAddress, network));
 
             //Money fee = feeRate.GetFee(swapTransaction, network.Consensus.Options.WitnessScaleFactor);
             Money send = swapOutput.TxOut.Value - fee;

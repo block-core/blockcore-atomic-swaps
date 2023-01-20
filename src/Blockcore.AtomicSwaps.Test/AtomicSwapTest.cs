@@ -229,7 +229,7 @@ namespace Blockcore.AtomicSwaps.Test
             var swapSpendUnsignedTransaction = SwapBuilder.CreateSwapSpendUnsignedTransaction(
                 cityNetwork,
                 swapTransaction.Transaction,
-                receiverKeyCITY.PubKey.GetAddress(cityNetwork).ToString(),
+                receiverKeyCITY.PubKey.GetSegwitAddress(cityNetwork).ToString(),
                 Money.Satoshis(cityNetwork.MinTxFee * 3));
 
             var swapSpendTransaction = SwapBuilder.SignSwapSpendUnsignedTransaction(
@@ -249,7 +249,7 @@ namespace Blockcore.AtomicSwaps.Test
             var swapRecoverUnsignedTransaction = SwapBuilder.CreateSwapRecoveryUnsignedTransaction(
                 cityNetwork,
                 swapTransaction.Transaction,
-                senderKeyCITY.PubKey.GetAddress(cityNetwork).ToString(),
+                senderKeyCITY.PubKey.GetSegwitAddress(cityNetwork).ToString(),
                 Money.Satoshis(cityNetwork.MinTxFee * 3),
                 DateTime.UtcNow.AddHours(48));
 

@@ -13,9 +13,17 @@ namespace Blockcore.AtomicSwaps.Shared
         {
             byte[] secretBytes = null;
 
-            if (transaciton.Inputs[0].WitScript != null)
+            var input = transaciton.Inputs[0];
+
+            if (!string.IsNullOrEmpty(input.WitScript.ToString()))
             {
-                secretBytes = transaciton.Inputs[0].WitScript.ToScript().ToOps()[1].PushData;
+                var witscript = input.WitScript;
+                var script = witscript.ToScript();
+                var ops = script.ToOps();
+                var data1 = ops[1];
+                var data = data1.PushData;
+
+                secretBytes = data;//transaciton.Inputs[0].WitScript.ToScript().ToOps()[1].PushData;
             }
             else
             {
