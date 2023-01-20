@@ -316,16 +316,34 @@
             WriteIndented = true
         });
 
-        if (swap?.CoinSeller?.SenderPubkey != null)
+        if (swap != null)
         {
-            var accountSellerSide = _walletAccounts.TryGetAccountByKey(swap.CoinSeller.SenderPubkey);
-            mypubkeySellerSide = accountSellerSide?.Pubkey;
-        }
+            Guard.NotNull(swap.CoinSeller, nameof(swap.CoinSeller));
+            Guard.NotNull(swap.CoinBuyer, nameof(swap.CoinBuyer));
 
-        if (swap?.CoinBuyer?.ReceiverPubkey != null)
-        {
-            var accountBuyerSide = _walletAccounts.TryGetAccountByKey(swap.CoinBuyer.ReceiverPubkey);
-            mypubkeyBuyerSide = accountBuyerSide?.Pubkey;
+            // if I am the seller this is where my keys will be found
+            if (swap.CoinSeller.SenderPubkey != null)
+            {
+                Guard.NotNull(swap.CoinBuyer.ReceiverPubkey, nameof(swap.CoinBuyer.ReceiverPubkey));
+
+                var accountSellerSide = _walletAccounts.TryGetAccountByKey(swap.CoinSeller.SenderPubkey);
+                mypubkeySellerSide = accountSellerSide?.Pubkey;
+
+                var accountBuyerSide = _walletAccounts.TryGetAccountByKey(swap.CoinBuyer.ReceiverPubkey);
+                mypubkeyBuyerSide = accountBuyerSide?.Pubkey;
+            }
+
+            // if I am the buyer this is where my keys will be found   
+            if (swap.CoinBuyer.SenderPubkey!= null)
+            {
+                Guard.NotNull(swap.CoinSeller.ReceiverPubkey, nameof(swap.CoinSeller.ReceiverPubkey));
+
+                var accountSellerSide = _walletAccounts.TryGetAccountByKey(swap.CoinSeller.ReceiverPubkey);
+                mypubkeySellerSide = accountSellerSide?.Pubkey;
+
+                var accountBuyerSide = _walletAccounts.TryGetAccountByKey(swap.CoinBuyer.SenderPubkey);
+                mypubkeyBuyerSide = accountBuyerSide?.Pubkey;
+            }
         }
 
         await this.RefreshConfirmations();
