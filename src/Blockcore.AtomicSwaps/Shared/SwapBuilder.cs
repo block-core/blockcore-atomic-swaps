@@ -121,7 +121,14 @@ namespace Blockcore.AtomicSwaps.Shared
             uint256 sighash = swapSpendUnsignedTransaction.GetSignatureHash(network, new Coin(swapTransaction, swapOutput.TxOut).ToScriptCoin(redeemScript));
             TransactionSignature signature = receiverPrivateKey.Sign(sighash, SigHash.All);
 
-            swapSpentInput.ScriptSig = SwapScripts.GetAtomicSwapExchangeScriptSig(signature, sharedSecret, redeemScript);
+            if (swapOutput.TxOut.ScriptPubKey.IsScriptType(ScriptType.P2WSH))
+            {
+                swapSpentInput.WitScript = SwapScripts.GetAtomicSwapExchangeScriptSig(signature, sharedSecret, redeemScript);
+            }
+            else
+            {
+                swapSpentInput.ScriptSig = SwapScripts.GetAtomicSwapExchangeScriptSig(signature, sharedSecret, redeemScript);
+            }
 
             Transaction swapSpendTransaction = swapSpendUnsignedTransaction; // assign for readability
 
@@ -224,7 +231,14 @@ namespace Blockcore.AtomicSwaps.Shared
             uint256 sighash = unsignedRecoverTransaction.GetSignatureHash(network, new Coin(swapTransaction, swapOutput.TxOut).ToScriptCoin(redeemScript));
             TransactionSignature signature = senderPrivateKey.Sign(sighash, SigHash.All);
 
-            recoverInput.ScriptSig = SwapScripts.GetAtomicSwapRecoverScriptSig(signature, redeemScript);
+            if (swapOutput.TxOut.ScriptPubKey.IsScriptType(ScriptType.P2WSH))
+            {
+                recoverInput.WitScript = SwapScripts.GetAtomicSwapRecoverScriptSig(signature, redeemScript);
+            }
+            else
+            {
+                recoverInput.ScriptSig = SwapScripts.GetAtomicSwapRecoverScriptSig(signature, redeemScript);
+            }
 
             Transaction recoverTransaction = unsignedRecoverTransaction; // assign for readability
 
