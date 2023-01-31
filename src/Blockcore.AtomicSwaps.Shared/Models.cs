@@ -1,4 +1,4 @@
-namespace Blockcore.AtomicSwaps.Server.Controllers;
+namespace Blockcore.AtomicSwaps.Shared;
 
 public class SwapSessionCoin
 {
@@ -12,8 +12,8 @@ public class SwapSessionCoin
     public string? SwapTransactionHex { get; set; }
     public string? SwapRedeemScriptHex { get; set; }
     public string? SwapTransactionHash { get; set; }
-    public string? SenderRecoveryTransactionHex { get; set; }
-    public string? SenderRecoveryTransactionHash { get; set; }
+    public string? RecoveryTransactionHex { get; set; }
+    public string? RecoveryTransactionHash { get; set; }
     public string? ExchangeTransactionHex { get; set; }
     public string? ExchangeTransactionHash { get; set; }
     public DateTime? RecoveryLockTime { get; set; }
@@ -24,8 +24,8 @@ public class SwapSession
 {
     public string SwapSessionId { get; set; }
     public DateTime Created { get; set; }
-    public SwapSessionCoin CoinSeller { get; set; } = new();
-    public SwapSessionCoin CoinBuyer { get; set; } = new();
+    public SwapSessionCoin SwapMaker { get; set; } = new();
+    public SwapSessionCoin SwapTaker { get; set; } = new();
     public decimal ExchangeRate { get; set; }
     public string? SharedSecretHash { get; set; }
     public string? SharedSecret { get; set; }

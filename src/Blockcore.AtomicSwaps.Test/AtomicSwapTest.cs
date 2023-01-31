@@ -35,10 +35,10 @@ namespace Blockcore.AtomicSwaps.Test
 
             // seller builds the trx that sends 10 city to the buyer
 
-            var cityNetwork = Networks.Networks.City.Mainnet();
+            var cityNetwork = Shared.Networks.Networks.City.Mainnet();
             
             // create a fake inputTrx
-            var cityFakeInputTrx = Networks.Networks.City.Mainnet().Consensus.ConsensusFactory.CreateTransaction();
+            var cityFakeInputTrx = Shared.Networks.Networks.City.Mainnet().Consensus.ConsensusFactory.CreateTransaction();
             Key fakeInputKey = new Key();
             var fakeTxout = cityFakeInputTrx.AddOutput(Money.Parse("20.2"), fakeInputKey.ScriptPubKey);
 
@@ -113,10 +113,10 @@ namespace Blockcore.AtomicSwaps.Test
 
             // seller builds the trx that sends 10 city to the buyer
 
-            var cityNetwork = Networks.Networks.City.Mainnet();
+            var cityNetwork = Shared.Networks.Networks.City.Mainnet();
 
             // create a fake inputTrx
-            var cityFakeInputTrx = Networks.Networks.City.Mainnet().Consensus.ConsensusFactory.CreateTransaction();
+            var cityFakeInputTrx = Shared.Networks.Networks.City.Mainnet().Consensus.ConsensusFactory.CreateTransaction();
             Key fakeInputKey = new Key();
             var fakeTxout = cityFakeInputTrx.AddOutput(Money.Parse("20.2"), fakeInputKey.ScriptPubKey);
 
@@ -203,10 +203,10 @@ namespace Blockcore.AtomicSwaps.Test
 
             // seller builds the trx that sends 10 city to the buyer
 
-            var cityNetwork = Networks.Networks.City.Mainnet();
+            var cityNetwork = Shared.Networks.Networks.City.Mainnet();
 
             // create a fake inputTrx
-            var cityFakeInputTrx = Networks.Networks.City.Mainnet().Consensus.ConsensusFactory.CreateTransaction();
+            var cityFakeInputTrx = Shared.Networks.Networks.City.Mainnet().Consensus.ConsensusFactory.CreateTransaction();
             Key fakeInputKey = new Key();
             var fakeTxout = cityFakeInputTrx.AddOutput(Money.Parse("20.2"), fakeInputKey.ScriptPubKey);
 

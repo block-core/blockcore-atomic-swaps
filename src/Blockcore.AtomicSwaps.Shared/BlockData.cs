@@ -1,4 +1,4 @@
-namespace Blockcore.AtomicSwaps.Server.Controllers;
+namespace Blockcore.AtomicSwaps.Shared;
 
 public class BlockData
 {

@@ -1,9 +1,9 @@
 using Blockcore.AtomicSwaps.BlockcoreWallet;
 using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions;
-using Blockcore.AtomicSwaps.Server.Controllers;
 using Blockcore.Utilities;
 using NBitcoin;
 using System.Text.Json;
+using Blockcore.AtomicSwaps.Shared;
 
 namespace Blockcore.AtomicSwaps.Client.Services
 {

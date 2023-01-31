@@ -1,8 +1,7 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using Newtonsoft.Json;
 
-namespace Blockcore.Controllers.Converters
+namespace Blockcore.AtomicSwaps.Shared.Converters
 {
     /// <summary>
     /// Converts a decimal value to a string with the minimum number of decimals used by bitcoin (8).

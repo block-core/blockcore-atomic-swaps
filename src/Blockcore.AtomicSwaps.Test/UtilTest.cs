@@ -1,7 +1,7 @@
-using Blockcore.Features.Wallet.Helpers;
 using NBitcoin;
 using System;
 using System.Collections.Generic;
+using Blockcore.AtomicSwaps.Shared;
 using Xunit;
 
 namespace Blockcore.AtomicSwaps.Test
@@ -14,7 +14,7 @@ namespace Blockcore.AtomicSwaps.Test
             ExtKey.UseBCForHMACSHA512 = true;
             NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-            Networks.Network network = Blockcore.Networks.Networks.Strax.Mainnet();
+            Networks.Network network = Shared.Networks.Networks.Strax.Mainnet();
 
             var coinType = network.Consensus.CoinType;
             var accountIndex = 0; // for now only account 0

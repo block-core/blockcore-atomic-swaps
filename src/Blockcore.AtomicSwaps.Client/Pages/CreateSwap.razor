@@ -1,5 +1,4 @@
 ﻿@page "/createswap"
-@using Blockcore.AtomicSwaps.Server.Controllers
 @using Blockcore.Utilities
 @using NBitcoin
 @using NBitcoin.Crypto
@@ -185,11 +184,11 @@ else
 			if (s.Status == SwapsDataStatus.Complete)
 				return 0;
 
-			if (s.CoinSeller.SenderPubkey == accountSellerSide.Pubkey)
-				return s.CoinSeller.Amount;
+			if (s.SwapMaker.SenderPubkey == accountSellerSide.Pubkey)
+				return s.SwapMaker.Amount;
 
-			if (s.CoinBuyer.SenderPubkey == accountBuyerSide.Pubkey)
-				return s.CoinBuyer.Amount;
+			if (s.SwapTaker.SenderPubkey == accountBuyerSide.Pubkey)
+				return s.SwapTaker.Amount;
 
 			return 0;
 		});
@@ -221,7 +220,7 @@ else
 				Created = DateTime.UtcNow,
 				Status = SwapsDataStatus.Available,
 				SharedSecretHash = sharedSecretHash.ToString(),
-				CoinSeller = new SwapSessionCoin
+				SwapMaker = new SwapSessionCoin
 				{
 					CoinSymbol = swapFrom,
 					Amount = amountToSellSats.Satoshi,
@@ -230,7 +229,7 @@ else
 					ServiceFee = SwapsConfiguration.GetServiceData(swapFrom).ServiceFee,
 					ServiceAddress = SwapsConfiguration.GetServiceData(swapFrom).ServiceAddress,
 				},
-				CoinBuyer = new SwapSessionCoin
+				SwapTaker = new SwapSessionCoin
 				{
 					CoinSymbol = swapTo,
 					Amount = amountToBuySats.Satoshi,

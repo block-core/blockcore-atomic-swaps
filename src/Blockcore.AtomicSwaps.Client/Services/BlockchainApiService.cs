@@ -1,5 +1,5 @@
-using Blockcore.AtomicSwaps.Server.Controllers;
 using System.Net.Http.Json;
+using Blockcore.AtomicSwaps.Shared;
 
 namespace Blockcore.AtomicSwaps.Client.Services
 {

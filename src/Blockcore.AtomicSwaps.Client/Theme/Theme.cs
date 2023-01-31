@@ -3,13 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using MudBlazor;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Blockcore.AtomicSwaps.Client
+namespace Blockcore.AtomicSwaps.Client.Theme
 {
 	public class Theme
 	{

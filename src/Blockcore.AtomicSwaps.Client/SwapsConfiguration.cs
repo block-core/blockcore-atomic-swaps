@@ -1,9 +1,7 @@
 ﻿using Blockcore.AtomicSwaps.Client.Services;
-using Blockcore.AtomicSwaps.Server.Controllers;
 using Blockcore.AtomicSwaps.Shared;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
-using Blockcore.Features.Wallet.Helpers;
 using Blockcore.Networks;
 using Blockcore.Utilities;
 using NBitcoin;
@@ -28,12 +26,12 @@ namespace Blockcore.AtomicSwaps.Client
 
         public Dictionary<string, Network> Networks { get; } = new()
         {
-            { "STRAX", Blockcore.Networks.Networks.Strax.Mainnet() },
-            { "CITY", Blockcore.Networks.Networks.City.Mainnet() },
-            { "BTC", Blockcore.Networks.Networks.Bitcoin.Mainnet() },
-            { "IMPLX", Blockcore.Networks.Networks.Implx.Mainnet() },
-            { "RSC", Blockcore.Networks.Networks.RSC.Mainnet() },
-            { "SBC", Blockcore.Networks.Networks.SBC.Mainnet() },
+            { "STRAX", AtomicSwaps.Shared.Networks.Networks.Strax.Mainnet() },
+            { "CITY", AtomicSwaps.Shared.Networks.Networks.City.Mainnet() },
+            { "BTC", AtomicSwaps.Shared.Networks.Networks.Bitcoin.Mainnet() },
+            { "IMPLX", AtomicSwaps.Shared.Networks.Networks.Implx.Mainnet() },
+            { "RSC", AtomicSwaps.Shared.Networks.Networks.RSC.Mainnet() },
+            { "SBC", AtomicSwaps.Shared.Networks.Networks.SBC.Mainnet() },
         };
 
         public static string GetVersion()

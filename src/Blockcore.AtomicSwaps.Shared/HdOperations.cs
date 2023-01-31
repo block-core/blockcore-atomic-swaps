@@ -1,9 +1,8 @@
-﻿using System;
-using Blockcore.Networks;
+﻿using Blockcore.Networks;
 using Blockcore.Utilities;
 using NBitcoin;
 
-namespace Blockcore.Features.Wallet.Helpers
+namespace Blockcore.AtomicSwaps.Shared
 {
     /// <summary>
     /// Class providing helper methods for working with Hierarchical Deterministic (HD) wallets.

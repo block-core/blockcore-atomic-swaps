@@ -16,7 +16,7 @@ namespace Blockcore.AtomicSwaps.Client.Shared
 		protected override void OnInitialized()
 		{
 			LayoutService.MajorUpdateOccured += LayoutServiceOnMajorUpdateOccured;
-			LayoutService.SetBaseTheme(Theme.SwapsTheme());
+			LayoutService.SetBaseTheme(Theme.Theme.SwapsTheme());
 			base.OnInitialized();
 		}
 
