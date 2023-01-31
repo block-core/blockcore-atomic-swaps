@@ -1,15 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
-using Blockcore.AtomicSwaps.Server.Controllers;
-using Blockcore.AtomicSwaps.Shared;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Features.Wallet.Helpers;
 using NBitcoin;
-using NBitcoin.Policy;
+using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace Blockcore.AtomicSwaps.Test
@@ -65,7 +57,7 @@ namespace Blockcore.AtomicSwaps.Test
                 var path = HdOperations.CreateHdPath(purpose, coinType, accountIndex, false, scanIndex);
 
                 lst.Add((adddress, path, pubkey.ToHex(network.Consensus.ConsensusFactory)));
-              }
+            }
         }
     }
 }
