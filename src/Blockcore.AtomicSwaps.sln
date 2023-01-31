@@ -3,12 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Server", "Blockcore.AtomicSwaps\Server\Blockcore.AtomicSwaps.Server.csproj", "{1C19E7EC-4EC5-406F-BB09-D3EFB66EF464}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Client", "Blockcore.AtomicSwaps\Client\Blockcore.AtomicSwaps.Client.csproj", "{A384A61A-E30C-4C04-96DB-5148455D6FCD}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Shared", "Blockcore.AtomicSwaps\Shared\Blockcore.AtomicSwaps.Shared.csproj", "{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Test", "Blockcore.AtomicSwaps.Test\Blockcore.AtomicSwaps.Test.csproj", "{172554B5-8EB3-44E7-A1A3-E307F9362F5E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.BlockcoreWallet", "Blockcore.AtomicSwaps.BlockcoreWallet\Blockcore.AtomicSwaps.BlockcoreWallet.csproj", "{907FFB78-FBB2-4B3B-B9A2-8F45B3F3F259}"
@@ -23,24 +17,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\package.json = ..\package.json
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Shared", "Blockcore.AtomicSwaps.Shared\Blockcore.AtomicSwaps.Shared.csproj", "{D7CC9C28-055E-4B18-AEA5-1D978902B50F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Client", "Blockcore.AtomicSwaps.Client\Blockcore.AtomicSwaps.Client.csproj", "{6EA7228B-51B7-4655-A533-D5BF868DC02A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.AtomicSwaps.Server", "Blockcore.AtomicSwaps.Server\Blockcore.AtomicSwaps.Server.csproj", "{FAFF3121-BC37-4677-AE27-ECF6BB799DAF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1C19E7EC-4EC5-406F-BB09-D3EFB66EF464}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1C19E7EC-4EC5-406F-BB09-D3EFB66EF464}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1C19E7EC-4EC5-406F-BB09-D3EFB66EF464}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1C19E7EC-4EC5-406F-BB09-D3EFB66EF464}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A384A61A-E30C-4C04-96DB-5148455D6FCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A384A61A-E30C-4C04-96DB-5148455D6FCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A384A61A-E30C-4C04-96DB-5148455D6FCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A384A61A-E30C-4C04-96DB-5148455D6FCD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -53,17 +41,29 @@ Global
 		{39D1BF25-6D80-4D08-99EA-D4BF59A74AE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39D1BF25-6D80-4D08-99EA-D4BF59A74AE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39D1BF25-6D80-4D08-99EA-D4BF59A74AE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7CC9C28-055E-4B18-AEA5-1D978902B50F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7CC9C28-055E-4B18-AEA5-1D978902B50F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7CC9C28-055E-4B18-AEA5-1D978902B50F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7CC9C28-055E-4B18-AEA5-1D978902B50F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EA7228B-51B7-4655-A533-D5BF868DC02A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EA7228B-51B7-4655-A533-D5BF868DC02A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EA7228B-51B7-4655-A533-D5BF868DC02A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EA7228B-51B7-4655-A533-D5BF868DC02A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FAFF3121-BC37-4677-AE27-ECF6BB799DAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAFF3121-BC37-4677-AE27-ECF6BB799DAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAFF3121-BC37-4677-AE27-ECF6BB799DAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAFF3121-BC37-4677-AE27-ECF6BB799DAF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{1C19E7EC-4EC5-406F-BB09-D3EFB66EF464} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
-		{A384A61A-E30C-4C04-96DB-5148455D6FCD} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
-		{A78CCC4D-3FA5-4CB4-A88A-7F7C30F072E2} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
 		{172554B5-8EB3-44E7-A1A3-E307F9362F5E} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
 		{907FFB78-FBB2-4B3B-B9A2-8F45B3F3F259} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
 		{39D1BF25-6D80-4D08-99EA-D4BF59A74AE6} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{D7CC9C28-055E-4B18-AEA5-1D978902B50F} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{6EA7228B-51B7-4655-A533-D5BF868DC02A} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
+		{FAFF3121-BC37-4677-AE27-ECF6BB799DAF} = {0E08E290-C1B0-411D-AD3B-16DEFEF025F1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E63BB75-3610-454D-985B-F494BC626257}
