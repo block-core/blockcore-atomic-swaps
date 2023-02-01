@@ -96,9 +96,9 @@
 
     <p><strong>Maker sends @Money.Satoshis(swap.SwapMaker.Amount + swap.SwapMaker.NetworkFee + swap.SwapMaker.ServiceFee) @swap.SwapMaker.CoinSymbol</strong></p>
     <p>Swap amount = @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol</p>
-    <p>Network fee = @Money.Satoshis(swap.SwapMaker.NetworkFee) @swap.SwapMaker.CoinSymbol</p>
+@*    <p>Network fee = @Money.Satoshis(swap.SwapMaker.NetworkFee) @swap.SwapMaker.CoinSymbol</p>
     <p>Service fee = @Money.Satoshis(swap.SwapMaker.ServiceFee) @swap.SwapMaker.CoinSymbol</p>
-
+*@
     @if (swap.SwapMaker.SwapTransactionHash != null)
     {
         <p>maker swap chain @swap.SwapMaker.CoinSymbol trx id -  @swap.SwapMaker.SwapTransactionHash</p>
@@ -108,15 +108,19 @@
             <p>InProgress until : @swap.SwapMaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapMaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
         }
 
-        <p>Swap address:</p>
-        <div class="alert alert-secondary" role="alert">
-            @swap.SwapMaker.SwapAddress
-        </div>
+        <button class="btn btn-info" @onclick="ShowScriptMaker" type="button">Show scripts</button>
+        <br />
+        <p hidden="@ShowScriptMakerFlag">
+            <p>Swap address:</p>
+            <div class="alert alert-secondary" role="alert">
+                @swap.SwapMaker.SwapAddress
+            </div>
 
-        <p>ScriptHash :</p>
-        <div class="alert alert-info" role="alert">
-            @Script.FromHex(@swap.SwapMaker.SwapRedeemScriptHex).ToString()
-        </div>
+            <p>ScriptHash :</p>
+            <div class="alert alert-info" role="alert">
+                @Script.FromHex(@swap.SwapMaker.SwapRedeemScriptHex).ToString()
+            </div>
+        </p>
     }
 
     @if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide)
@@ -135,9 +139,9 @@
 
     <p><strong>Taker sends @Money.Satoshis(swap.SwapTaker.Amount + swap.SwapTaker.NetworkFee + swap.SwapTaker.ServiceFee) @swap.SwapTaker.CoinSymbol</strong></p>
     <p>Swap amount = @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</p>
-    <p>Network fee = @Money.Satoshis(swap.SwapTaker.NetworkFee) @swap.SwapTaker.CoinSymbol</p>
+@*    <p>Network fee = @Money.Satoshis(swap.SwapTaker.NetworkFee) @swap.SwapTaker.CoinSymbol</p>
     <p>Service fee = @Money.Satoshis(swap.SwapTaker.ServiceFee) @swap.SwapTaker.CoinSymbol</p>
-
+*@
     @if (swap.SwapTaker.SwapTransactionHash != null)
     {
         <p>Taker swap chain @swap.SwapTaker.CoinSymbol trx id - @swap.SwapTaker.SwapTransactionHash</p>
@@ -145,17 +149,22 @@
         @if (swap.SwapTaker.RecoveryLockTime.HasValue)
         {
             <p>InProgress until : @swap.SwapTaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapTaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
-        }    
+        }
 
-        <p>Swap address:</p>
-        <div class="alert alert-secondary" role="alert">
-            @swap.SwapTaker.SwapAddress
-        </div>
+        <button class="btn btn-info" @onclick="ShowScriptTaker" type="button">Show scripts</button>
+        <br />
+        <p hidden="@ShowScriptTakerFlag">
 
-        <p>ScriptHash :</p>
-        <div class="alert alert-info" role="alert">
-            @Script.FromHex(@swap.SwapTaker.SwapRedeemScriptHex).ToString()
-        </div>
+            <p>Swap address:</p>
+            <div class="alert alert-secondary" role="alert">
+                @swap.SwapTaker.SwapAddress
+            </div>
+
+            <p>ScriptHash :</p>
+            <div class="alert alert-info" role="alert">
+                @Script.FromHex(@swap.SwapTaker.SwapRedeemScriptHex).ToString()
+            </div>
+        </p>
     }
 
     @if (swap.SwapTaker.SenderPubkey == mypubkeyTakerSide)
@@ -1060,5 +1069,17 @@
             swapSessionCoin.RecoveryTransactionHex = result.transactionHex;
             swapSessionCoin.RecoveryTransactionHash = result.transactionId;
         }
+    }
+
+    bool ShowScriptMakerFlag = true;
+    private void ShowScriptMaker()
+    {
+        ShowScriptMakerFlag = !ShowScriptMakerFlag;
+    }
+
+    bool ShowScriptTakerFlag = true;
+    private void ShowScriptTaker()
+    {
+        ShowScriptTakerFlag = !ShowScriptTakerFlag;
     }
 }
