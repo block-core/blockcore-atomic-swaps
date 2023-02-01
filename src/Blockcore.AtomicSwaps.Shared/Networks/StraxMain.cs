@@ -1,13 +1,14 @@
 ﻿using System.Drawing;
+using System.Text;
 using Blockcore.Consensus;
 using Blockcore.Consensus.BlockInfo;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
+using Blockcore.Networks;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using System.Text;
 
-namespace Blockcore.Networks.Strax
+namespace Blockcore.AtomicSwaps.Shared.Networks
 {
     public class StraxMain : Network
     {

@@ -50,11 +50,11 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
 		        return NotFound();
 	        }
 
-	        if (data.CoinSeller.SenderPubkey != swapSession.CoinSeller.SenderPubkey)
-		        throw new Exception("Invalid CoinSeller owner");
+	        if (data.SwapMaker.SenderPubkey != swapSession.SwapMaker.SenderPubkey)
+		        throw new Exception("Invalid SwapMaker owner");
 
-	        if (swapSession.CoinBuyer.SenderPubkey != null && data.CoinBuyer.SenderPubkey != swapSession.CoinBuyer.SenderPubkey)
-		        throw new Exception("Invalid CoinBuyer owner");
+	        if (swapSession.SwapTaker.SenderPubkey != null && data.SwapTaker.SenderPubkey != swapSession.SwapTaker.SenderPubkey)
+		        throw new Exception("Invalid SwapTaker owner");
 
 	        await _storageService.Update(data);
 

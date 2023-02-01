@@ -1,12 +1,13 @@
 ﻿using Blockcore.Consensus;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
+using Blockcore.Networks;
 using NBitcoin;
 using NBitcoin.BitcoinCore;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
 
-namespace Blockcore.Networks.Bitcoin
+namespace Blockcore.AtomicSwaps.Shared.Networks
 {
     public class BitcoinMain : Network
     {

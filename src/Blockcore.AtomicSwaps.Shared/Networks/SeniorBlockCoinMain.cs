@@ -1,16 +1,17 @@
+using System.Net;
 using Blockcore.Consensus;
 using Blockcore.Consensus.BlockInfo;
 using Blockcore.Consensus.Checkpoints;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
+using Blockcore.Networks;
 using Blockcore.P2P;
 using NBitcoin;
 using NBitcoin.BitcoinCore;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.DataEncoders;
-using System.Net;
 
-namespace Blockcore.Networks.SeniorBlockCoin.Networks
+namespace Blockcore.AtomicSwaps.Shared.Networks
 {
     public class SeniorBlockCoinMain : Network
    {
@@ -177,21 +178,6 @@ namespace Blockcore.Networks.SeniorBlockCoin.Networks
 
          return genesis;
       }
-   }
-
-   public class ConversionTools
-   {
-       public static uint ConvertToUInt32(string magicText, bool reverse = false)
-       {
-           byte[] number = magicText.Split('-').Select(b => Convert.ToByte(b, 16)).ToArray();
-
-           if (reverse)
-           {
-               Array.Reverse(number);
-           }
-
-           return BitConverter.ToUInt32(number);
-       }
    }
 
     public class SeniorBlockCoinStandardScriptsRegistry : StandardScriptsRegistry

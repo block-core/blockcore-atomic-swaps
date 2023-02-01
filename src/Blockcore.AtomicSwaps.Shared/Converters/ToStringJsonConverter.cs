@@ -1,7 +1,6 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-namespace Blockcore.Controllers.Converters
+namespace Blockcore.AtomicSwaps.Shared.Converters
 {
     public class ToStringJsonConverter : JsonConverter
     {

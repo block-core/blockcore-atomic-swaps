@@ -1,5 +1,5 @@
 ﻿using Blazored.LocalStorage;
-using Blockcore.AtomicSwaps.Server.Controllers;
+using Blockcore.AtomicSwaps.Shared;
 
 namespace Blockcore.AtomicSwaps.Client
 {

@@ -1,17 +1,17 @@
+using System.Net;
 using Blockcore.Consensus;
 using Blockcore.Consensus.BlockInfo;
 using Blockcore.Consensus.Checkpoints;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
-using Blockcore.Networks.City.Networks;
+using Blockcore.Networks;
 using Blockcore.P2P;
 using NBitcoin;
 using NBitcoin.BitcoinCore;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.DataEncoders;
-using System.Net;
 
-namespace Blockcore.Networks.RoyalSportsCity.Networks
+namespace Blockcore.AtomicSwaps.Shared.Networks
 {
     public class RoyalSportsCityMain : Network
    {

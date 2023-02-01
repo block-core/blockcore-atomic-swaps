@@ -1,15 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Blockcore.Consensus.Chain;
+﻿using Blockcore.Consensus.Chain;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
-using Blockcore.Controllers.Converters;
 using Blockcore.Networks;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 
-namespace Blockcore.Controllers.Models
+namespace Blockcore.AtomicSwaps.Shared.Converters
 {
     /// <summary>
     /// A class representing a transaction.
