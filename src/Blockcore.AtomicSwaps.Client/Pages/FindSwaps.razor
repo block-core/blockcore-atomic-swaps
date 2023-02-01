@@ -33,10 +33,10 @@
 			<MudTh></MudTh>
 		</HeaderContent>
 		<RowTemplate>
-			<MudTd Class="text-one-line" DataLabel="Seller">@Money.Satoshis(context.SwapMaker.Amount) - @context.SwapMaker.CoinSymbol</MudTd>
-			<MudTd Class="text-one-line" DataLabel="Buyer">@Money.Satoshis(context.SwapTaker.Amount) - @context.SwapTaker.CoinSymbol</MudTd>
+			<MudTd Class="text-one-line" DataLabel="Maker">@Money.Satoshis(context.SwapMaker.Amount) - @context.SwapMaker.CoinSymbol</MudTd>
+			<MudTd Class="text-one-line" DataLabel="Taker">@Money.Satoshis(context.SwapTaker.Amount) - @context.SwapTaker.CoinSymbol</MudTd>
 			<MudTd Class="text-one-line" DataLabel="Date">@context.Created </MudTd>
-			<MudTd Class="text-one-line" DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.SwapMaker.SenderPubkey) ? "I am seller" : _walletAccounts.HasAccountKey(context.SwapTaker.SenderPubkey) ? "I am buyer" : "not my swap")</MudTd>
+			<MudTd Class="text-one-line" DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.SwapMaker.SenderPubkey) ? "I am maker" : _walletAccounts.HasAccountKey(context.SwapTaker.SenderPubkey) ? "I am taker" : "not my swap")</MudTd>
 				<MudTd Class="text-one-line" DataLabel="Status">@context.Status </MudTd>
 				<MudTd DataLabel="Details">
 					<MudButton Color="Color.Info" Variant="Variant.Filled" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>

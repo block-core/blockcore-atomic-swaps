@@ -157,12 +157,12 @@ else
 			return;
 		}
 
-		var accountSellerSide = _walletAccounts.FindAccount(swapFrom);
-		var accountBuyerSide = _walletAccounts.FindAccount(swapTo);
+		var accountMakerSide = _walletAccounts.FindAccount(swapFrom);
+		var accountTakerSide = _walletAccounts.FindAccount(swapTo);
 
 		var amountToSellSats = Money.Coins(amountToSell);
 		var amountToBuySats = Money.Coins(amountToBuy);
-		var totalBalance = Money.Satoshis(accountSellerSide.Balance);
+		var totalBalance = Money.Satoshis(accountMakerSide.Balance);
 
 		if (totalBalance < amountToSellSats)
 		{
@@ -184,10 +184,10 @@ else
 			if (s.Status == SwapsDataStatus.Complete)
 				return 0;
 
-			if (s.SwapMaker.SenderPubkey == accountSellerSide.Pubkey)
+			if (s.SwapMaker.SenderPubkey == accountMakerSide.Pubkey)
 				return s.SwapMaker.Amount;
 
-			if (s.SwapTaker.SenderPubkey == accountBuyerSide.Pubkey)
+			if (s.SwapTaker.SenderPubkey == accountTakerSide.Pubkey)
 				return s.SwapTaker.Amount;
 
 			return 0;
@@ -195,7 +195,7 @@ else
 
 		var totalBalanceInSwapsSats = Money.Satoshis(totalBalanceInSwaps);
 
-		Logger.LogInformation($"accountInfo.TotalBalance={accountSellerSide.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
+		Logger.LogInformation($"accountInfo.TotalBalance={accountMakerSide.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
 
 		if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
 		{
@@ -205,7 +205,7 @@ else
 		}
 
 		var sessionId = Guid.NewGuid().ToString("N");
-		var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(accountSellerSide, sessionId);
+		var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(accountMakerSide, sessionId);
 
 		if (!string.IsNullOrEmpty(errorOut))
 		{
@@ -224,7 +224,7 @@ else
 				{
 					CoinSymbol = swapFrom,
 					Amount = amountToSellSats.Satoshi,
-					SenderPubkey = accountSellerSide.Pubkey,
+					SenderPubkey = accountMakerSide.Pubkey,
 					NetworkFee = SwapsConfiguration.GetNetworkFee(swapFrom),
 					ServiceFee = SwapsConfiguration.GetServiceData(swapFrom).ServiceFee,
 					ServiceAddress = SwapsConfiguration.GetServiceData(swapFrom).ServiceAddress,
@@ -233,7 +233,7 @@ else
 				{
 					CoinSymbol = swapTo,
 					Amount = amountToBuySats.Satoshi,
-					ReceiverPubkey = accountBuyerSide.Pubkey,
+					ReceiverPubkey = accountTakerSide.Pubkey,
 					NetworkFee = SwapsConfiguration.GetNetworkFee(swapTo),
 					ServiceFee = SwapsConfiguration.GetServiceData(swapTo).ServiceFee,
 					ServiceAddress = SwapsConfiguration.GetServiceData(swapTo).ServiceAddress,
