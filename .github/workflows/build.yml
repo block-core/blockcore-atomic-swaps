@@ -31,7 +31,7 @@ jobs:
     env:
       PROJECT_NAME: 'Blockcore.AtomicSwaps'
       SOLUTION_PATH: 'src/Blockcore.AtomicSwaps.sln'
-      PROJECT_PATH: 'src/Blockcore.AtomicSwaps/Server/Blockcore.AtomicSwaps.Server.csproj'
+      PROJECT_PATH: 'src/Blockcore.AtomicSwaps.Server/Blockcore.AtomicSwaps.Server.csproj'
       BUILD_CONFIGURATION: 'Release'
 
     steps:
