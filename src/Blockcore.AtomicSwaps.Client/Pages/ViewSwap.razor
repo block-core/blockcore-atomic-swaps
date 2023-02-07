@@ -95,17 +95,18 @@
     <h3>Step 3 - maker funds the swap</h3>
 
     <p><strong>Maker sends @Money.Satoshis(swap.SwapMaker.Amount + swap.SwapMaker.NetworkFee + swap.SwapMaker.ServiceFee) @swap.SwapMaker.CoinSymbol</strong></p>
-    <p>Swap amount = @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol</p>
-@*    <p>Network fee = @Money.Satoshis(swap.SwapMaker.NetworkFee) @swap.SwapMaker.CoinSymbol</p>
+ @*   <p>Swap amount = @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol</p>
+    <p>Network fee = @Money.Satoshis(swap.SwapMaker.NetworkFee) @swap.SwapMaker.CoinSymbol</p>
     <p>Service fee = @Money.Satoshis(swap.SwapMaker.ServiceFee) @swap.SwapMaker.CoinSymbol</p>
 *@
     @if (swap.SwapMaker.SwapTransactionHash != null)
     {
-        <p>maker swap chain @swap.SwapMaker.CoinSymbol trx id -  @swap.SwapMaker.SwapTransactionHash</p>
-        <p>maker swap trx confirmations - @MakerSwapTransactionConfirmations</p>
+        var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.SwapTransactionHash}";
+
+        <p>Maker on @swap.SwapMaker.CoinSymbol, confirmations - @MakerSwapTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapMaker.SwapTransactionHash</a></p>
         @if (swap.SwapMaker.RecoveryLockTime.HasValue)
         {
-            <p>InProgress until : @swap.SwapMaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapMaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
+            <p>In progress until : @swap.SwapMaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapMaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
         }
 
         <button class="btn btn-info" @onclick="ShowScriptMaker" type="button">Show scripts</button>
@@ -138,17 +139,18 @@
     <h3>Step 4 - taker funds the swap</h3>
 
     <p><strong>Taker sends @Money.Satoshis(swap.SwapTaker.Amount + swap.SwapTaker.NetworkFee + swap.SwapTaker.ServiceFee) @swap.SwapTaker.CoinSymbol</strong></p>
-    <p>Swap amount = @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</p>
-@*    <p>Network fee = @Money.Satoshis(swap.SwapTaker.NetworkFee) @swap.SwapTaker.CoinSymbol</p>
+ @*    <p>Swap amount = @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</p>
+   <p>Network fee = @Money.Satoshis(swap.SwapTaker.NetworkFee) @swap.SwapTaker.CoinSymbol</p>
     <p>Service fee = @Money.Satoshis(swap.SwapTaker.ServiceFee) @swap.SwapTaker.CoinSymbol</p>
 *@
     @if (swap.SwapTaker.SwapTransactionHash != null)
     {
-        <p>Taker swap chain @swap.SwapTaker.CoinSymbol trx id - @swap.SwapTaker.SwapTransactionHash</p>
-        <p>Taker swap trx id confirmations : @TakerSwapTransactionConfirmations</p>
+        var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.SwapTransactionHash}";
+
+        <p>Taker on @swap.SwapTaker.CoinSymbol, confirmations : @TakerSwapTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapTaker.SwapTransactionHash</a></p>
         @if (swap.SwapTaker.RecoveryLockTime.HasValue)
         {
-            <p>InProgress until : @swap.SwapTaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapTaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
+            <p>In progress until : @swap.SwapTaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapTaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
         }
 
         <button class="btn btn-info" @onclick="ShowScriptTaker" type="button">Show scripts</button>
@@ -188,9 +190,9 @@
 
     @if (@swap.SwapTaker.ExchangeTransactionHash != null)
     {
-        <p>Maker Exchange chain @swap.SwapTaker.CoinSymbol trx id - @swap.SwapTaker.ExchangeTransactionHash</p>
-        <p>Maker Exchange trx Confirmations : @MakerExchangeTransactionConfirmations</p>
+        var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.ExchangeTransactionHash}";
 
+        <p>Maker on @swap.SwapTaker.CoinSymbol, Confirmations : @MakerExchangeTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapTaker.ExchangeTransactionHash</a></p>
         <P class="text-success"><strong>MAKER EXCHANGE SUCCESS</strong></P>
     }
 
@@ -234,9 +236,9 @@
 
     @if (swap.SwapMaker.ExchangeTransactionHash != null)
     {
-        <p>Taker Exchange chain @swap.SwapMaker.CoinSymbol trx id - @swap.SwapMaker.ExchangeTransactionHash</p>
-        <p>Taker Exchange trx Confirmations : @TakerExchangeTransactionConfirmations</p>
+        var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.ExchangeTransactionHash}";
 
+        <p>Taker on @swap.SwapMaker.CoinSymbol, Confirmations : @TakerExchangeTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapMaker.ExchangeTransactionHash</a></p>
         <P class="text-success"><strong>TAKER EXCHANGE SUCCESS</strong></P>
     }
     

@@ -15,6 +15,8 @@ namespace Blockcore.AtomicSwaps.Client
         public Dictionary<string, SwapSession> Swaps { get; } = new();
 
 
+        public string ExplorerUrl = "https://explorer.blockcore.net";
+
         public List<IndexerUrl> Indexers { get; } = new()
         {
             new IndexerUrl { Symbol = "STRAX", Url = "https://strax.indexer.blockcore.net/api" },
