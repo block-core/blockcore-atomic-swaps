@@ -18,6 +18,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
         Task<BlockcoreWalletSwapCoinsOut?> SwapCoins(BlockcoreWalletSwapCoins blockcoreWalletSwapCoins);
 
         Task<(string? Error, uint256? Secret, uint160? SecretHash)> GenerateSecretHash(WalletAccount walletAccount, string sessionId);
+        void ClearWallet();
     }
 
     public class WalletConnectInput

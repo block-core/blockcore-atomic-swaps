@@ -157,5 +157,9 @@ namespace Blockcore.AtomicSwaps.Client.Services
 
             }
         }
+        public void ClearWallet()
+        {
+            _storage.Delete<WalletAccounts>();
+        }
     }
 }

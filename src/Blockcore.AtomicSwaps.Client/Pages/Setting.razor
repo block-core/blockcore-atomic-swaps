@@ -13,12 +13,40 @@
 @inject ILogger<Setting> Logger;
 @inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService
+@inject IWalletService WalletService
 
 <PageTitle>Settings</PageTitle>
 
 <MudText Align="Align.Center" Typo="Typo.h4">Settings</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
 
-@code {
+@if (hasWallet && _walletAccounts.Connected)
+{
+    <button class="btn btn-danger" @onclick="DisconnectWallet">Disconnect Wallet</button>
+    <br />
+    <br />
+    <button class="btn btn-danger" @onclick="WipeSwaps">Wipe Swaps (caution this may be irreversible)</button>
+}
 
+@code {
+    private bool hasWallet;
+    private WalletAccounts _walletAccounts = new WalletAccounts();
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasWallet = await WalletConnector.HasBlockcoreWallet();
+        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+    }
+
+    private void WipeSwaps()
+    {
+        // todo: don't allow this if any open swaps
+        storage.DeleteSwaps();
+    }
+
+    private void DisconnectWallet()
+    {
+        WalletService.ClearWallet();
+        _walletAccounts = new WalletAccounts();
+    }
 }

@@ -61,6 +61,16 @@ namespace Blockcore.AtomicSwaps.Client
             return _storage.GetItem<List<SwapSession>>($"swaps");
         }
 
+        public void DeleteSwaps()
+        {
+            _storage.RemoveItem($"swaps");
+        }
+
+        public void Delete<T>() where T : class
+        {
+            _storage.RemoveItem(typeof(T).Name);
+        }
+
         public void Set<T>(T item) where T : class
         {
             _storage.SetItem(typeof(T).Name, item);
