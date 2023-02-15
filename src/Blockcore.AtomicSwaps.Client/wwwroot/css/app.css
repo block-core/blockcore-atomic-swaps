@@ -125,11 +125,11 @@ a, .btn-link {
     align-items: center;
     height: 40px;
     margin-left: 5px;
-    color: #7767e0 !important;
+    color: #d9d4f6 !important;
 }
 
     .brand-text :hover {
-        color: #5a47ff !important;
+        color: #fff !important;
     }
 
 .header {
@@ -156,4 +156,7 @@ a, .btn-link {
     100% {
         opacity: 1;
     }
+}
+a:hover {
+    color: #fff !important;
 }
