@@ -44,7 +44,8 @@ else
                         </MudSelect>
                     </MudItem>
                     <MudItem sm="6" xl="6" xs="12">
-                        <MudNumericField @bind-Value="amountToSell" HideSpinButtons="true" Min="0" Label="Amount" Variant="Variant.Outlined" AdornmentText="@swapFrom" Adornment="Adornment.End" AdornmentColor="Color.Info" HelperText="@swapFromMaxAmmountText" />
+                        <MudNumericField @bind-Value="amountToSell" HideSpinButtons="true" Min="0" Max="@swapFromTotalBalance" Label="Amount" Variant="Variant.Outlined" AdornmentText="@swapFrom" Adornment="Adornment.End" AdornmentColor="Color.Info" HelperText="@swapFromMaxAmmountText" />
+                        <MudSlider @bind-Value="amountToSell" Min="0" Max="@swapFromTotalBalance" TickMarks="true" Size="Size.Medium" Variant="Variant.Filled"></MudSlider>
                     </MudItem>
                 </MudGrid>
             </MudPaper>
@@ -109,7 +110,7 @@ else
     decimal amountToBuy = 0;
     private bool hasWallet;
     private bool busy = false;
-    decimal swapFromTotalBalance;
+    decimal swapFromTotalBalance = 0;
     WalletAccounts _walletAccounts = new();
     List<string> _networkList = new();
 
