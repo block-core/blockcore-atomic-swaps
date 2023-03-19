@@ -31,12 +31,21 @@ jobs:
       with:
         dotnet-version: | 
           7.0.x
+    - name: Setup Node.js (${{ matrix.node_version }})
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node_version }}
+
+    - name: Variables
+      run: |
+        echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
+      shell: bash
+      
+    - name: Workload
+      run: dotnet workload restore ${{env.SOLUTION_PATH}}
 
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
-      
-    - name: Build
-      run: dotnet build -c ${{env.BUILD_CONFIGURATION}} -v m ${{env.SOLUTION_PATH}}
-      
+
     - name: Unit Test
-      run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}}
+      run: dotnet test -v=normal -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
