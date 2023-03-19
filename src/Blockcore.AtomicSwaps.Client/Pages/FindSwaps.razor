@@ -17,13 +17,13 @@
 <MudText Align="Align.Center" Typo="Typo.h4">Find Atomic Swaps</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8">This component helps find available swaps.</MudText>
 
-<MudButton Color="Color.Info" Variant="Variant.Filled" @onclick="Fetch" Class="mt-5 mb-5">Fetch Swaps</MudButton>
+<MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Fetch" Class="mt-5 mb-5">Fetch Swaps</MudButton>
 
 @if (swaps != null)
 {
 
 
-    <MudTable Items="@swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+    <MudTable Items="@swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Primary">
         <HeaderContent>
             <MudTh>Swap</MudTh>
             <MudTh>From</MudTh>
@@ -50,7 +50,7 @@
             <MudTd Class="text-one-line" DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.SwapMaker.SenderPubkey) ? "I am maker" : _walletAccounts.HasAccountKey(context.SwapTaker.SenderPubkey) ? "I am taker" : "not my swap")</MudTd>
                 <MudTd Class="text-one-line" DataLabel="Status">@context.Status </MudTd>
                 <MudTd DataLabel="Details">
-                    <MudButton Color="Color.Info" Variant="Variant.Filled" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
+                    <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
                 </MudTd>
             </RowTemplate>
         </MudTable>

@@ -20,6 +20,12 @@
 
 <PageTitle>View Swaps</PageTitle>
 
+
+
+
+
+
+
 <h1>View Swaps</h1>
 
 <p>This component displays a swap.</p>
@@ -29,47 +35,53 @@
 @if (swap != null)
 {
     @*=========================Swap info========================*@
+    <MudCard Class="mb-5">
+        <MudCardContent>
+            <h4>Session id - @swap.SwapSessionId</h4>
+            <p>Created - @swap.Created</p>
+            <p>Status - @swap.Status</p>
 
-    <h4>Session id - @swap.SwapSessionId</h4>
-    <p>Created - @swap.Created</p>
-    <p>Status - @swap.Status</p>
+            <MudAvatarGroup Max="2" Spacing="3" MaxColor="Color.Primary">
+                @{
+                    var makerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapMaker.CoinSymbol);
+                    var takerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapTaker.CoinSymbol);
+                }
 
-    <MudAvatarGroup Max="2" Spacing="3" MaxColor="Color.Primary">
-        @{
-            var makerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapMaker.CoinSymbol);
-            var takerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapTaker.CoinSymbol);
-        }
+                <MudAvatar Image="@makerCoinImg" />
+                <MudAvatar Image="@takerCoinImg" />
+            </MudAvatarGroup>
+            <h4>Swap @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol for @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</h4>
 
-        <MudAvatar Image="@makerCoinImg" />
-        <MudAvatar Image="@takerCoinImg" />
-    </MudAvatarGroup>
-    <h4>Swap @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol for @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</h4>
+            @if (mypubkeyTakerSide == null && mypubkeyMakerSide == null)
+            {
+                <p><strong>Not my swap</strong></p>
+            }
+            else if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide)
+            {
+                <p class="text-success"><strong> I am the maker</strong></p>
+            }
+            else if (swap.SwapTaker.SenderPubkey == mypubkeyTakerSide)
+            {
+                <p class="text-success"><strong>I am the taker</strong></p>
+            }
+            else
+            {
+                <p><strong>Not my swap</strong></p>
+            }
 
-    @if (mypubkeyTakerSide == null && mypubkeyMakerSide == null)
-    {
-        <p><strong>Not my swap</strong></p>
-    }
-    else if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide)
-    {
-        <p class="text-success"><strong> I am the maker</strong></p>
-    }
-    else if (swap.SwapTaker.SenderPubkey == mypubkeyTakerSide)
-    {
-        <p class="text-success"><strong>I am the taker</strong></p>
-    }
-    else
-    {
-        <p><strong>Not my swap</strong></p>
-    }
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="RefreshSwap">Refresh Swap</MudButton>
 
-    <button class="btn btn-primary" @onclick="RefreshSwap">Refresh Swap</button>
+            @if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="RefreshConfirmations">Refresh confirmations</MudButton>
 
-    @if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
-    {
-        <button class="btn btn-primary ms-2" @onclick="RefreshConfirmations">Refresh confirmations</button>
-    }
+            }
+        </MudCardActions>
+    </MudCard>
 
-
+ 
 
 
 
