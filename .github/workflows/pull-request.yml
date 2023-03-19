@@ -17,7 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     
     env:
-      SOLUTION_PATH: 'Blockcore.AtomicSwaps.sln'
+      PROJECT_NAME: 'Blockcore.AtomicSwaps'
+      SOLUTION_PATH: 'src/Blockcore.AtomicSwaps.sln'
+      PROJECT_PATH: 'src/Blockcore.AtomicSwaps.Server/Blockcore.AtomicSwaps.Server.csproj'
       BUILD_CONFIGURATION: 'Release'
 
     steps:
