@@ -45,7 +45,7 @@ else
                     </MudItem>
                     <MudItem sm="6" xl="6" xs="12">
                         <MudNumericField @bind-Value="amountToSell" HideSpinButtons="true" Min="0" Max="@swapFromTotalBalance" Label="Amount" Variant="Variant.Outlined" AdornmentText="@swapFrom" Adornment="Adornment.End" AdornmentColor="Color.Info" HelperText="@swapFromMaxAmmountText" />
-                        <MudSlider @bind-Value="amountToSell" Min="0" Max="@swapFromTotalBalance" TickMarks="true" Size="Size.Medium" Variant="Variant.Filled"></MudSlider>
+                        @*<MudSlider @bind-Value="amountToSell" Min="0" Max="@swapFromTotalBalance" TickMarks="true" Size="Size.Medium" Variant="Variant.Filled"></MudSlider>*@
                     </MudItem>
                 </MudGrid>
             </MudPaper>
