@@ -18,29 +18,55 @@
 
 <MudText Align="Align.Center" Typo="Typo.h4">Blockcore Atomic Swaps</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
+<MudPaper Class="mb-5">
+    <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="@arrows" ShowBullets="@bullets" EnableSwipeGesture="@enableSwipeGesture" AutoCycle="@autocycle" TData="object">
+        <MudCarouselItem Transition="transition" Color="@Color.Primary">
+            <div class="d-flex" style="height:100%">
+                <MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.GitHub" Size="@Size.Large" />
+            </div>
+        </MudCarouselItem>
+        <MudCarouselItem Transition="transition" Color="@Color.Secondary">
+            <div class="d-flex" style="height:100%">
+                <MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.GitHub" Size="@Size.Large" />
+            </div>
+        </MudCarouselItem>
+        <MudCarouselItem Transition="transition">
+            <div class="d-flex" style="height:100%">
+                <MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.GitHub" Color="@Color.Primary" Size="@Size.Large" />
+            </div>
+        </MudCarouselItem>
+    </MudCarousel>
+</MudPaper>
+
 
 @foreach (var prp in _networkList)
 {
-	<MudPaper Class="pa-4 mb-3">
-		<MudStack Row="true">
-			@{
-				var img = String.Format("https://chains.blockcore.net/assets/{0}/icon.png",prp);
-			}
-			<MudAvatar Color="Color.Transparent" Style="background-color:transparent !important" Image="@img" Size="Size.Large" />
-			<MudStack Justify="Justify.Center" Spacing="0">
-				<MudText Typo="Typo.body1">@prp</MudText>
-				@*<MudText Typo="Typo.body2">@prp</MudText>*@
-			</MudStack>
-		</MudStack>
-	</MudPaper>
+    <MudPaper Class="pa-4 mb-3">
+        <MudStack Row="true">
+            @{
+                var img = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", prp);
+            }
+            <MudAvatar Color="Color.Transparent" Style="background-color:transparent !important" Image="@img" Size="Size.Large" />
+            <MudStack Justify="Justify.Center" Spacing="0">
+                <MudText Typo="Typo.body1">@prp</MudText>
+                @*<MudText Typo="Typo.body2">@prp</MudText>*@
+            </MudStack>
+        </MudStack>
+    </MudPaper>
 }
 
 
 @code {
-	List<string> _networkList = new();
-	protected override async Task OnInitializedAsync()
-	{
- 		_networkList = SwapsConfiguration.Networks.Keys.ToList();
- 	}
+    private bool arrows = true;
+    private bool bullets = true;
+    private bool enableSwipeGesture = true;
+    private bool autocycle = true;
+    private Transition transition = Transition.Slide;
+
+    List<string> _networkList = new();
+    protected override async Task OnInitializedAsync()
+    {
+        _networkList = SwapsConfiguration.Networks.Keys.ToList();
+    }
 
 }

@@ -34,12 +34,33 @@
     <p>Created - @swap.Created</p>
     <p>Status - @swap.Status</p>
 
+    <MudAvatarGroup Max="2" Spacing="3" MaxColor="Color.Primary">
+        @{
+            var makerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapMaker.CoinSymbol);
+            var takerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapTaker.CoinSymbol);
+        }
+
+        <MudAvatar Image="@makerCoinImg" />
+        <MudAvatar Image="@takerCoinImg" />
+    </MudAvatarGroup>
     <h4>Swap @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol for @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</h4>
 
-    @if (mypubkeyTakerSide == null && mypubkeyMakerSide == null){<p><strong>Not my swap</strong></p>}
-    else if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide){<p class="text-success"><strong> I am the maker</strong></p>}
-    else if (swap.SwapTaker.SenderPubkey == mypubkeyTakerSide){<p class="text-success"><strong>I am the taker</strong></p>}
-    else{<p><strong>Not my swap</strong></p>}
+    @if (mypubkeyTakerSide == null && mypubkeyMakerSide == null)
+    {
+        <p><strong>Not my swap</strong></p>
+    }
+    else if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide)
+    {
+        <p class="text-success"><strong> I am the maker</strong></p>
+    }
+    else if (swap.SwapTaker.SenderPubkey == mypubkeyTakerSide)
+    {
+        <p class="text-success"><strong>I am the taker</strong></p>
+    }
+    else
+    {
+        <p><strong>Not my swap</strong></p>
+    }
 
     <button class="btn btn-primary" @onclick="RefreshSwap">Refresh Swap</button>
 
@@ -47,239 +68,251 @@
     {
         <button class="btn btn-primary ms-2" @onclick="RefreshConfirmations">Refresh confirmations</button>
     }
-    <hr/>
 
-    @*=========================Step1 - swap created by maker ========================*@
 
-    <h3>Step 1 - swap created by the maker</h3>
 
-    <p>Maker Pubkey - @swap.SwapMaker.SenderPubkey</p>
-    <p>Shared secret hash - @swap.SharedSecretHash</p>
-    
-    @if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide && swap.SwapTaker.SenderPubkey == null)
-    {
-        <button class="btn btn-danger" @onclick="DeleteSwap">Delete Swap</button>
-    }
 
-    <hr />
 
-    @*=========================Step2 - swap locked by taker ========================*@
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <MudTabPanel Text="Step 1">
 
-    <h3>Step 2 - swap locked by taker</h3>
-    
-    <p>Taker Pubkey - @swap.SwapTaker.SenderPubkey</p>
+            @*=========================Step1 - swap created by maker ========================*@
 
-    @if (swap.SwapMaker.SenderPubkey != mypubkeyMakerSide && swap.SwapTaker.SenderPubkey == null)
-    {
-        if (hasWallet)
-        {
-            if (_walletAccounts.Connected)
+            <h3>Step 1 - swap created by the maker</h3>
+
+            <p>Maker Pubkey - @swap.SwapMaker.SenderPubkey</p>
+            <p>Shared secret hash - @swap.SharedSecretHash</p>
+
+            @if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide && swap.SwapTaker.SenderPubkey == null)
             {
-                <button class="btn btn-success" @onclick="TakerAcceptSwap">Claim This Swap</button>
+                <button class="btn btn-danger" @onclick="DeleteSwap">Delete Swap</button>
             }
-            else
+
+        </MudTabPanel>
+        <MudTabPanel Text="Step 2">
+
+
+            @*=========================Step2 - swap locked by taker ========================*@
+
+            <h3>Step 2 - swap locked by taker</h3>
+
+            <p>Taker Pubkey - @swap.SwapTaker.SenderPubkey</p>
+
+            @if (swap.SwapMaker.SenderPubkey != mypubkeyMakerSide && swap.SwapTaker.SenderPubkey == null)
             {
-                <p><a href="/walletconnect">Connect a wallet to participate in this swap </a></p>
-            }
-        }
-        else
-        {
-            <p>Not wallet found please install the wallet at blockcore.net to participate in this swap</p>
-        }
-    }
-
-    <hr />
-
-    @*=========================Step3 - maker creates swap trx ========================*@
-
-    <h3>Step 3 - maker funds the swap</h3>
-
-    <p><strong>Maker sends @Money.Satoshis(swap.SwapMaker.Amount + swap.SwapMaker.NetworkFee + swap.SwapMaker.ServiceFee) @swap.SwapMaker.CoinSymbol</strong></p>
- @*   <p>Swap amount = @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol</p>
-    <p>Network fee = @Money.Satoshis(swap.SwapMaker.NetworkFee) @swap.SwapMaker.CoinSymbol</p>
-    <p>Service fee = @Money.Satoshis(swap.SwapMaker.ServiceFee) @swap.SwapMaker.CoinSymbol</p>
-*@
-    @if (swap.SwapMaker.SwapTransactionHash != null)
-    {
-        var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.SwapTransactionHash}";
-
-        <p>Maker on @swap.SwapMaker.CoinSymbol, confirmations - @MakerSwapTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapMaker.SwapTransactionHash</a></p>
-        @if (swap.SwapMaker.RecoveryLockTime.HasValue)
-        {
-            <p>In progress until : @swap.SwapMaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapMaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
-        }
-
-        <button class="btn btn-info" @onclick="ShowScriptMaker" type="button">Show scripts</button>
-        <br />
-        <p hidden="@ShowScriptMakerFlag">
-            <p>Swap address:</p>
-            <div class="alert alert-secondary" role="alert">
-                @swap.SwapMaker.SwapAddress
-            </div>
-
-            <p>ScriptHash :</p>
-            <div class="alert alert-info" role="alert">
-                @Script.FromHex(@swap.SwapMaker.SwapRedeemScriptHex).ToString()
-            </div>
-        </p>
-    }
-
-    @if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide)
-    {
-        @if (swap.SwapTaker.SenderPubkey != null && swap.SwapMaker.SwapTransactionHash == null)
-        {
-            <button class="btn btn-info" @onclick="BuildMakerSwap">Build Maker Swap Transaction</button>
-        }
-    }
-
-    <hr />
-
-    @*=========================Step4 - taker creates swap trx ========================*@
-
-    <h3>Step 4 - taker funds the swap</h3>
-
-    <p><strong>Taker sends @Money.Satoshis(swap.SwapTaker.Amount + swap.SwapTaker.NetworkFee + swap.SwapTaker.ServiceFee) @swap.SwapTaker.CoinSymbol</strong></p>
- @*    <p>Swap amount = @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</p>
-   <p>Network fee = @Money.Satoshis(swap.SwapTaker.NetworkFee) @swap.SwapTaker.CoinSymbol</p>
-    <p>Service fee = @Money.Satoshis(swap.SwapTaker.ServiceFee) @swap.SwapTaker.CoinSymbol</p>
-*@
-    @if (swap.SwapTaker.SwapTransactionHash != null)
-    {
-        var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.SwapTransactionHash}";
-
-        <p>Taker on @swap.SwapTaker.CoinSymbol, confirmations : @TakerSwapTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapTaker.SwapTransactionHash</a></p>
-        @if (swap.SwapTaker.RecoveryLockTime.HasValue)
-        {
-            <p>In progress until : @swap.SwapTaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapTaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
-        }
-
-        <button class="btn btn-info" @onclick="ShowScriptTaker" type="button">Show scripts</button>
-        <br />
-        <p hidden="@ShowScriptTakerFlag">
-
-            <p>Swap address:</p>
-            <div class="alert alert-secondary" role="alert">
-                @swap.SwapTaker.SwapAddress
-            </div>
-
-            <p>ScriptHash :</p>
-            <div class="alert alert-info" role="alert">
-                @Script.FromHex(@swap.SwapTaker.SwapRedeemScriptHex).ToString()
-            </div>
-        </p>
-    }
-
-    @if (swap.SwapTaker.SenderPubkey == mypubkeyTakerSide)
-    {
-        @if (swap.SwapMaker.SwapTransactionHash != null)
-        {
-            @if (MakerSwapTransactionConfirmations > 0 && swap.SwapTaker.SwapTransactionHash == null)
-            {
-                <button class="btn btn-info" @onclick="BuildTakerSwap">Build Taker Swap Transaction</button>
-            }
-        }
-    }
-
-    <hr />
-
-    @*=========================Step5 - maker creates exchange trx (reveal secret) ========================*@
-
-    <h3>Step 5 - maker claims coins (reveal secret)</h3>
-
-    <p><strong>Maker receives @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</strong></p>
-
-    @if (@swap.SwapTaker.ExchangeTransactionHash != null)
-    {
-        var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.ExchangeTransactionHash}";
-
-        <p>Maker on @swap.SwapTaker.CoinSymbol, Confirmations : @MakerExchangeTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapTaker.ExchangeTransactionHash</a></p>
-        <P class="text-success"><strong>MAKER EXCHANGE SUCCESS</strong></P>
-    }
-
-    @if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide)
-    {
-        if (TakerSwapTransactionConfirmations > 0 && swap.SwapTaker.SwapTransactionHash != null &&
-            MakerSwapTransactionConfirmations > 0 && swap.SwapMaker.SwapTransactionHash != null)
-        {
-            if (swap.SwapTaker.ExchangeTransactionHash == null && swap.SwapMaker.RecoveryTransactionHash == null)
-            {
-                <button class="btn btn-success" @onclick="MakerExchangeFunds1">Claim Maker Coins</button>
-            }
-        }
-
-        if (swap.SwapMaker.SwapTransactionHash != null && swap.SwapMaker.ExchangeTransactionHash == null && swap.SwapMaker.RecoveryLockTime < DateTime.UtcNow)
-        {
-            <br />
-
-            <h4>Maker claims recover trx (timeout)</h4>
-
-            <p><strong>Maker takes back @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol</strong></p>
-
-            if (swap.SwapMaker.RecoveryTransactionHash == null)
-            {
-                <button class="btn btn-danger" @onclick="MakerRecoverFunds1">Recover Maker Funds</button>
-            }
-            else
-            {
-                <P class="text-warning"><strong>MAKER RECOVER SUCCESS</strong></P>
-            }
-        }
-    }
-    
-    <hr />
-
-    @*=========================Step6 - Taker creates exchange trx (discover secret) ========================*@
-
-    <h3>Step 6 - taker claims coins (discover secret)</h3>
-
-    <p><strong>Taker receives @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol</strong></p>
-
-    @if (swap.SwapMaker.ExchangeTransactionHash != null)
-    {
-        var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.ExchangeTransactionHash}";
-
-        <p>Taker on @swap.SwapMaker.CoinSymbol, Confirmations : @TakerExchangeTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapMaker.ExchangeTransactionHash</a></p>
-        <P class="text-success"><strong>TAKER EXCHANGE SUCCESS</strong></P>
-    }
-    
-    @if (swap.SwapTaker.SenderPubkey == mypubkeyTakerSide)
-    {
-        @if (TakerSwapTransactionConfirmations > 0 && swap.SwapTaker.SwapTransactionHash != null &&
-            MakerSwapTransactionConfirmations > 0 && swap.SwapMaker.SwapTransactionHash != null)
-        {
-            @if (swap.SwapMaker.ExchangeTransactionHash == null && swap.SwapTaker.RecoveryTransactionHash == null)
-            {
-                if (string.IsNullOrEmpty(SharedSecret))
+                if (hasWallet)
                 {
-                    <button class="btn btn-warning" @onclick="ScanForSecretHash">Check the Blockchain for the secret hash</button>
+                    if (_walletAccounts.Connected)
+                    {
+                        <button class="btn btn-success" @onclick="TakerAcceptSwap">Claim This Swap</button>
+                    }
+                    else
+                    {
+                        <p><a href="/walletconnect">Connect a wallet to participate in this swap </a></p>
+                    }
                 }
                 else
                 {
-                    <button class="btn btn-success" @onclick="TakerExchangeFunds1">Claim Taker Swap Transaction</button>
+                    <p>Not wallet found please install the wallet at blockcore.net to participate in this swap</p>
                 }
             }
-        }
 
-        if (swap.SwapTaker.SwapTransactionHash != null && swap.SwapTaker.ExchangeTransactionHash == null && swap.SwapTaker.RecoveryLockTime < DateTime.UtcNow)
-        {
-            <br/>
 
-            <h4>Taker claims recover trx (timeout)</h4>
 
-            <p><strong>Taker takes back @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</strong></p>
+        </MudTabPanel>
+        <MudTabPanel Text="Step 3">
+            @*=========================Step3 - maker creates swap trx ========================*@
 
-            if (swap.SwapTaker.RecoveryTransactionHash == null)
+            <h3>Step 3 - maker funds the swap</h3>
+
+            <p><strong>Maker sends @Money.Satoshis(swap.SwapMaker.Amount + swap.SwapMaker.NetworkFee + swap.SwapMaker.ServiceFee) @swap.SwapMaker.CoinSymbol</strong></p>
+            @*   <p>Swap amount = @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol</p>
+        <p>Network fee = @Money.Satoshis(swap.SwapMaker.NetworkFee) @swap.SwapMaker.CoinSymbol</p>
+        <p>Service fee = @Money.Satoshis(swap.SwapMaker.ServiceFee) @swap.SwapMaker.CoinSymbol</p>
+        *@
+            @if (swap.SwapMaker.SwapTransactionHash != null)
             {
-                <button class="btn btn-danger" @onclick="TakerRecoverFunds1">Recover Taker Funds</button>
-            }
-            else
-            {
-                <P class="text-warning"><strong>TAKER RECOVER SUCCESS</strong></P>
-            }
-        }
-    }
+                var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.SwapTransactionHash}";
 
-    <hr />
+                <p>Maker on @swap.SwapMaker.CoinSymbol, confirmations - @MakerSwapTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapMaker.SwapTransactionHash</a></p>
+                @if (swap.SwapMaker.RecoveryLockTime.HasValue)
+                {
+                    <p>In progress until : @swap.SwapMaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapMaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
+                }
+
+                <button class="btn btn-info" @onclick="ShowScriptMaker" type="button">Show scripts</button>
+                <br />
+                <p hidden="@ShowScriptMakerFlag">
+                <p>Swap address:</p>
+                <div class="alert alert-secondary" role="alert">
+                        @swap.SwapMaker.SwapAddress
+                </div>
+
+                <p>ScriptHash :</p>
+                <div class="alert alert-info" role="alert">
+                        @Script.FromHex(@swap.SwapMaker.SwapRedeemScriptHex).ToString()
+                </div>
+                </p>
+            }
+
+            @if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide)
+            {
+                @if (swap.SwapTaker.SenderPubkey != null && swap.SwapMaker.SwapTransactionHash == null)
+                {
+                    <button class="btn btn-info" @onclick="BuildMakerSwap">Build Maker Swap Transaction</button>
+                }
+            }
+        </MudTabPanel>
+        <MudTabPanel Text="Step 4">
+            @*=========================Step4 - taker creates swap trx ========================*@
+
+            <h3>Step 4 - taker funds the swap</h3>
+
+            <p><strong>Taker sends @Money.Satoshis(swap.SwapTaker.Amount + swap.SwapTaker.NetworkFee + swap.SwapTaker.ServiceFee) @swap.SwapTaker.CoinSymbol</strong></p>
+            @*    <p>Swap amount = @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</p>
+        <p>Network fee = @Money.Satoshis(swap.SwapTaker.NetworkFee) @swap.SwapTaker.CoinSymbol</p>
+        <p>Service fee = @Money.Satoshis(swap.SwapTaker.ServiceFee) @swap.SwapTaker.CoinSymbol</p>
+        *@
+            @if (swap.SwapTaker.SwapTransactionHash != null)
+            {
+                var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.SwapTransactionHash}";
+
+                <p>Taker on @swap.SwapTaker.CoinSymbol, confirmations : @TakerSwapTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapTaker.SwapTransactionHash</a></p>
+                @if (swap.SwapTaker.RecoveryLockTime.HasValue)
+                {
+                    <p>In progress until : @swap.SwapTaker.RecoveryLockTime?.ToString("dd/MM/yyyy HH:mm:ss") (@((swap.SwapTaker.RecoveryLockTime - DateTime.UtcNow)?.TotalHours.ToString("F")) hours left)</p>
+                }
+
+                <button class="btn btn-info" @onclick="ShowScriptTaker" type="button">Show scripts</button>
+                <br />
+                <p hidden="@ShowScriptTakerFlag">
+
+                <p>Swap address:</p>
+                <div class="alert alert-secondary" role="alert">
+                        @swap.SwapTaker.SwapAddress
+                </div>
+
+                <p>ScriptHash :</p>
+                <div class="alert alert-info" role="alert">
+                        @Script.FromHex(@swap.SwapTaker.SwapRedeemScriptHex).ToString()
+                </div>
+                </p>
+            }
+
+            @if (swap.SwapTaker.SenderPubkey == mypubkeyTakerSide)
+            {
+                @if (swap.SwapMaker.SwapTransactionHash != null)
+                {
+                    @if (MakerSwapTransactionConfirmations > 0 && swap.SwapTaker.SwapTransactionHash == null)
+                    {
+                        <button class="btn btn-info" @onclick="BuildTakerSwap">Build Taker Swap Transaction</button>
+                    }
+                }
+            }
+
+        </MudTabPanel>
+        <MudTabPanel Text="Step 5">
+            @*=========================Step5 - maker creates exchange trx (reveal secret) ========================*@
+
+            <h3>Step 5 - maker claims coins (reveal secret)</h3>
+
+            <p><strong>Maker receives @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</strong></p>
+
+            @if (@swap.SwapTaker.ExchangeTransactionHash != null)
+            {
+                var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.ExchangeTransactionHash}";
+
+                <p>Maker on @swap.SwapTaker.CoinSymbol, Confirmations : @MakerExchangeTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapTaker.ExchangeTransactionHash</a></p>
+                <P class="text-success"><strong>MAKER EXCHANGE SUCCESS</strong></P>
+            }
+
+            @if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide)
+            {
+                if (TakerSwapTransactionConfirmations > 0 && swap.SwapTaker.SwapTransactionHash != null &&
+                MakerSwapTransactionConfirmations > 0 && swap.SwapMaker.SwapTransactionHash != null)
+                {
+                    if (swap.SwapTaker.ExchangeTransactionHash == null && swap.SwapMaker.RecoveryTransactionHash == null)
+                    {
+                        <button class="btn btn-success" @onclick="MakerExchangeFunds1">Claim Maker Coins</button>
+                    }
+                }
+
+                if (swap.SwapMaker.SwapTransactionHash != null && swap.SwapMaker.ExchangeTransactionHash == null && swap.SwapMaker.RecoveryLockTime < DateTime.UtcNow)
+                {
+                    <br />
+
+                    <h4>Maker claims recover trx (timeout)</h4>
+
+                    <p><strong>Maker takes back @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol</strong></p>
+
+                    if (swap.SwapMaker.RecoveryTransactionHash == null)
+                    {
+                        <button class="btn btn-danger" @onclick="MakerRecoverFunds1">Recover Maker Funds</button>
+                    }
+                    else
+                    {
+                        <P class="text-warning"><strong>MAKER RECOVER SUCCESS</strong></P>
+                    }
+                }
+            }
+
+        </MudTabPanel>
+        <MudTabPanel Text="Step 6">
+
+            @*=========================Step6 - Taker creates exchange trx (discover secret) ========================*@
+
+            <h3>Step 6 - taker claims coins (discover secret)</h3>
+
+            <p><strong>Taker receives @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol</strong></p>
+
+            @if (swap.SwapMaker.ExchangeTransactionHash != null)
+            {
+                var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.ExchangeTransactionHash}";
+
+                <p>Taker on @swap.SwapMaker.CoinSymbol, Confirmations : @TakerExchangeTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapMaker.ExchangeTransactionHash</a></p>
+                <P class="text-success"><strong>TAKER EXCHANGE SUCCESS</strong></P>
+            }
+
+            @if (swap.SwapTaker.SenderPubkey == mypubkeyTakerSide)
+            {
+                @if (TakerSwapTransactionConfirmations > 0 && swap.SwapTaker.SwapTransactionHash != null &&
+               MakerSwapTransactionConfirmations > 0 && swap.SwapMaker.SwapTransactionHash != null)
+                {
+                    @if (swap.SwapMaker.ExchangeTransactionHash == null && swap.SwapTaker.RecoveryTransactionHash == null)
+                    {
+                        if (string.IsNullOrEmpty(SharedSecret))
+                        {
+                            <button class="btn btn-warning" @onclick="ScanForSecretHash">Check the Blockchain for the secret hash</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-success" @onclick="TakerExchangeFunds1">Claim Taker Swap Transaction</button>
+                        }
+                    }
+                }
+
+                if (swap.SwapTaker.SwapTransactionHash != null && swap.SwapTaker.ExchangeTransactionHash == null && swap.SwapTaker.RecoveryLockTime < DateTime.UtcNow)
+                {
+                    <br />
+
+                    <h4>Taker claims recover trx (timeout)</h4>
+
+                    <p><strong>Taker takes back @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</strong></p>
+
+                    if (swap.SwapTaker.RecoveryTransactionHash == null)
+                    {
+                        <button class="btn btn-danger" @onclick="TakerRecoverFunds1">Recover Taker Funds</button>
+                    }
+                    else
+                    {
+                        <P class="text-warning"><strong>TAKER RECOVER SUCCESS</strong></P>
+                    }
+                }
+            }
+
+        </MudTabPanel>
+    </MudTabs>
+
 }
 
 @code {
@@ -301,7 +334,7 @@
     int TakerExchangeTransactionConfirmations;
     int MakerRecoveryTransactionConfirmations;
     int TakerRecoveryTransactionConfirmations;
-   
+
     WalletAccounts _walletAccounts = new();
 
     private bool hasWallet;
@@ -320,10 +353,10 @@
         }
 
         swap = JsonSerializer.Deserialize<SwapSession>(swapRes, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
-        });
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            });
 
         if (swap != null)
         {
@@ -342,8 +375,8 @@
                 mypubkeyTakerSide = accountTakerSide?.Pubkey;
             }
 
-            // if I am the taker this is where my keys will be found   
-            if (mypubkeyMakerSide == null && swap.SwapTaker.SenderPubkey!= null)
+            // if I am the taker this is where my keys will be found
+            if (mypubkeyMakerSide == null && swap.SwapTaker.SenderPubkey != null)
             {
                 Guard.NotNull(swap.SwapMaker.ReceiverPubkey, nameof(swap.SwapMaker.ReceiverPubkey));
 
@@ -394,7 +427,7 @@
 
         Guard.Assert(mypubkeyMakerSide == null);
         Guard.Assert(mypubkeyTakerSide == null);
-        
+
         var accountMaker = _walletAccounts.FindAccount(swap.SwapMaker.CoinSymbol);
         var accountTaker = _walletAccounts.FindAccount(swap.SwapTaker.CoinSymbol);
 
@@ -418,7 +451,7 @@
         myswaps.Add(swap);
         storage.SetSwaps(myswaps);
     }
-    
+
     private async Task BuildMakerSwap()
     {
         if (swap.SwapMaker.SenderPubkey != mypubkeyMakerSide)
@@ -456,7 +489,7 @@
         Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
 
         swapSessionCoin.RecoveryLockTime = recoveryLockTime;
-        
+
         var account = _walletAccounts.GetAccountByKey(swapSessionCoin.SenderPubkey);
 
         RedeemType redeemType = account.AccountPurpose == 44 ? RedeemType.P2SH :
@@ -473,10 +506,10 @@
         swapSessionCoin.SwapAddress = swapAddressContext.SwapAddress;
 
         BlockcoreWalletSendFunds sendTo = new()
-        {
-            network = swapSessionCoin.CoinSymbol,
-            feeRate = "medium",
-            recipients = new()
+            {
+                network = swapSessionCoin.CoinSymbol,
+                feeRate = "medium",
+                recipients = new()
             {
                 new()
                 {
@@ -485,7 +518,7 @@
                     amount = swapSessionCoin.Amount + swapSessionCoin.NetworkFee,
                 }
             }
-        };
+            };
 
         var trxContext = await WalletService.SendCoins(sendTo);
 
@@ -535,8 +568,8 @@
     //    RedeemType redeemType = walletAccount.purpose == 44 ? RedeemType.P2SH :
     //        walletAccount.purpose == 88 ? RedeemType.WitnessV0 : RedeemType.P2SH;
 
-    //    var change = redeemType == RedeemType.P2SH ? 
-    //        pubKey.GetAddress(network).ScriptPubKey : 
+    //    var change = redeemType == RedeemType.P2SH ?
+    //        pubKey.GetAddress(network).ScriptPubKey :
     //        pubKey.GetSegwitAddress(network).ScriptPubKey;
 
     //    var transactionContext = SwapBuilder.CreateSwapTransaction(network,
@@ -544,9 +577,9 @@
     //        new PubKey(swapSessionCoin.SenderPubkey),
     //        change,
     //        new PubKey(swapSessionCoin.ReceiverPubkey),
-    //        swapSessionCoin.RecoveryLockTime.Value, 
-    //        swapSessionCoin.Amount, 
-    //        utxos, 
+    //        swapSessionCoin.RecoveryLockTime.Value,
+    //        swapSessionCoin.Amount,
+    //        utxos,
     //        new FeeRate(new Money(fee)),
     //        redeemType);
 
@@ -592,8 +625,8 @@
         if (swap?.SwapMaker.SwapTransactionHash != null)
         {
             MakerSwapTransactionConfirmations = await BlockchainApiService.GetConfirmationsAsync(
-                swap.SwapMaker.CoinSymbol, 
-                swap.SwapMaker.SwapTransactionHash, 
+                swap.SwapMaker.CoinSymbol,
+                swap.SwapMaker.SwapTransactionHash,
                 swap.SwapMaker.SwapTransactionHex);
         }
 
@@ -631,7 +664,7 @@
     //        throw new Exception("Maker pubkey was changed");
 
     //    Networks.Network network = SwapsConfiguration.Networks[swap.SwapTaker.CoinSymbol];
-      
+
     //    var account = _walletAccounts.GetAccount(swap.SwapMaker.CoinSymbol);
     //    var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(account, swap.SwapSessionId);
     //    if (!string.IsNullOrEmpty(errorOut))
@@ -799,16 +832,16 @@
             new Money(swapSessionCoin.NetworkFee));
 
         var swapCoinsInput = new BlockcoreWalletSwapCoins
-        {
-            walletId = account.WalletId,
-            accountId = account.AccountId,
-            network = network.CoinTicker,
-            swapTrxHex = swapSessionCoin.SwapTransactionHex,
-            redeemScriptHex = swapSessionCoin.SwapRedeemScriptHex,
-            secretHashHex = Encoders.Hex.EncodeData(sharedSecret.ToBytes()),
-            trxToSignHex = unsignedExchangeTransaction.ToHex(network.Consensus.ConsensusFactory),
-            message = $"Swap {Money.Satoshis(swapSessionCoin.Amount)} {swapSessionCoin.CoinSymbol} to {sendToAddress}"
-        };
+            {
+                walletId = account.WalletId,
+                accountId = account.AccountId,
+                network = network.CoinTicker,
+                swapTrxHex = swapSessionCoin.SwapTransactionHex,
+                redeemScriptHex = swapSessionCoin.SwapRedeemScriptHex,
+                secretHashHex = Encoders.Hex.EncodeData(sharedSecret.ToBytes()),
+                trxToSignHex = unsignedExchangeTransaction.ToHex(network.Consensus.ConsensusFactory),
+                message = $"Swap {Money.Satoshis(swapSessionCoin.Amount)} {swapSessionCoin.CoinSymbol} to {sendToAddress}"
+            };
 
         var result = await WalletService.SwapCoins(swapCoinsInput);
 
@@ -1033,16 +1066,16 @@
             swapSessionCoin.RecoveryLockTime!.Value);
 
         var swapCoinsInput = new BlockcoreWalletSwapCoins
-        {
-            walletId = account.WalletId,
-            accountId = account.AccountId,
-            network = network.CoinTicker,
-            swapTrxHex = swapSessionCoin.SwapTransactionHex,
-            redeemScriptHex = swapSessionCoin.SwapRedeemScriptHex,
-            secretHashHex = null, // this means it is recover not swap
-            trxToSignHex = unsignedRecoverTransaction.ToHex(network.Consensus.ConsensusFactory),
-            message = $"Recover {Money.Satoshis(swapSessionCoin.Amount)} {swapSessionCoin.CoinSymbol} to {sendToAddress}"
-        };
+            {
+                walletId = account.WalletId,
+                accountId = account.AccountId,
+                network = network.CoinTicker,
+                swapTrxHex = swapSessionCoin.SwapTransactionHex,
+                redeemScriptHex = swapSessionCoin.SwapRedeemScriptHex,
+                secretHashHex = null, // this means it is recover not swap
+                trxToSignHex = unsignedRecoverTransaction.ToHex(network.Consensus.ConsensusFactory),
+                message = $"Recover {Money.Satoshis(swapSessionCoin.Amount)} {swapSessionCoin.CoinSymbol} to {sendToAddress}"
+            };
 
         var result = await WalletService.SwapCoins(swapCoinsInput);
 

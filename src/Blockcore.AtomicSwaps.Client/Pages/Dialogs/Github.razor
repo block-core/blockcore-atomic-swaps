@@ -1,0 +1,23 @@
+﻿@inject IJSRuntime JSRuntime;
+
+<MudDialog>
+    <DialogContent>
+        Do you want to go to the Blockcore Atomic Swaps repository on GitHub?
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="No">No (close)</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Yes">Yes</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    public async Task Yes()
+    {
+        await JSRuntime.InvokeVoidAsync("open", @"https://github.com/block-core/blockcore-atomic-swaps", "_blank");
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    void No() => MudDialog.Cancel();
+}
