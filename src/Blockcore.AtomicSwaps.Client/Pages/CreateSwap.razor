@@ -25,254 +25,274 @@
 
 @if (!hasWallet)
 {
-	<MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">No wallet found please install the wallet at blockcore.net</MudAlert>
+    <MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">No wallet found please install the wallet at blockcore.net</MudAlert>
 }
 else
 {
-	<MudGrid Spacing="@spacing" Justify="Justify.Center">
-		<MudItem sm="12" xl="8" xs="12" lg="8">
-			<MudPaper Class="pa-4">
-				<MudGrid Spacing="@spacing" Justify="Justify.Center">
-					<MudItem sm="6" xl="6" xs="12">
-						<MudSelect T="string" @bind-Value="swapFrom" Adornment="Adornment.End" Label="From" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Wallet" AdornmentColor="Color.Warning" Placeholder="Please Select">
-							@foreach (var prp in _networkList)
-							{
-								<MudSelectItem Value="@prp">
-									<img src="https://chains.blockcore.net/assets/@prp/icon.png" height="24" class="mr-1" /> @prp
-								</MudSelectItem>
-							}
-						</MudSelect>
-					</MudItem>
-					<MudItem sm="6" xl="6" xs="12">
-						<MudNumericField @bind-Value="amountToSell" HideSpinButtons="true" Min="0" Label="Amount" Variant="Variant.Outlined" AdornmentText="@swapFrom" Adornment="Adornment.End" AdornmentColor="Color.Info" />
-					</MudItem>
-				</MudGrid>
-			</MudPaper>
-		</MudItem>
-	</MudGrid>
-	<MudGrid Justify="Justify.Center">
-		<MudItem>
-			<MudIconButton Icon="@Icons.Material.Outlined.SwapVert" Color="Color.Success" OnClick="SwapValue" />
-		</MudItem>
-	</MudGrid>
-	<MudGrid Spacing="@spacing" Justify="Justify.Center">
-		<MudItem sm="12" xl="8" xs="12" lg="8">
-			<MudPaper Class="pa-4">
-				<MudGrid Spacing="@spacing" Justify="Justify.Center">
-					<MudItem sm="6" xl="6" xs="12">
-						<MudSelect T="string" @bind-Value="swapTo" Adornment="Adornment.End" Label="To" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Wallet" AdornmentColor="Color.Secondary" Placeholder="Please Select">
-							@foreach (var prp in _networkList)
-							{
-								<MudSelectItem Value="@prp">
-									<img src="https://chains.blockcore.net/assets/@prp/icon.png" height="24" class="mr-1" /> @prp
-								</MudSelectItem>
-							}
-						</MudSelect>
-					</MudItem>
-					<MudItem sm="6" xl="6" xs="12">
-						<MudNumericField @bind-Value="amountToBuy" HideSpinButtons="true" Min="0" Label="Amount" Variant="Variant.Outlined" AdornmentText="@swapTo" Adornment="Adornment.End" AdornmentColor="Color.Info" />
-					</MudItem>
-				</MudGrid>
-			</MudPaper>
-		</MudItem>
-	</MudGrid>
+    <MudGrid Spacing="@spacing" Justify="Justify.Center">
+        <MudItem sm="12" xl="8" xs="12" lg="8">
+            <MudPaper Class="pa-4">
+                <MudGrid Spacing="@spacing" Justify="Justify.Center">
+                    <MudItem sm="6" xl="6" xs="12">
+                        <MudSelect T="string" Value="swapFrom" Adornment="Adornment.End" Label="From" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Wallet" AdornmentColor="Color.Warning" Placeholder="Please Select" ValueChanged="value => SwapFromValueChanged(value)">
+                            @foreach (var prp in _networkList)
+                            {
+                                <MudSelectItem Value="@prp">
+                                    <img src="https://chains.blockcore.net/assets/@prp/icon.png" height="24" class="mr-1" /> @prp
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem sm="6" xl="6" xs="12">
+                        <MudNumericField @bind-Value="amountToSell" HideSpinButtons="true" Min="0" Max="@swapFromTotalBalance" Label="Amount" Variant="Variant.Outlined" AdornmentText="@swapFrom" Adornment="Adornment.End" AdornmentColor="Color.Info" HelperText="@swapFromMaxAmmountText" />
+                        @*<MudSlider @bind-Value="amountToSell" Min="0" Max="@swapFromTotalBalance" TickMarks="true" Size="Size.Medium" Variant="Variant.Filled"></MudSlider>*@
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Justify="Justify.Center">
+        <MudItem>
+            <MudIconButton Icon="@Icons.Material.Outlined.SwapVert" Color="Color.Success" OnClick="SwapValue" />
+        </MudItem>
+    </MudGrid>
+    <MudGrid Spacing="@spacing" Justify="Justify.Center">
+        <MudItem sm="12" xl="8" xs="12" lg="8">
+            <MudPaper Class="pa-4">
+                <MudGrid Spacing="@spacing" Justify="Justify.Center">
+                    <MudItem sm="6" xl="6" xs="12">
+                        <MudSelect T="string" @bind-Value="swapTo" Adornment="Adornment.End" Label="To" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Wallet" AdornmentColor="Color.Secondary" Placeholder="Please Select">
+                            @foreach (var prp in _networkList)
+                            {
+                                <MudSelectItem Value="@prp">
+                                    <img src="https://chains.blockcore.net/assets/@prp/icon.png" height="24" class="mr-1" /> @prp
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem sm="6" xl="6" xs="12">
+                        <MudNumericField @bind-Value="amountToBuy" HideSpinButtons="true" Min="0" Label="Amount" Variant="Variant.Outlined" AdornmentText="@swapTo" Adornment="Adornment.End" AdornmentColor="Color.Info" />
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-	<MudGrid Spacing="@spacing" Justify="Justify.Center">
-		<MudItem sm="12" xl="8" xs="12" lg="8">
-			<MudPaper Class="pa-4">
-				@if (!_walletAccounts.Connected)
-				{
-					<MudButton FullWidth Color="Color.Primary" Variant="Variant.Filled" disabled="@busy" @onclick="ConnectWallet">Connect Wallet</MudButton>
-				}
-				else
-				{
-					<MudButton FullWidth Color="Color.Primary" Variant="Variant.Filled" @onclick="CreateNewSwap">Create Swap</MudButton>
-				}
-			</MudPaper>
-		</MudItem>
-	</MudGrid>
+    <MudGrid Spacing="@spacing" Justify="Justify.Center">
+        <MudItem sm="12" xl="8" xs="12" lg="8">
+            <MudPaper Class="pa-4">
+                @if (!_walletAccounts.Connected)
+                {
+                    <MudButton FullWidth Color="Color.Primary" Variant="Variant.Filled" disabled="@busy" @onclick="ConnectWallet">Connect Wallet</MudButton>
+                }
+                else
+                {
+                    <MudButton FullWidth Color="Color.Primary" Variant="Variant.Filled" @onclick="CreateNewSwap">Create Swap</MudButton>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 }
 
 @code {
-	public int spacing { get; set; } = 3;
+    public int spacing { get; set; } = 3;
 
-	private List<SwapSession> swaps;
+    private List<SwapSession> swaps;
 
-	string error;
+    string error;
 
-	string swapFrom = "STRAX";
-	string swapTo = "CITY";
+    string swapFrom = "";
+    string swapTo = "";
 
-	long amountToSell = 0;
-	long amountToBuy = 0;
-	private bool hasWallet;
-	private bool busy = false;
+    string swapFromMaxAmmountText = "";
 
-	WalletAccounts _walletAccounts = new();
-	List<string> _networkList = new();
+    decimal amountToSell = 0;
+    decimal amountToBuy = 0;
+    private bool hasWallet;
+    private bool busy = false;
+    decimal swapFromTotalBalance = 0;
+    WalletAccounts _walletAccounts = new();
+    List<string> _networkList = new();
 
-	protected override async Task OnInitializedAsync()
-	{
-		hasWallet = await WalletConnector.HasBlockcoreWallet();
-		_networkList = SwapsConfiguration.Networks.Keys.ToList();
-		_walletAccounts = storage.GetOrCreate<WalletAccounts>();
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        hasWallet = await WalletConnector.HasBlockcoreWallet();
+        _networkList = SwapsConfiguration.Networks.Keys.ToList();
+        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+    }
+    void SwapFromValueChanged(string selected)
+    {
+        try
+        {
+            swapFrom = selected;
+            var accountMakerSide = _walletAccounts.FindAccount(swapFrom);
+            var amountToSellSats = Money.Coins(amountToSell);
+            swapFromTotalBalance = Money.Satoshis(accountMakerSide.Balance).ToUnit(MoneyUnit.BTC);
+        }
+        catch (Exception)
+        {
+            swapFromTotalBalance = 0;
+        }
+        swapFromMaxAmmountText = !string.IsNullOrEmpty(swapFrom) ? $"Max: {swapFromTotalBalance} {swapFrom}" : "";
+    }
 
-	protected async Task CreateNewSwap()
-	{
-		ExtKey.UseBCForHMACSHA512 = true;
-		NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+    protected async Task CreateNewSwap()
+    {
+        ExtKey.UseBCForHMACSHA512 = true;
+        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-		// check that the user has enough money
-		error = string.Empty;
-		if (swapFrom == swapTo)
-		{
-			error = "Cant swap to the same network";
-			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-			return;
-		}
+        // check that the user has enough money
+        error = string.Empty;
+        if (swapFrom == swapTo)
+        {
+            error = "Cant swap to the same network";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            return;
+        }
 
-		Networks.Network network = SwapsConfiguration.Networks[swapFrom];
+        Networks.Network network = SwapsConfiguration.Networks[swapFrom];
 
-		var errorRes = await WalletService.ConnectWallet(_walletAccounts);
+        var errorRes = await WalletService.ConnectWallet(_walletAccounts);
 
-		if (!string.IsNullOrEmpty(errorRes))
-		{
-			error = errorRes;
-			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-			return;
-		}
+        if (!string.IsNullOrEmpty(errorRes))
+        {
+            error = errorRes;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            return;
+        }
 
-		if (!_walletAccounts.HasCoin(swapFrom))
-		{
-			error = $"The coin {swapFrom} network is not found in wallet";
-			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-			return;
-		}
+        if (!_walletAccounts.HasCoin(swapFrom))
+        {
+            error = $"The coin {swapFrom} network is not found in wallet";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            return;
+        }
 
-		if (!_walletAccounts.HasCoin(swapTo))
-		{
-			error = $"The coin {swapTo} network is not found in wallet";
-			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-			return;
-		}
+        if (!_walletAccounts.HasCoin(swapTo))
+        {
+            error = $"The coin {swapTo} network is not found in wallet";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            return;
+        }
 
-		var accountMakerSide = _walletAccounts.FindAccount(swapFrom);
-		var accountTakerSide = _walletAccounts.FindAccount(swapTo);
+        var accountMakerSide = _walletAccounts.FindAccount(swapFrom);
+        var accountTakerSide = _walletAccounts.FindAccount(swapTo);
 
-		var amountToSellSats = Money.Coins(amountToSell);
-		var amountToBuySats = Money.Coins(amountToBuy);
-		var totalBalance = Money.Satoshis(accountMakerSide.Balance);
+        var amountToSellSats = Money.Coins(amountToSell);
+        var amountToBuySats = Money.Coins(amountToBuy);
+        var totalBalance = Money.Satoshis(accountMakerSide.Balance);
 
-		if (totalBalance < amountToSellSats)
-		{
-			error = "You do not have enough funds";
-			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-			return;
-		}
+        if (totalBalance < amountToSellSats)
+        {
+            error = "You do not have enough funds";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            return;
+        }
 
-		var myswaps = storage.GetSwaps();
+        var myswaps = storage.GetSwaps();
 
-		if (myswaps == null)
-		{
-			myswaps = new List<SwapSession>();
-			storage.SetSwaps(myswaps);
-		}
+        if (myswaps == null)
+        {
+            myswaps = new List<SwapSession>();
+            storage.SetSwaps(myswaps);
+        }
 
-		var totalBalanceInSwaps = myswaps.Sum(s =>
-		{
-			if (s.Status == SwapsDataStatus.Complete)
-				return 0;
+        var totalBalanceInSwaps = myswaps.Sum(s =>
+        {
+            if (s.Status == SwapsDataStatus.Complete)
+                return 0;
 
-			if (s.SwapMaker.SenderPubkey == accountMakerSide.Pubkey)
-				return s.SwapMaker.Amount;
+            if (s.SwapMaker.SenderPubkey == accountMakerSide.Pubkey)
+                return s.SwapMaker.Amount;
 
-			if (s.SwapTaker.SenderPubkey == accountTakerSide.Pubkey)
-				return s.SwapTaker.Amount;
+            if (s.SwapTaker.SenderPubkey == accountTakerSide.Pubkey)
+                return s.SwapTaker.Amount;
 
-			return 0;
-		});
+            return 0;
+        });
 
-		var totalBalanceInSwapsSats = Money.Satoshis(totalBalanceInSwaps);
+        var totalBalanceInSwapsSats = Money.Satoshis(totalBalanceInSwaps);
 
-		Logger.LogInformation($"accountInfo.TotalBalance={accountMakerSide.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
+        Logger.LogInformation($"accountInfo.TotalBalance={accountMakerSide.Balance} - totalBalanceInSwaps={totalBalanceInSwaps} - amountToSell={amountToSellSats}");
 
-		if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
-		{
-			error = "funds are used in other swaps no funds left to make a swap";
-			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-			return;
-		}
+        if (totalBalance - totalBalanceInSwapsSats < amountToSellSats)
+        {
+            error = "funds are used in other swaps no funds left to make a swap";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            return;
+        }
 
-		var sessionId = Guid.NewGuid().ToString("N");
-		var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(accountMakerSide, sessionId);
+        var sessionId = Guid.NewGuid().ToString("N");
+        var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(accountMakerSide, sessionId);
 
-		if (!string.IsNullOrEmpty(errorOut))
-		{
-			error = errorOut;
-			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-			return;
-		}
+        if (!string.IsNullOrEmpty(errorOut))
+        {
+            error = errorOut;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            return;
+        }
 
-		SwapSession session = new()
-			{
-				SwapSessionId = sessionId,
-				Created = DateTime.UtcNow,
-				Status = SwapsDataStatus.Available,
-				SharedSecretHash = sharedSecretHash.ToString(),
-				SwapMaker = new SwapSessionCoin
-				{
-					CoinSymbol = swapFrom,
-					Amount = amountToSellSats.Satoshi,
-					SenderPubkey = accountMakerSide.Pubkey,
-					NetworkFee = SwapsConfiguration.GetNetworkFee(swapFrom),
-					ServiceFee = SwapsConfiguration.GetServiceData(swapFrom).ServiceFee,
-					ServiceAddress = SwapsConfiguration.GetServiceData(swapFrom).ServiceAddress,
-				},
-				SwapTaker = new SwapSessionCoin
-				{
-					CoinSymbol = swapTo,
-					Amount = amountToBuySats.Satoshi,
-					ReceiverPubkey = accountTakerSide.Pubkey,
-					NetworkFee = SwapsConfiguration.GetNetworkFee(swapTo),
-					ServiceFee = SwapsConfiguration.GetServiceData(swapTo).ServiceFee,
-					ServiceAddress = SwapsConfiguration.GetServiceData(swapTo).ServiceAddress,
-				}
-			};
+        SwapSession session = new()
+            {
+                SwapSessionId = sessionId,
+                Created = DateTime.UtcNow,
+                Status = SwapsDataStatus.Available,
+                SharedSecretHash = sharedSecretHash.ToString(),
+                SwapMaker = new SwapSessionCoin
+                {
+                    CoinSymbol = swapFrom,
+                    Amount = amountToSellSats.Satoshi,
+                    SenderPubkey = accountMakerSide.Pubkey,
+                    NetworkFee = SwapsConfiguration.GetNetworkFee(swapFrom),
+                    ServiceFee = SwapsConfiguration.GetServiceData(swapFrom).ServiceFee,
+                    ServiceAddress = SwapsConfiguration.GetServiceData(swapFrom).ServiceAddress,
+                },
+                SwapTaker = new SwapSessionCoin
+                {
+                    CoinSymbol = swapTo,
+                    Amount = amountToBuySats.Satoshi,
+                    ReceiverPubkey = accountTakerSide.Pubkey,
+                    NetworkFee = SwapsConfiguration.GetNetworkFee(swapTo),
+                    ServiceFee = SwapsConfiguration.GetServiceData(swapTo).ServiceFee,
+                    ServiceAddress = SwapsConfiguration.GetServiceData(swapTo).ServiceAddress,
+                }
+            };
 
-		await Http.PostAsJsonAsync($"api/SwapCoordinator/create", session);
+        await Http.PostAsJsonAsync($"api/SwapCoordinator/create", session);
 
-		var swap = await Http.GetFromJsonAsync<SwapSession?>($"api/SwapCoordinator/session/{session.SwapSessionId}");
+        var swap = await Http.GetFromJsonAsync<SwapSession?>($"api/SwapCoordinator/session/{session.SwapSessionId}");
 
-		if (swap == null)
-		{
-			error = $"swap not created correctly session = {session.SwapSessionId}";
-			await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-			return;
-		}
+        if (swap == null)
+        {
+            error = $"swap not created correctly session = {session.SwapSessionId}";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            return;
+        }
 
-		myswaps.Add(swap);
+        myswaps.Add(swap);
 
-		storage.SetSwaps(myswaps);
+        storage.SetSwaps(myswaps);
 
-		NavigationManager.NavigateTo($"viewswap/{sessionId}");
-	}
+        NavigationManager.NavigateTo($"viewswap/{sessionId}");
+    }
 
-	protected async Task ViewSwap(string session)
-	{
-		NavigationManager.NavigateTo($"viewswap/{session}");
-	}
+    protected async Task ViewSwap(string session)
+    {
+        NavigationManager.NavigateTo($"viewswap/{session}");
+    }
 
-	private async Task ConnectWallet()
-	{
-		error = await WalletService.ConnectWallet(_walletAccounts);
-		await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-	}
+    private async Task ConnectWallet()
+    {
+        error = await WalletService.ConnectWallet(_walletAccounts);
+        await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+    }
 
-	private void SwapValue()
-	{
-		(swapFrom, swapTo) = (swapTo, swapFrom);
+    private void SwapValue()
+    {
+        (swapFrom, swapTo) = (swapTo, swapFrom);
 
-		(amountToSell, amountToBuy) = (amountToBuy, amountToSell);
-	}
+        (amountToSell, amountToBuy) = (amountToBuy, amountToSell);
+
+        SwapFromValueChanged(swapFrom);
+    }
 }

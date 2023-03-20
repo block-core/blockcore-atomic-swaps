@@ -17,99 +17,110 @@
 <PageTitle>My Swaps</PageTitle>
 
 <MudText Align="Align.Center" Typo="Typo.h4">My Swaps</MudText>
-<MudText Align="Align.Center" Class="mb-8 mt-8">This component helps find available swaps.</MudText>
+<MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
 
 
 @if (hasWallet == false)
 {
-	<MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">Not wallet found please install the wallet at blockcore.net</MudAlert>
+    <MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">No wallet found please install the wallet at blockcore.net</MudAlert>
 }
-   
-
-@if (myswaps != null)
+else
 {
-	<MudTable Items="@myswaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
-		<HeaderContent>
-			<MudTh>From</MudTh>
-			<MudTh>To</MudTh>
-			<MudTh>Date</MudTh>
-			<MudTh>Is Mine</MudTh>
-			<MudTh>Status</MudTh>
-			<MudTh></MudTh>
-		</HeaderContent>
-			<RowTemplate>
-				<MudTd Class="text-one-line" DataLabel="Maker">@Money.Satoshis(context.SwapMaker.Amount) - @context.SwapMaker.CoinSymbol</MudTd>
-				<MudTd Class="text-one-line" DataLabel="Taker">@Money.Satoshis(context.SwapTaker.Amount) - @context.SwapTaker.CoinSymbol</MudTd>
-				<MudTd Class="text-one-line" DataLabel="Date">@context.Created </MudTd>
-				<MudTd Class="text-one-line" DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.SwapMaker.SenderPubkey) ? "I am maker" : _walletAccounts.HasAccountKey(context.SwapTaker.SenderPubkey) ? "I am taker" : "not my swap")</MudTd>
-					<MudTd Class="text-one-line" DataLabel="Status">@context.Status </MudTd>
-					<MudTd DataLabel="Details">
-						<MudButton Color="Color.Info" Variant="Variant.Filled" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
-					</MudTd>
-				</RowTemplate>
-	</MudTable>
+    @if (myswaps != null)
+    {
+        <MudTable Items="@myswaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Swap</MudTh>
+                <MudTh>From</MudTh>
+                <MudTh>To</MudTh>
+                <MudTh>Date</MudTh>
+                <MudTh>Is Mine</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd Class="text-one-line" DataLabel="Swap">
+                    <MudAvatarGroup Max="2" Spacing="3" MaxColor="Color.Primary">
+                        @{
+                            var makerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @context.SwapMaker.CoinSymbol);
+                            var takerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @context.SwapTaker.CoinSymbol);
+                        }
+                        <MudAvatar Image="@makerCoinImg" />
+                        <MudAvatar Image="@takerCoinImg" />
+                    </MudAvatarGroup>
+                </MudTd>
+                <MudTd Class="text-one-line" DataLabel="Maker">@Money.Satoshis(context.SwapMaker.Amount) - @context.SwapMaker.CoinSymbol</MudTd>
+                <MudTd Class="text-one-line" DataLabel="Taker">@Money.Satoshis(context.SwapTaker.Amount) - @context.SwapTaker.CoinSymbol</MudTd>
+                <MudTd Class="text-one-line" DataLabel="Date">@context.Created </MudTd>
+                <MudTd Class="text-one-line" DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.SwapMaker.SenderPubkey) ? "I am maker" : _walletAccounts.HasAccountKey(context.SwapTaker.SenderPubkey) ? "I am taker" : "not my swap")</MudTd>
+                    <MudTd Class="text-one-line" DataLabel="Status">@context.Status </MudTd>
+                    <MudTd DataLabel="Details">
+                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+    }
 }
-
 @code {
-	private IEnumerable<SwapSession> myswaps = new List<SwapSession>();
-	private bool _loading;
+    private IEnumerable<SwapSession> myswaps = new List<SwapSession>();
+    private bool _loading;
 
-	Networks.Network network;
-	List<string> NetworkList;
-	private bool hasWallet;
+    Networks.Network network;
+    List<string> NetworkList;
+    private bool hasWallet;
 
-	string error;
+    string error;
 
-	string SwapFrom = "STRAX";
-	string SwapTo = "CITY";
+    string SwapFrom = "STRAX";
+    string SwapTo = "CITY";
 
-	long amountToSell = 1;
-	long amountToBuy = 10;
-	WalletAccounts? _walletAccounts;
+    long amountToSell = 1;
+    long amountToBuy = 10;
+    WalletAccounts? _walletAccounts;
 
-	private async Task Fetch()
-	{
-		myswaps = storage.GetSwaps();
+    private async Task Fetch()
+    {
+        myswaps = storage.GetSwaps();
 
-	    if (myswaps != null)
-	    {
-	        foreach (var myswap in myswaps.ToList())
-	        {
-	            if (myswap.Status is SwapsDataStatus.Available or SwapsDataStatus.InProgress)
-	            {
-	                var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{myswap.SwapSessionId}");
+        if (myswaps != null)
+        {
+            foreach (var myswap in myswaps.ToList())
+            {
+                if (myswap.Status is SwapsDataStatus.Available or SwapsDataStatus.InProgress)
+                {
+                    var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{myswap.SwapSessionId}");
 
-	                if (myswap.Status != swap.Status)
-	                {
-	                    myswaps.ToList().Remove(myswap);
-						myswaps.ToList().Add(swap);
-						storage.SetSwaps(myswaps.ToList());
-	                }
-	            }
-	        }
-	    }
-	}
-	
-	protected override async Task OnInitializedAsync()
-	{
-		NetworkList = SwapsConfiguration.Networks.Keys.ToList();
+                    if (myswap.Status != swap.Status)
+                    {
+                        myswaps.ToList().Remove(myswap);
+                        myswaps.ToList().Add(swap);
+                        storage.SetSwaps(myswaps.ToList());
+                    }
+                }
+            }
+        }
+    }
 
-	    if (await WalletConnector.HasBlockcoreWallet() == false)
-	    {
-	        hasWallet = false;
-	        return;
-	    }
+    protected override async Task OnInitializedAsync()
+    {
+        NetworkList = SwapsConfiguration.Networks.Keys.ToList();
 
-	    hasWallet = true;
+        if (await WalletConnector.HasBlockcoreWallet() == false)
+        {
+            hasWallet = false;
+            return;
+        }
 
-	    _walletAccounts = storage.GetOrCreate<WalletAccounts>();
-		
-		await this.Fetch();
-	}
+        hasWallet = true;
 
-	protected async Task ViewSwap(string session)
-	{
-		NavigationManager.NavigateTo($"viewswap/{session}");
-	}
+        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+
+        await this.Fetch();
+    }
+
+    protected async Task ViewSwap(string session)
+    {
+        NavigationManager.NavigateTo($"viewswap/{session}");
+    }
 
 }

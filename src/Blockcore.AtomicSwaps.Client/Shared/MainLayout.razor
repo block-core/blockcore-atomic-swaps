@@ -1,44 +1,45 @@
 ﻿@using System.Reflection
 @inherits LayoutComponentBase
+@inject IDialogService DialogService
 
 <MudThemeProvider @ref="@_mudThemeProvider" Theme="@LayoutService.CurrentTheme" IsDarkMode="@LayoutService.IsDarkMode" IsDarkModeChanged="LayoutService.SetDarkMode" />
 <MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.ExtraSmall" />
 <MudSnackbarProvider />
 
 <MudLayout>
-	<MudAppBar Elevation="1">
-		<MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
 
-		<MudText class="w-100 text-warning fw-bold">WARNING ALPHA SOFTWARE</MudText>
+        <MudText class="w-100 text-warning fw-bold">WARNING ALPHA SOFTWARE</MudText>
 
-		<MudSpacer />
+        <MudSpacer />
 
-		<MudTooltip Duration="1000" Text="Settings">
-			<MudIconButton Icon="@Icons.Material.Outlined.Settings" Color="Color.Inherit" Link="/settings" />
-		</MudTooltip>
+        <MudTooltip Duration="1000" Text="Settings">
+            <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" Link="/settings"></MudIconButton>
+        </MudTooltip>
 
-		<MudTooltip Duration="1000" Text="@(LayoutService.IsDarkMode ? "Switch to Light Theme" : "Switch to Dark Theme")">
-			<MudIconButton Icon="@(LayoutService.IsDarkMode ? @Icons.Rounded.LightMode : @Icons.Material.Outlined.DarkMode)" Color="Color.Inherit" OnClick="@LayoutService.ToggleDarkMode" />
-		</MudTooltip>
+        <MudTooltip Duration="1000" Text="@(LayoutService.IsDarkMode ? "Switch to Light Theme" : "Switch to Dark Theme")">
+            <MudIconButton Icon="@(LayoutService.IsDarkMode ? @Icons.Material.Outlined.LightMode : @Icons.Material.Outlined.DarkMode)" Color="Color.Primary" OnClick="@LayoutService.ToggleDarkMode" />
+        </MudTooltip>
 
-		<MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/block-core/blockcore-atomic-swaps" Target="_blank" />
+        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" aria-label="github" @onclick="OpenDialog" />
 
-	</MudAppBar>
-	<MudDrawer @bind-Open="_drawerOpen" Elevation="0">
-		<MudDrawerHeader>
-			<a href="/" class="d-flex me-4">
-				<img src="/logo.png" class="swap-logo" />
-				<h5 class="brand-text">Atomic Swaps</h5>
-			</a>
-		</MudDrawerHeader>
-		<NavMenu />
-	</MudDrawer>
-	<MudMainContent>
-		<MudContainer MaxWidth="MaxWidth.Large" Class="my-8 pb-1 fade-in">
-			@Body
-		</MudContainer>
-	</MudMainContent>
-@*	<MudAppBar Style="top: auto; bottom: 0;">
-		version - @SwapsConfiguration.GetVersion()
-	</MudAppBar>*@
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="0">
+        <MudDrawerHeader>
+            <a href="/" class="d-flex me-4">
+                <img src="/logo.png" class="swap-logo" />
+                <h5 class="brand-text">Atomic Swaps</h5>
+            </a>
+        </MudDrawerHeader>
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-8 pb-1 fade-in">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+    @*	<MudAppBar Style="top: auto; bottom: 0;">
+    version - @SwapsConfiguration.GetVersion()
+    </MudAppBar>*@
 </MudLayout>

@@ -8,7 +8,7 @@ public class LayoutService
 	private readonly IUserPreferencesService _userPreferencesService;
 	private UserPreferences.UserPreferences _userPreferences;
 
-	public bool IsDarkMode { get; private set; } = false;
+	public bool IsDarkMode { get; private set; } = true;
 
 	public MudTheme CurrentTheme { get; private set; }
 

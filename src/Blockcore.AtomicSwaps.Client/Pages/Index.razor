@@ -19,49 +19,59 @@
 <MudText Align="Align.Center" Typo="Typo.h4">Blockcore Atomic Swaps</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
 
+@*<MudPaper Class="mb-5">
+    <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="@arrows" ShowBullets="@bullets" EnableSwipeGesture="@enableSwipeGesture" AutoCycle="@autocycle" TData="object">
+        <MudCarouselItem Transition="transition" Color="@Color.Primary">
+            <div class="d-flex" style="height:100%">
+                <MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.GitHub" Size="@Size.Large" />
+            </div>
+        </MudCarouselItem>
+        <MudCarouselItem Transition="transition" Color="@Color.Secondary">
+            <div class="d-flex" style="height:100%">
+                <MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.GitHub" Size="@Size.Large" />
+            </div>
+        </MudCarouselItem>
+        <MudCarouselItem Transition="transition">
+            <div class="d-flex" style="height:100%">
+                <MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.GitHub" Color="@Color.Primary" Size="@Size.Large" />
+            </div>
+        </MudCarouselItem>
+    </MudCarousel>
+</MudPaper>*@
 
-<MudPaper Class="pa-4 mb-3">
-	<MudStack Row="true">
-		<MudAvatar Color="Color.Transparent"  Style="background-color:transparent !important" Image="https://chains.blockcore.net/assets/CITY/icon.png" Size="Size.Large" />
-		<MudStack Justify="Justify.Center" Spacing="0">
-			<MudText Typo="Typo.body1">CITY</MudText>
-			<MudText Typo="Typo.body2">City chain</MudText>
-		</MudStack>
-	</MudStack>
-</MudPaper>
 
-<MudPaper Class="pa-4 mb-3">
-	<MudStack Row="true">
-		<MudAvatar Color="Color.Transparent"  Style="background-color:transparent !important" Image="https://chains.blockcore.net/assets/STRAX/icon.png" Size="Size.Large" />
-		<MudStack Justify="Justify.Center" Spacing="0">
-			<MudText Typo="Typo.body1">STRAX</MudText>
-			<MudText Typo="Typo.body2">Stratis</MudText>
-		</MudStack>
-	</MudStack>
-</MudPaper>
-   
-<MudPaper Class="pa-4 mb-3">
-	<MudStack Row="true">
-		<MudAvatar Color="Color.Transparent" Style="background-color:transparent !important" Image="https://chains.blockcore.net/assets/SBC/icon.png" Size="Size.Large" />
-		<MudStack Justify="Justify.Center" Spacing="0">
-			<MudText Typo="Typo.body1">SBC</MudText>
-			<MudText Typo="Typo.body2">Senior blockchain</MudText>
-		</MudStack>
-	</MudStack>
-</MudPaper>
+@foreach (var prp in _networkList)
+{
+    <MudPaper Class="pa-4 mb-3">
+        <MudStack Row="true">
+            @{
+                var img = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", prp);
+            }
+            <MudAvatar Size="Size.Large">
+                <MudImage Src="@img" Width="55" Height="55"  Color=" Color.Transparent" Style="background-color:transparent !important"></MudImage>
+            </MudAvatar>
 
-<MudPaper Class="pa-4 mb-3">
-	<MudStack Row="true">
-		<MudAvatar Color="Color.Transparent"  Style="background-color:transparent !important" Image="https://chains.blockcore.net/assets/RSC/icon.png" Size="Size.Large" />
-		<MudStack Justify="Justify.Center" Spacing="0">
-			<MudText Typo="Typo.body1">RSC</MudText>
-			<MudText Typo="Typo.body2">Royal sports city</MudText>
-		</MudStack>
-	</MudStack>
-</MudPaper>
- 
+
+            <MudStack Justify="Justify.Center" Spacing="0">
+                <MudText Typo="Typo.body1">@prp</MudText>
+                @*<MudText Typo="Typo.body2">@prp</MudText>*@
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+}
+
 
 @code {
-	
+    private bool arrows = true;
+    private bool bullets = true;
+    private bool enableSwipeGesture = true;
+    private bool autocycle = true;
+    private Transition transition = Transition.Slide;
+
+    List<string> _networkList = new();
+    protected override async Task OnInitializedAsync()
+    {
+        _networkList = SwapsConfiguration.Networks.Keys.ToList();
+    }
 
 }
