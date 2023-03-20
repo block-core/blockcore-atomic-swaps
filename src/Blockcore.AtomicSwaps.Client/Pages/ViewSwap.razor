@@ -17,18 +17,12 @@
 @inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService;
 @inject IWalletService WalletService
+@inject ISnackbarService SnackbarService
 
 <PageTitle>View Swaps</PageTitle>
 
-
-
-
-
-
-
-<h1>View Swaps</h1>
-
-<p>This component displays a swap.</p>
+<MudText Align="Align.Center" Typo="Typo.h4">View Swaps</MudText>
+<MudText Align="Align.Center" Class="mb-8 mt-8">This component displays a swap.</MudText>
 
 <p class="alert-danger">@error</p>
 
@@ -361,6 +355,7 @@
         if (string.IsNullOrEmpty(swapRes))
         {
             error = $"Swap not found!";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
 
@@ -415,6 +410,7 @@
         else
         {
             error = "Only the owner can delete a swap";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
 
@@ -540,6 +536,7 @@
         if (trxContext.transactionId == null || trxContext.transactionHex == null)
         {
             error = "transactionId was null, something went wrong";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             Logger.LogWarning("trxid was null");
             Logger.LogWarning("trxhex=" + trxContext.transactionHex);
         }
@@ -760,6 +757,8 @@
         if (!string.IsNullOrEmpty(errorOut))
         {
             error = errorOut;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+
             return;
         }
 
@@ -773,6 +772,7 @@
         if (!string.IsNullOrEmpty(errorRes))
         {
             error = errorRes;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
 
@@ -809,6 +809,7 @@
         if (!string.IsNullOrEmpty(errorRes))
         {
             error = errorRes;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
 
@@ -1009,6 +1010,7 @@
         if (!string.IsNullOrEmpty(errorRes))
         {
             error = errorRes;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
 
@@ -1042,6 +1044,7 @@
         if (!string.IsNullOrEmpty(errorRes))
         {
             error = errorRes;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
 
