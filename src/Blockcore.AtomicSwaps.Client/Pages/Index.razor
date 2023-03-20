@@ -18,7 +18,8 @@
 
 <MudText Align="Align.Center" Typo="Typo.h4">Blockcore Atomic Swaps</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
-<MudPaper Class="mb-5">
+
+@*<MudPaper Class="mb-5">
     <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="@arrows" ShowBullets="@bullets" EnableSwipeGesture="@enableSwipeGesture" AutoCycle="@autocycle" TData="object">
         <MudCarouselItem Transition="transition" Color="@Color.Primary">
             <div class="d-flex" style="height:100%">
@@ -36,7 +37,7 @@
             </div>
         </MudCarouselItem>
     </MudCarousel>
-</MudPaper>
+</MudPaper>*@
 
 
 @foreach (var prp in _networkList)
@@ -46,7 +47,11 @@
             @{
                 var img = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", prp);
             }
-            <MudAvatar Color="Color.Transparent" Style="background-color:transparent !important" Image="@img" Size="Size.Large" />
+            <MudAvatar Size="Size.Large">
+                <MudImage Src="@img" Width="55" Height="55"  Color=" Color.Transparent" Style="background-color:transparent !important"></MudImage>
+            </MudAvatar>
+
+
             <MudStack Justify="Justify.Center" Spacing="0">
                 <MudText Typo="Typo.body1">@prp</MudText>
                 @*<MudText Typo="Typo.body2">@prp</MudText>*@

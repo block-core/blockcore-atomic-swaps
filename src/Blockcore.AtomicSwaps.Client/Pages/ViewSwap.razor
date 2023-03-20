@@ -22,7 +22,10 @@
 <PageTitle>View Swaps</PageTitle>
 
 <MudText Align="Align.Center" Typo="Typo.h4">View Swaps</MudText>
-<MudText Align="Align.Center" Class="mb-8 mt-8">This component displays a swap.</MudText>
+<MudText Align="Align.Center" Class="mb-8 mt-8">
+
+
+</MudText>
 
 <p class="alert-danger">@error</p>
 
@@ -30,22 +33,27 @@
 {
     @*=========================Swap info========================*@
     <MudCard Class="mb-5">
+        <MudCardHeader>
+            <CardHeaderAvatar>
+                <MudAvatarGroup Max="2" Spacing="3" MaxColor="Color.Primary">
+                    @{
+                        var makerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapMaker.CoinSymbol);
+                        var takerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapTaker.CoinSymbol);
+                    }
+                    <MudAvatar Image="@makerCoinImg" />
+                    <MudAvatar Image="@takerCoinImg" />
+                </MudAvatarGroup>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.body1">@swap.SwapMaker.CoinSymbol for @swap.SwapTaker.CoinSymbol</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Default" />
+            </CardHeaderActions>
+        </MudCardHeader>
         <MudCardContent>
-            <h4>Session id - @swap.SwapSessionId</h4>
-            <p>Created - @swap.Created</p>
-            <p>Status - @swap.Status</p>
-
-            <MudAvatarGroup Max="2" Spacing="3" MaxColor="Color.Primary">
-                @{
-                    var makerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapMaker.CoinSymbol);
-                    var takerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapTaker.CoinSymbol);
-                }
-
-                <MudAvatar Image="@makerCoinImg" />
-                <MudAvatar Image="@takerCoinImg" />
-            </MudAvatarGroup>
-            <h4>Swap @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol for @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</h4>
-
+            <MudText Typo="Typo.body1">Swap @Money.Satoshis(swap.SwapMaker.Amount) @swap.SwapMaker.CoinSymbol for @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</MudText>
+            <MudText Typo="Typo.body2">Created - @swap.Created</MudText>            <p>Status - @swap.Status</p>
             @if (mypubkeyTakerSide == null && mypubkeyMakerSide == null)
             {
                 <p><strong>Not my swap</strong></p>
@@ -74,9 +82,6 @@
             }
         </MudCardActions>
     </MudCard>
-
- 
-
 
 
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">

@@ -15,7 +15,13 @@
 <PageTitle>Find Atomic Swaps</PageTitle>
 
 <MudText Align="Align.Center" Typo="Typo.h4">Find Atomic Swaps</MudText>
-<MudText Align="Align.Center" Class="mb-8 mt-8">This component helps find available swaps.</MudText>
+<MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
+
+@if (!hasWallet)
+{
+    <MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">No wallet found please install the wallet at blockcore.net</MudAlert>
+}
+else{
 
 <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Fetch" Class="mt-5 mb-5">Fetch Swaps</MudButton>
 
@@ -56,6 +62,7 @@
         </MudTable>
 }
 
+}
 @code {
     private IEnumerable<SwapSession> swaps = new List<SwapSession>();
     private bool _loading;
