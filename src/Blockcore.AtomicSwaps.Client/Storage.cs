@@ -11,6 +11,11 @@ namespace Blockcore.AtomicSwaps.Client
         {
             _storage = storage;
         }
+
+        public Storage()
+        {
+        }
+
         public void SaveWalletWords(string mnemonic)
         {
             _storage.SetItemAsString("mnemonic", mnemonic);
@@ -87,6 +92,25 @@ namespace Blockcore.AtomicSwaps.Client
             }
 
             return item;
+        }
+        public void SetExplorerUrl(string address)
+        {
+            _storage.SetItemAsString("explorer", address);
+        }
+
+        public string? GetExplorerUrl()
+        {
+            return _storage.GetItemAsString("explorer");
+        }
+
+        public void SetIndexerUrl(string symbol, string url)
+        {
+            _storage.SetItemAsString(symbol.ToLower() + "-indexer", url);
+        }
+
+        public string? GetIndexerUrl(string symbol)
+        {
+            return _storage.GetItemAsString(symbol + "-indexer");
         }
     }
 }

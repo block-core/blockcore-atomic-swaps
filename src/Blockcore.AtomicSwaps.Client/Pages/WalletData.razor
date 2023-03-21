@@ -136,7 +136,7 @@
             var accountIndex = 0; // for now only account 0
             var purpose = 44; // for now only legacy
 
-            var indexer = SwapsConfiguration.Indexers.First(f => f.Symbol == selectedNetwork);
+            var indexer = SwapsConfiguration.Indexers().First(f => f.Symbol == selectedNetwork);
 
             AccountInfo accountInfo = storage.GetAccountInfo(selectedNetwork);
 

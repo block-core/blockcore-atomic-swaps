@@ -1,5 +1,7 @@
 ﻿@page "/settings"
 
+@using Blockcore.AtomicSwaps.BlockcoreDns;
+@using Blockcore.AtomicSwaps.BlockcoreDns.Models;
 @using Blockcore.AtomicSwaps.Shared
 @using Blockcore.Consensus.BlockInfo
 @using NBitcoin
@@ -14,6 +16,7 @@
 @inject IBlockcoreWalletConnector WalletConnector
 @inject IBlockchainApiService BlockchainApiService
 @inject IWalletService WalletService
+@inject IBlockcoreDnsService DnsService;
 
 <PageTitle>Settings</PageTitle>
 
@@ -21,9 +24,47 @@
 <MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
 
 <MudTabs Elevation="1" Rounded="true" PanelClass="pa-6">
-@*    <MudTabPanel Text="Options" ToolTip="Options">
-        <MudText>Options</MudText>
-    </MudTabPanel>*@
+    <MudTabPanel Text="Network Status" ToolTip="Network Status">
+        @foreach (var item in _indexors)
+        {
+            <MudText>@item.Symbol</MudText>
+
+            @foreach (var ind in item.Indexers)
+            {
+                @foreach (var res in ind.DnsResults)
+                {
+                    if (res.Online)
+                    {
+                        <li class="text-success">@res.Domain </li>
+                    }
+                    else
+                    {
+                        <li class="text-danger">@res.Domain </li>
+                    }
+                }
+            }
+
+        }
+    </MudTabPanel>
+    <MudTabPanel Text="Explorer" ToolTip="Explorer">
+        @foreach (var item in _explorers)
+        {
+            <MudText>@item.Url</MudText>
+            
+                @foreach (var res in item.DnsResults)
+                {
+                   if (res.Online)
+                    {
+                        <li class="text-success">@res.Domain </li>
+                    }
+                    else
+                    {
+                        <li class="text-danger">@res.Domain </li>
+                    }
+                }
+             
+        }
+    </MudTabPanel>
     <MudTabPanel Text="Data" ToolTip="Data">
         <MudText>
             @if (hasWallet && _walletAccounts.Connected)
@@ -41,11 +82,48 @@
 @code {
     private bool hasWallet;
     private WalletAccounts _walletAccounts = new WalletAccounts();
+    List<string> _networkList = new();
+
+    List<DnsServices> _explorers = new();
+
+    List<NetworkIndexers> _indexors = new();
 
     protected override async Task OnInitializedAsync()
     {
         hasWallet = await WalletConnector.HasBlockcoreWallet();
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+        _networkList = SwapsConfiguration.Networks.Keys.ToList();
+
+        await LoadExplorers();
+
+        await LoadIndexers();
+
+    }
+
+    private async Task LoadIndexers()
+    {
+        foreach (var item in _networkList)
+        {
+            var indexers = await DnsService.GetServicesByNetwork(item);
+            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList() });
+        }
+
+    }
+
+    private void UpdatedSelectedIndexer()
+    {
+
+    }
+
+    private async Task LoadExplorers()
+    {
+        var explorers = await DnsService.GetServicesByType("Explorer");
+        _explorers = explorers.ToList();
+    }
+
+    private void UpdatedSelectedExplorer()
+    {
+
     }
 
     private void WipeSwaps()
@@ -59,4 +137,11 @@
         WalletService.ClearWallet();
         _walletAccounts = new WalletAccounts();
     }
+
+    class NetworkIndexers
+    {
+        public string Symbol { get; set; }
+        public List<DnsServices> Indexers { get; set; }
+    }
+
 }

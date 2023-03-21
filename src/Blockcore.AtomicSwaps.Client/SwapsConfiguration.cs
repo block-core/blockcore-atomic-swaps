@@ -1,30 +1,40 @@
-﻿using Blockcore.AtomicSwaps.Client.Services;
+﻿using Blazored.LocalStorage;
+using Blockcore.AtomicSwaps.Client.Services;
 using Blockcore.AtomicSwaps.Shared;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using Blockcore.Utilities;
+using Microsoft.AspNetCore.Components;
 using NBitcoin;
 using NBitcoin.Crypto;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Blockcore.AtomicSwaps.Client
 {
     public class SwapsConfiguration
     {
+        [Inject]
+        public Storage _storage { get; set; }
+
         public Dictionary<string, SwapSession> Swaps { get; } = new();
 
-
-        public string ExplorerUrl = "https://explorer.blockcore.net";
-
-        public List<IndexerUrl> Indexers { get; } = new()
+        public string ExplorerUrl()
         {
-            new IndexerUrl { Symbol = "STRAX", Url = "https://strax.indexer.blockcore.net/api" },
-            new IndexerUrl { Symbol = "CITY", Url = "https://city.indexer.blockcore.net/api" },
-            new IndexerUrl { Symbol = "IMPLX", Url = "https://implx.indexer.blockcore.net/api" },
-            new IndexerUrl { Symbol = "RSC", Url = "https://rsc.indexer.blockcore.net/api" },
-            new IndexerUrl { Symbol = "SBC", Url = "https://sbc.indexer.blockcore.net/api" },
-        };
+            return _storage.GetExplorerUrl() ?? "https://explorer.blockcore.net";
+        }
+        public List<IndexerUrl> Indexers()
+        {
+            List<IndexerUrl> indexers = new List<IndexerUrl>();
+            indexers.Add(new IndexerUrl { Symbol = "BTC", Url = _storage.GetIndexerUrl("BTC") ?? "https://btc.indexer.coinvault.io/api" });
+            indexers.Add(new IndexerUrl { Symbol = "STRAX", Url = _storage.GetIndexerUrl("STRAX") ?? "https://strax.indexer.blockcore.net/api" });
+            indexers.Add(new IndexerUrl { Symbol = "CITY", Url = _storage.GetIndexerUrl("CITY") ?? "https://city.indexer.blockcore.net/api" });
+            indexers.Add(new IndexerUrl { Symbol = "IMPLX", Url = _storage.GetIndexerUrl("IMPLX") ?? "https://implx.indexer.blockcore.net/api" });
+            indexers.Add(new IndexerUrl { Symbol = "RSC", Url = _storage.GetIndexerUrl("RSC") ?? "https://rsc.indexer.blockcore.net/api" });
+            indexers.Add(new IndexerUrl { Symbol = "SBC", Url = _storage.GetIndexerUrl("SBC") ?? "https://sbc.indexer.blockcore.net/api" });
+            return indexers;
+        }
 
         public Dictionary<string, Network> Networks { get; } = new()
         {
@@ -87,7 +97,7 @@ namespace Blockcore.AtomicSwaps.Client
 
         public static bool FindInputs1(Networks.Network network, Storage storage, long targetAmount, long fee, WalletConnectInput walletConnectInputs, out List<UtxoData> balancesList)
         {
-           // AccountInfo? accountInfo = storage.GetAccountInfo(network.CoinTicker);
+            // AccountInfo? accountInfo = storage.GetAccountInfo(network.CoinTicker);
             Guard.NotNull(walletConnectInputs, nameof(walletConnectInputs));
             Guard.NotNull(walletConnectInputs.WalletApiMessage, nameof(walletConnectInputs.WalletApiMessage));
 
@@ -105,7 +115,7 @@ namespace Blockcore.AtomicSwaps.Client
                 {
                     address = item.address,
                     value = item.balance,
-                    outpoint = new Outpoint {outputIndex = item.index, transactionId = item.transactionHash},
+                    outpoint = new Outpoint { outputIndex = item.index, transactionId = item.transactionHash },
                 });
                 balance += item.balance;
 

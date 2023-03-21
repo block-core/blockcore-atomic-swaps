@@ -905,7 +905,7 @@
             return;
         }
 
-        var indexer = SwapsConfiguration.Indexers.First(f => f.Symbol == swap.SwapTaker.CoinSymbol);
+        var indexer = SwapsConfiguration.Indexers().First(f => f.Symbol == swap.SwapTaker.CoinSymbol);
         var url = $"/query/transaction/{swap.SwapTaker.SwapTransactionHash}";
         var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
 
