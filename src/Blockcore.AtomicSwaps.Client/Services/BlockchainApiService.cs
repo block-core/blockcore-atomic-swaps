@@ -5,7 +5,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
 {
 
     public class BlockchainApiService : IBlockchainApiService
-	{
+    {
         private readonly ILogger<BlockchainApiService> _logger;
         private readonly HttpClient _httpClient;
         private readonly SwapsConfiguration _swapsConfiguration;
@@ -21,7 +21,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
         {
             try
             {
-                var indexer = _swapsConfiguration.Indexers.First(f => f.Symbol == network);
+                var indexer = _swapsConfiguration.Indexers().First(f => f.Symbol == network);
                 var url = $"/query/transaction/{trxId}";
                 var res = await _httpClient.GetFromJsonAsync<TransactionData>(indexer.Url + url);
                 return res?.confirmations ?? 0;
@@ -44,7 +44,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
         {
             if (!string.IsNullOrEmpty(trxHex))
             {
-                var indexer = _swapsConfiguration.Indexers.First(f => f.Symbol == network);
+                var indexer = _swapsConfiguration.Indexers().First(f => f.Symbol == network);
                 var url = $"/command/send";
                 var result = await _httpClient.PostAsync(indexer.Url + url, new StringContent(trxHex));
                 result.EnsureSuccessStatusCode();
