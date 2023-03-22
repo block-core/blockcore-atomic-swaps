@@ -100,7 +100,7 @@ namespace Blockcore.AtomicSwaps.Client
 
         public string? GetExplorerUrl()
         {
-            return _storage.GetItemAsString("explorer");
+            return _storage.GetItemAsString("explorer") ?? "https://explorer.blockcore.net";
         }
 
         public void SetIndexerUrl(string symbol, string url)
@@ -110,7 +110,7 @@ namespace Blockcore.AtomicSwaps.Client
 
         public string? GetIndexerUrl(string symbol)
         {
-            return _storage.GetItemAsString(symbol + "-indexer");
+            return _storage.GetItemAsString(symbol.ToLower() + "-indexer");
         }
     }
 }

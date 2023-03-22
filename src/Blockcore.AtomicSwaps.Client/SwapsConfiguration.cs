@@ -22,7 +22,7 @@ namespace Blockcore.AtomicSwaps.Client
 
         public string ExplorerUrl()
         {
-            return _storage.GetExplorerUrl() ?? "https://explorer.blockcore.net";
+            return _storage.GetExplorerUrl();
         }
         public List<IndexerUrl> Indexers()
         {

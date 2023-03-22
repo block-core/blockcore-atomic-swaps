@@ -23,58 +23,114 @@
 <MudText Align="Align.Center" Typo="Typo.h4">Settings</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
 
-<MudTabs Elevation="1" Rounded="true" PanelClass="pa-6">
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
     <MudTabPanel Text="Network Status" ToolTip="Network Status">
-        @foreach (var item in _indexors)
+        @if (_indexors.Count <= 0)
         {
-            <MudText>@item.Symbol</MudText>
 
-            @foreach (var ind in item.Indexers)
+            <div class="app-loading-spinner">
+                <div class="spinner-border" role="status"></div>
+                loading...
+            </div>
+
+        }
+        else
+        {
+            @foreach (var item in _indexors)
             {
-                @foreach (var res in ind.DnsResults)
-                {
-                    if (res.Online)
-                    {
-                        <li class="text-success">@res.Domain </li>
-                    }
-                    else
-                    {
-                        <li class="text-danger">@res.Domain </li>
-                    }
-                }
-            }
+                <MudCard Class="mb-5">
+                    <MudCardHeader>
+                        <CardHeaderAvatar>
+                            <MudAvatarGroup Max="1" Spacing="3" MaxColor="Color.Primary">
+                                @{
+                                    var networkImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @item.Symbol);
+                                }
+                                <MudAvatar Image="@networkImg" />
+                            </MudAvatarGroup>
+                        </CardHeaderAvatar>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.body1">@item.Symbol</MudText>
+                        </CardHeaderContent>
 
+                    </MudCardHeader>
+                    <MudCardContent>
+
+                        <MudRadioGroup T="string" SelectedOption="@item.SelectedIndexer" SelectedOptionChanged="selectedOption => ChangeIndexer(item, selectedOption)">
+                            @foreach (var ind in item.Indexers)
+                            {
+
+                                @foreach (var res in ind.DnsResults)
+                                {
+                                    @if (res.Online)
+                                    {
+                                        <MudRadio Color="Color.Success" Option="@res.Domain">@res.Domain</MudRadio>
+                                        <br />
+                                    }
+                                    else
+                                    {
+                                        <MudRadio Color="Color.Error" Option="@res.Domain">@res.Domain</MudRadio>
+                                        <br />
+                                    }
+                                }
+
+                            }
+                        </MudRadioGroup>
+                    </MudCardContent>
+                </MudCard>
+            }
         }
     </MudTabPanel>
     <MudTabPanel Text="Explorer" ToolTip="Explorer">
-        @foreach (var item in _explorers)
+        @if (_explorers.Count <= 0)
         {
-            <MudText>@item.Url</MudText>
-            
-                @foreach (var res in item.DnsResults)
-                {
-                   if (res.Online)
+            <div class="app-loading-spinner">
+                <div class="spinner-border" role="status"></div>
+                loading...
+            </div>
+        }
+        else
+        {
+            <MudCard>
+                <MudCardContent>
+
+
+                    @foreach (var item in _explorers)
                     {
-                        <li class="text-success">@res.Domain </li>
+                        <MudRadioGroup T="string" SelectedOption="@SelectedExplorer" SelectedOptionChanged="ChangeExplorer">
+
+                            @foreach (var res in item.DnsResults)
+                            {
+                                @if (res.Online)
+                                {
+                                    <MudRadio Color="Color.Success" Option="@res.Domain">@res.Domain</MudRadio>
+                                }
+                                else
+                                {
+                                    <MudRadio Color="Color.Error" Option="@res.Domain">@res.Domain</MudRadio>
+                                }
+                            }
+                        </MudRadioGroup>
+
                     }
-                    else
-                    {
-                        <li class="text-danger">@res.Domain </li>
-                    }
-                }
-             
+
+
+                </MudCardContent>
+            </MudCard>
         }
     </MudTabPanel>
     <MudTabPanel Text="Data" ToolTip="Data">
-        <MudText>
-            @if (hasWallet && _walletAccounts.Connected)
-            {
-                <button class="btn btn-danger" @onclick="DisconnectWallet">Disconnect Wallet</button>
-                <br />
-                <br />
-                <button class="btn btn-danger" @onclick="WipeSwaps">Wipe Swaps (caution this may be irreversible)</button>
-            }
-        </MudText>
+
+        @if (hasWallet && _walletAccounts.Connected)
+        {
+            <MudCard>
+                <MudCardContent>
+                    <button class="btn btn-danger" @onclick="DisconnectWallet">Disconnect Wallet</button>
+                    <br />
+                    <br />
+                    <button class="btn btn-danger" @onclick="WipeSwaps">Wipe Swaps (caution this may be irreversible)</button>
+                </MudCardContent>
+            </MudCard>
+        }
     </MudTabPanel>
 </MudTabs>
 
@@ -87,6 +143,7 @@
     List<DnsServices> _explorers = new();
 
     List<NetworkIndexers> _indexors = new();
+    public string SelectedExplorer { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -95,6 +152,7 @@
         _networkList = SwapsConfiguration.Networks.Keys.ToList();
 
         await LoadExplorers();
+        SelectedExplorer = storage.GetExplorerUrl().Replace("https://", "");
 
         await LoadIndexers();
 
@@ -105,7 +163,7 @@
         foreach (var item in _networkList)
         {
             var indexers = await DnsService.GetServicesByNetwork(item);
-            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList() });
+            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList(), SelectedIndexer = storage.GetIndexerUrl(item) != null ? storage.GetIndexerUrl(item).Replace("https://", "") : string.Empty });
         }
 
     }
@@ -141,7 +199,29 @@
     class NetworkIndexers
     {
         public string Symbol { get; set; }
-        public List<DnsServices> Indexers { get; set; }
+        public List<DnsServices>? Indexers { get; set; }
+        public string? SelectedIndexer { get; set; }
+    }
+
+    public void ChangeExplorer(string selectedExplorer)
+    {
+        SelectedExplorer = selectedExplorer;
+
+        if (selectedExplorer != null)
+        {
+            storage.SetExplorerUrl("https://" + selectedExplorer);
+
+        }
+    }
+
+    private void ChangeIndexer(NetworkIndexers item, string selectedOption)
+    {
+        item.SelectedIndexer = selectedOption;
+
+        if (item.SelectedIndexer != null)
+        {
+            storage.SetIndexerUrl(item.Symbol, "https://" + item.SelectedIndexer);
+        }
     }
 
 }
