@@ -143,7 +143,7 @@
         *@
             @if (swap.SwapMaker.SwapTransactionHash != null)
             {
-                var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.SwapTransactionHash}";
+                var url = $"{storage.GetExplorerUrl().Result}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.SwapTransactionHash}";
 
                 <p>Maker on @swap.SwapMaker.CoinSymbol, confirmations - @MakerSwapTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapMaker.SwapTransactionHash</a></p>
                 @if (swap.SwapMaker.RecoveryLockTime.HasValue)
@@ -186,7 +186,7 @@
         *@
             @if (swap.SwapTaker.SwapTransactionHash != null)
             {
-                var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.SwapTransactionHash}";
+                var url = $"{storage.GetExplorerUrl().Result}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.SwapTransactionHash}";
 
                 <p>Taker on @swap.SwapTaker.CoinSymbol, confirmations : @TakerSwapTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapTaker.SwapTransactionHash</a></p>
                 @if (swap.SwapTaker.RecoveryLockTime.HasValue)
@@ -231,7 +231,7 @@
 
             @if (@swap.SwapTaker.ExchangeTransactionHash != null)
             {
-                var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.ExchangeTransactionHash}";
+                var url = $"{storage.GetExplorerUrl().Result}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.ExchangeTransactionHash}";
 
                 <p>Maker on @swap.SwapTaker.CoinSymbol, Confirmations : @MakerExchangeTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapTaker.ExchangeTransactionHash</a></p>
                 <P class="text-success"><strong>MAKER EXCHANGE SUCCESS</strong></P>
@@ -278,7 +278,7 @@
 
             @if (swap.SwapMaker.ExchangeTransactionHash != null)
             {
-                var url = $"{SwapsConfiguration.ExplorerUrl}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.ExchangeTransactionHash}";
+                var url = $"{storage.GetExplorerUrl().Result}/{swap.SwapMaker.CoinSymbol}/explorer/transaction/{swap.SwapMaker.ExchangeTransactionHash}";
 
                 <p>Taker on @swap.SwapMaker.CoinSymbol, Confirmations : @TakerExchangeTransactionConfirmations, trx - <a href="@url" target="_blank">@swap.SwapMaker.ExchangeTransactionHash</a></p>
                 <P class="text-success"><strong>TAKER EXCHANGE SUCCESS</strong></P>
@@ -905,7 +905,7 @@
             return;
         }
 
-        var indexer = SwapsConfiguration.Indexers().First(f => f.Symbol == swap.SwapTaker.CoinSymbol);
+        var indexer =(await storage.Indexers()).First(f => f.Symbol == swap.SwapTaker.CoinSymbol);
         var url = $"/query/transaction/{swap.SwapTaker.SwapTransactionHash}";
         var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
 

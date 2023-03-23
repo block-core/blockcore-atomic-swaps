@@ -152,7 +152,7 @@
         _networkList = SwapsConfiguration.Networks.Keys.ToList();
 
         await LoadExplorers();
-        SelectedExplorer = storage.GetExplorerUrl().Replace("https://", "");
+        SelectedExplorer = (await storage.GetExplorerUrl()).Replace("https://", "");
 
         await LoadIndexers();
 
@@ -163,13 +163,8 @@
         foreach (var item in _networkList)
         {
             var indexers = await DnsService.GetServicesByNetwork(item);
-            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList(), SelectedIndexer = storage.GetIndexerUrl(item) != null ? storage.GetIndexerUrl(item).Replace("https://", "") : string.Empty });
+            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList(), SelectedIndexer = storage.GetIndexerUrlAsync(item) != null ? (await storage.GetIndexerUrlAsync(item)).Replace("https://", "").Replace("/api", "") : string.Empty });
         }
-
-    }
-
-    private void UpdatedSelectedIndexer()
-    {
 
     }
 
@@ -177,11 +172,6 @@
     {
         var explorers = await DnsService.GetServicesByType("Explorer");
         _explorers = explorers.ToList();
-    }
-
-    private void UpdatedSelectedExplorer()
-    {
-
     }
 
     private void WipeSwaps()
@@ -209,7 +199,7 @@
 
         if (selectedExplorer != null)
         {
-            storage.SetExplorerUrl("https://" + selectedExplorer);
+            storage.SetExplorerUrl("https://" + selectedExplorer );
 
         }
     }
@@ -220,7 +210,7 @@
 
         if (item.SelectedIndexer != null)
         {
-            storage.SetIndexerUrl(item.Symbol, "https://" + item.SelectedIndexer);
+            storage.SetIndexerUrl(item.Symbol, "https://" + item.SelectedIndexer + "/api");
         }
     }
 

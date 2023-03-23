@@ -9,19 +9,21 @@ namespace Blockcore.AtomicSwaps.Client.Services
         private readonly ILogger<BlockchainApiService> _logger;
         private readonly HttpClient _httpClient;
         private readonly SwapsConfiguration _swapsConfiguration;
+        private readonly Storage _storage;
 
-        public BlockchainApiService(ILogger<BlockchainApiService> logger, HttpClient httpClient, SwapsConfiguration swapsConfiguration)
+        public BlockchainApiService(ILogger<BlockchainApiService> logger, HttpClient httpClient, SwapsConfiguration swapsConfiguration, Storage storage)
         {
             _logger = logger;
             _httpClient = httpClient;
             _swapsConfiguration = swapsConfiguration;
+            _storage = storage;
         }
 
         public async Task<int> GetConfirmationsAsync(string network, string trxId, string? trxHex = null)
         {
             try
             {
-                var indexer = _swapsConfiguration.Indexers().First(f => f.Symbol == network);
+                var indexer = (await _storage.Indexers()).First(f => f.Symbol == network);
                 var url = $"/query/transaction/{trxId}";
                 var res = await _httpClient.GetFromJsonAsync<TransactionData>(indexer.Url + url);
                 return res?.confirmations ?? 0;
@@ -44,7 +46,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
         {
             if (!string.IsNullOrEmpty(trxHex))
             {
-                var indexer = _swapsConfiguration.Indexers().First(f => f.Symbol == network);
+                var indexer = (await _storage.Indexers()).First(f => f.Symbol == network);
                 var url = $"/command/send";
                 var result = await _httpClient.PostAsync(indexer.Url + url, new StringContent(trxHex));
                 result.EnsureSuccessStatusCode();
