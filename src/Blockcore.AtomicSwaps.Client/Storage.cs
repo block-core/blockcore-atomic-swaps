@@ -98,7 +98,7 @@ namespace Blockcore.AtomicSwaps.Client
         }
         public void SetExplorerUrl(string address)
         {
-            _storage.SetItemAsString("explorer", address);
+            _storage.SetItemAsString("explorer", "https://" + address);
         }
 
         public async Task<string>? GetExplorerUrl()
@@ -122,12 +122,21 @@ namespace Blockcore.AtomicSwaps.Client
 
         public void SetIndexerUrl(string symbol, string url)
         {
-            _storage.SetItemAsString(symbol.ToLower() + "-indexer", url);
+            _storage.SetItemAsString(symbol.ToLower() + "-indexer", "https://" + url + "/api");
         }
 
         public async Task<string?> GetIndexerUrlAsync(string symbol)
         {
-            return _storage.GetItemAsString(symbol.ToLower() + "-indexer") ?? await GetIndexerUrlFromDDNS(symbol);
+            var res = _storage.GetItemAsString(symbol.ToLower() + "-indexer") ;
+
+            if (string.IsNullOrEmpty(res))
+            {
+                res = await GetIndexerUrlFromDDNS(symbol)!;
+
+                SetIndexerUrl(symbol,res);
+            }
+
+            return res;
         }
 
         public async Task<string>? GetIndexerUrlFromDDNS(string network)
@@ -141,6 +150,7 @@ namespace Blockcore.AtomicSwaps.Client
                     return onlineIndexer.Domain;
                 }
             }
+
             return string.Empty;
         }
 

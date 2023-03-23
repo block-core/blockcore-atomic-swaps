@@ -199,7 +199,7 @@
 
         if (selectedExplorer != null)
         {
-            storage.SetExplorerUrl("https://" + selectedExplorer );
+            storage.SetExplorerUrl(selectedExplorer );
 
         }
     }
@@ -210,7 +210,7 @@
 
         if (item.SelectedIndexer != null)
         {
-            storage.SetIndexerUrl(item.Symbol, "https://" + item.SelectedIndexer + "/api");
+            storage.SetIndexerUrl(item.Symbol, item.SelectedIndexer);
         }
     }
 
