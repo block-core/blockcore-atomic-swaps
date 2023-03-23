@@ -1,4 +1,6 @@
 ﻿using Blazored.LocalStorage;
+using Blockcore.AtomicSwaps.BlockcoreDns;
+using Blockcore.AtomicSwaps.BlockcoreDns.Models;
 using Blockcore.AtomicSwaps.Shared;
 
 namespace Blockcore.AtomicSwaps.Client
@@ -6,10 +8,11 @@ namespace Blockcore.AtomicSwaps.Client
     public class Storage
     {
         private readonly ISyncLocalStorageService _storage;
-
-        public Storage(ISyncLocalStorageService storage)
+        private readonly IBlockcoreDnsService _dnsService;
+        public Storage(ISyncLocalStorageService storage, IBlockcoreDnsService dnsService)
         {
             _storage = storage;
+            _dnsService = dnsService;
         }
 
         public Storage()
@@ -98,9 +101,23 @@ namespace Blockcore.AtomicSwaps.Client
             _storage.SetItemAsString("explorer", address);
         }
 
-        public string? GetExplorerUrl()
+        public async Task<string>? GetExplorerUrl()
         {
-            return _storage.GetItemAsString("explorer") ?? "https://explorer.blockcore.net";
+            return _storage.GetItemAsString("explorer") ?? await GetExplorerUrlFromDDNS();
+        }
+
+        public async Task<string>? GetExplorerUrlFromDDNS()
+        {
+            var Explorers = await _dnsService.GetServicesByType("Explorer");
+            foreach (var index in Explorers.ToList())
+            {
+                var onlineExplorers = index.DnsResults.FirstOrDefault(c => c.Online);
+                if (onlineExplorers != null)
+                {
+                    return onlineExplorers.Domain;
+                }
+            }
+            return string.Empty;
         }
 
         public void SetIndexerUrl(string symbol, string url)
@@ -108,9 +125,35 @@ namespace Blockcore.AtomicSwaps.Client
             _storage.SetItemAsString(symbol.ToLower() + "-indexer", url);
         }
 
-        public string? GetIndexerUrl(string symbol)
+        public async Task<string?> GetIndexerUrlAsync(string symbol)
         {
-            return _storage.GetItemAsString(symbol.ToLower() + "-indexer");
+            return _storage.GetItemAsString(symbol.ToLower() + "-indexer") ?? await GetIndexerUrlFromDDNS(symbol);
+        }
+
+        public async Task<string>? GetIndexerUrlFromDDNS(string network)
+        {
+            var indexers = await _dnsService.GetServicesByTypeAndNetwork("Indexer", network);
+            foreach (var index in indexers.ToList())
+            {
+                var onlineIndexer = index.DnsResults.FirstOrDefault(c => c.Online);
+                if (onlineIndexer != null)
+                {
+                    return onlineIndexer.Domain;
+                }
+            }
+            return string.Empty;
+        }
+
+        public async Task<List<IndexerUrl>> Indexers()
+        {
+            List<IndexerUrl> indexers = new List<IndexerUrl>();
+            indexers.Add(new IndexerUrl { Symbol = "BTC", Url = await GetIndexerUrlAsync("BTC") });
+            indexers.Add(new IndexerUrl { Symbol = "STRAX", Url = await GetIndexerUrlAsync("STRAX") });
+            indexers.Add(new IndexerUrl { Symbol = "CITY", Url = await GetIndexerUrlAsync("CITY") });
+            indexers.Add(new IndexerUrl { Symbol = "IMPLX", Url = await GetIndexerUrlAsync("IMPLX") });
+            indexers.Add(new IndexerUrl { Symbol = "RSC", Url = await GetIndexerUrlAsync("RSC") });
+            indexers.Add(new IndexerUrl { Symbol = "SBC", Url = await GetIndexerUrlAsync("SBC") });
+            return indexers;
         }
     }
 }
