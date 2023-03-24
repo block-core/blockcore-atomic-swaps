@@ -88,9 +88,9 @@ else
             {
                 if (myswap.Status is SwapsDataStatus.Available or SwapsDataStatus.InProgress)
                 {
-                    var swap = await Http.GetFromJsonAsync<SwapSession>($"api/SwapCoordinator/session/{myswap.SwapSessionId}");
+                    var swap = await Http.GetFromJsonNullableAsync<SwapSession?>($"api/SwapCoordinator/session/{myswap.SwapSessionId}");
 
-                    if (myswap.Status != swap.Status)
+                    if (swap != null && myswap.Status != swap.Status)
                     {
                         myswaps.ToList().Remove(myswap);
                         myswaps.ToList().Add(swap);

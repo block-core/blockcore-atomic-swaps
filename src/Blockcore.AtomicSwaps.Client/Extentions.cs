@@ -1,11 +1,5 @@
-﻿using Blockcore.AtomicSwaps.Client.Services;
-using Blockcore.AtomicSwaps.Shared;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.Networks;
-using Blockcore.Utilities;
-using NBitcoin;
-using NBitcoin.Crypto;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 namespace Blockcore.AtomicSwaps.Client
 {
@@ -22,6 +16,24 @@ namespace Blockcore.AtomicSwaps.Client
         {
             if (!string.IsNullOrEmpty(error))
                 throw new Exception(error);
+        }
+
+        public static async Task<TValue?> GetFromJsonNullableAsync<TValue>(this HttpClient client, [StringSyntax(StringSyntaxAttribute.Uri)] string? requestUri, CancellationToken cancellationToken = default)
+        {
+            string? res = await client.GetStringAsync(requestUri, cancellationToken);
+
+            if (string.IsNullOrEmpty(res))
+            {
+                return default(TValue);
+            }
+
+            var ser = JsonSerializer.Deserialize<TValue>(res, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            });
+
+            return ser;
         }
     }
 }

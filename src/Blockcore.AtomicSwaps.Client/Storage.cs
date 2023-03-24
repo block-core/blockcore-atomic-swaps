@@ -103,7 +103,16 @@ namespace Blockcore.AtomicSwaps.Client
 
         public async Task<string>? GetExplorerUrl()
         {
-            return _storage.GetItemAsString("explorer") ?? await GetExplorerUrlFromDDNS();
+            var res = _storage.GetItemAsString("explorer");
+
+            if (string.IsNullOrEmpty(res))
+            {
+                res = await GetExplorerUrlFromDDNS();
+
+                SetExplorerUrl(res);
+            }
+
+            return res;
         }
 
         public async Task<string>? GetExplorerUrlFromDDNS()
