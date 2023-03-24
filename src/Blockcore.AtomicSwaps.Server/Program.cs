@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddSwaggerGen();
-builder.Services.Configure<TelegramLoggingBotOptions>(options =>builder.Configuration.GetSection("TelegramLoggingBot").Bind(options));
+builder.Services.Configure<TelegramLoggingBotOptions>(options => builder.Configuration.GetSection("TelegramLoggingBot").Bind(options));
 builder.Services.AddSingleton<ITelegramBotService, TelegramBotService>();
 
 builder.Services.Configure<DataConfigOptions>(options => builder.Configuration.GetSection("DataConfig").Bind(options));
@@ -29,7 +29,18 @@ else
 }
 
 app.UseBlazorFrameworkFiles();
-app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = context =>
+    {
+        if (context.File.Name == "service-worker-assets.js")
+        {
+            context.Context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
+            context.Context.Response.Headers.Add("Expires", "-1");
+        }
+    }
+});
 
 app.UseRouting();
 

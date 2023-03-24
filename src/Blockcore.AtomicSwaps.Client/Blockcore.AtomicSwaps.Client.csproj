@@ -4,6 +4,7 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<BlazorCacheBootResources>false</BlazorCacheBootResources>
+		<DisableGitAutoCRLFInPublishOutput>true</DisableGitAutoCRLFInPublishOutput>
 		<RunAOTCompilation>true</RunAOTCompilation>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
