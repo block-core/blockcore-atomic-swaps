@@ -30,17 +30,7 @@ else
 
 app.UseBlazorFrameworkFiles();
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    OnPrepareResponse = context =>
-    {
-        if (context.File.Name == "service-worker-assets.js")
-        {
-            context.Context.Response.Headers.Add("Cache-Control", "no-cache, no-store");
-            context.Context.Response.Headers.Add("Expires", "-1");
-        }
-    }
-});
+app.UseStaticFiles();
 
 app.UseRouting();
 
