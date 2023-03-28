@@ -102,7 +102,7 @@ namespace Blockcore.AtomicSwaps.Client
             _storage.SetItemAsString("explorer", "https://" + address);
         }
 
-        public async Task<string>? GetExplorerUrl()
+        public string? GetExplorerUrl()
         {
             // TODO: it is not good practice to call an api from inside a method
             // the caller may not know there is an api call hidden in the methods
@@ -129,16 +129,16 @@ namespace Blockcore.AtomicSwaps.Client
             _storage.SetItemAsString(symbol.ToLower() + "-indexer", "https://" + url + "/api");
         }
 
-        public async Task<string?> GetIndexerUrl(string symbol)
+        public string? GetIndexerUrl(string symbol)
         {
-            var res = _storage.GetItemAsString(symbol.ToLower() + "-indexer") ;
+            var res = _storage.GetItemAsString(symbol.ToLower() + "-indexer");
 
             return res;
         }
 
         public async Task FetchIndexerAndExplorer(bool forceRefresh)
         {
-            if(!forceRefresh && !string.IsNullOrEmpty(_storage.GetItemAsString("explorer")))
+            if (!forceRefresh && !string.IsNullOrEmpty(_storage.GetItemAsString("explorer")))
                 return;
 
             var indexers = await _dnsService.GetServicesByType("Indexer");
@@ -167,7 +167,7 @@ namespace Blockcore.AtomicSwaps.Client
         {
             await FetchIndexerAndExplorer(false);
 
-            var res = await GetIndexerUrl(symbol);
+            var res = GetIndexerUrl(symbol);
 
             if (string.IsNullOrEmpty(res))
             {

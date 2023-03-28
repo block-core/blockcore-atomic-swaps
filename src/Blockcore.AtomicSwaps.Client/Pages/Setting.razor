@@ -154,7 +154,7 @@
         await storage.FetchIndexerAndExplorer(false);
 
         await LoadExplorers();
-        SelectedExplorer = (await storage.GetExplorerUrl()).Replace("https://", "");
+        SelectedExplorer = storage.GetExplorerUrl().Replace("https://", "");
 
         await LoadIndexers();
 
@@ -165,7 +165,7 @@
         foreach (var item in _networkList)
         {
             var indexers = await DnsService.GetServicesByNetwork(item);
-            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList(), SelectedIndexer = storage.GetIndexerUrl(item) != null ? (await storage.GetIndexerUrl(item)).Replace("https://", "").Replace("/api", "") : string.Empty });
+            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList(), SelectedIndexer = storage.GetIndexerUrl(item) != null ? storage.GetIndexerUrl(item).Replace("https://", "").Replace("/api", "") : string.Empty });
         }
 
     }
@@ -201,7 +201,7 @@
 
         if (selectedExplorer != null)
         {
-            storage.SetExplorerUrl(selectedExplorer );
+            storage.SetExplorerUrl(selectedExplorer);
 
         }
     }
