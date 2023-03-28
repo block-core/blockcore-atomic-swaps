@@ -151,6 +151,8 @@
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
         _networkList = SwapsConfiguration.Networks.Keys.ToList();
 
+        await storage.FetchIndexerAndExplorer(false);
+
         await LoadExplorers();
         SelectedExplorer = (await storage.GetExplorerUrl()).Replace("https://", "");
 
@@ -163,7 +165,7 @@
         foreach (var item in _networkList)
         {
             var indexers = await DnsService.GetServicesByNetwork(item);
-            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList(), SelectedIndexer = storage.GetIndexerUrlAsync(item) != null ? (await storage.GetIndexerUrlAsync(item)).Replace("https://", "").Replace("/api", "") : string.Empty });
+            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList(), SelectedIndexer = storage.GetIndexerUrl(item) != null ? (await storage.GetIndexerUrl(item)).Replace("https://", "").Replace("/api", "") : string.Empty });
         }
 
     }

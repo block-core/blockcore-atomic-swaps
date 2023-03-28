@@ -23,7 +23,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
         {
             try
             {
-                var indexer = (await _storage.Indexers()).First(f => f.Symbol == network);
+                var indexer = await _storage.Indexer(network);
                 var url = $"/query/transaction/{trxId}";
                 var res = await _httpClient.GetFromJsonNullableAsync<TransactionData>(indexer.Url + url);
                 return res?.confirmations ?? 0;
@@ -46,7 +46,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
         {
             if (!string.IsNullOrEmpty(trxHex))
             {
-                var indexer = (await _storage.Indexers()).First(f => f.Symbol == network);
+                var indexer = await _storage.Indexer(network);
                 var url = $"/command/send";
                 var result = await _httpClient.PostAsync(indexer.Url + url, new StringContent(trxHex));
                 result.EnsureSuccessStatusCode();
