@@ -25,7 +25,7 @@ namespace Blockcore.AtomicSwaps.Client.Services
             {
                 var indexer = (await _storage.Indexers()).First(f => f.Symbol == network);
                 var url = $"/query/transaction/{trxId}";
-                var res = await _httpClient.GetFromJsonAsync<TransactionData>(indexer.Url + url);
+                var res = await _httpClient.GetFromJsonNullableAsync<TransactionData>(indexer.Url + url);
                 return res?.confirmations ?? 0;
             }
             catch (HttpRequestException hre)

@@ -103,6 +103,10 @@ namespace Blockcore.AtomicSwaps.Client
 
         public async Task<string>? GetExplorerUrl()
         {
+            // TODO: it is not good practice to call an api from inside a method
+            // the caller may not know there is an api call hidden in the methods
+            // we should do all api calls in their own methods.
+
             var res = _storage.GetItemAsString("explorer");
 
             if (string.IsNullOrEmpty(res))
@@ -110,6 +114,8 @@ namespace Blockcore.AtomicSwaps.Client
                 res = await GetExplorerUrlFromDDNS();
 
                 SetExplorerUrl(res);
+
+                res = _storage.GetItemAsString("explorer");
             }
 
             return res;
@@ -136,6 +142,10 @@ namespace Blockcore.AtomicSwaps.Client
 
         public async Task<string?> GetIndexerUrlAsync(string symbol)
         {
+            // TODO: it is not good practice to call an api from inside a method
+            // the caller may not know there is an api call hidden in the methods
+            // we should do all api calls in their own methods.
+
             var res = _storage.GetItemAsString(symbol.ToLower() + "-indexer") ;
 
             if (string.IsNullOrEmpty(res))
@@ -143,6 +153,8 @@ namespace Blockcore.AtomicSwaps.Client
                 res = await GetIndexerUrlFromDDNS(symbol)!;
 
                 SetIndexerUrl(symbol,res);
+
+                res = _storage.GetItemAsString(symbol.ToLower() + "-indexer");
             }
 
             return res;
