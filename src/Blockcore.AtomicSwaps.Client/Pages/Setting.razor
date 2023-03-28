@@ -165,7 +165,12 @@
         foreach (var item in _networkList)
         {
             var indexers = await DnsService.GetServicesByNetwork(item);
-            _indexors.Add(new NetworkIndexers() { Symbol = item, Indexers = indexers.ToList(), SelectedIndexer = storage.GetIndexerUrl(item) != null ? storage.GetIndexerUrl(item).Replace("https://", "").Replace("/api", "") : string.Empty });
+            _indexors.Add(new NetworkIndexers()
+            {
+                Symbol = item, 
+                Indexers = indexers.ToList(), 
+                SelectedIndexer = storage.GetIndexerUrl(item) != null ? storage.GetIndexerUrl(item).Replace("https://", "").Replace("/api", "") : string.Empty
+            });
         }
 
     }

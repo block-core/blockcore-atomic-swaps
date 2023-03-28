@@ -10,10 +10,13 @@ namespace Blockcore.AtomicSwaps.Client
     {
         private readonly ISyncLocalStorageService _storage;
         private readonly IBlockcoreDnsService _dnsService;
-        public Storage(ISyncLocalStorageService storage, IBlockcoreDnsService dnsService)
+        private readonly SwapsConfiguration _swapsConfiguration;
+
+        public Storage(ISyncLocalStorageService storage, IBlockcoreDnsService dnsService, SwapsConfiguration swapsConfiguration)
         {
             _storage = storage;
             _dnsService = dnsService;
+            _swapsConfiguration = swapsConfiguration;
         }
 
         public Storage()
@@ -104,22 +107,7 @@ namespace Blockcore.AtomicSwaps.Client
 
         public string? GetExplorerUrl()
         {
-            // TODO: it is not good practice to call an api from inside a method
-            // the caller may not know there is an api call hidden in the methods
-            // we should do all api calls in their own methods.
-
             var res = _storage.GetItemAsString("explorer");
-
-            if (string.IsNullOrEmpty(res))
-            {
-                throw new Exception($"Explorer link was not found please go to settings page to lookup for indexer urls using a DNS.");
-
-                //res = await GetExplorerUrlFromDDNS();
-
-                //SetExplorerUrl(res);
-
-                //res = _storage.GetItemAsString("explorer");
-            }
 
             return res;
         }
@@ -143,12 +131,22 @@ namespace Blockcore.AtomicSwaps.Client
 
             var indexers = await _dnsService.GetServicesByType("Indexer");
 
+            var networks = _swapsConfiguration.Networks.Keys.ToList();
+
             foreach (var index in indexers.ToList())
             {
-                var onlineIndexer = index.DnsResults.FirstOrDefault(c => c.Online);
-                if (onlineIndexer != null)
+                foreach (var onlineIndexer in index.DnsResults.Where(w => w.Online).ToList())
                 {
-                    SetIndexerUrl(onlineIndexer.Symbol, onlineIndexer.Domain);
+                    if (networks.Contains(onlineIndexer.Symbol))
+                    {
+                        if (onlineIndexer != null)
+                        {
+                            if (string.IsNullOrEmpty(GetIndexerUrl(onlineIndexer.Symbol)))
+                            {
+                                SetIndexerUrl(onlineIndexer.Symbol, onlineIndexer.Domain);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -161,6 +159,20 @@ namespace Blockcore.AtomicSwaps.Client
                     SetExplorerUrl(onlineExplorers.Domain);
                 }
             }
+        }
+
+        public async Task<string?> ExplorerUrl()
+        {
+            await FetchIndexerAndExplorer(false);
+
+            var res = GetExplorerUrl();
+
+            if (string.IsNullOrEmpty(res))
+            {
+                throw new Exception($"Explorer link was not found please go to settings page to lookup for indexer urls using a DNS.");
+            }
+
+            return res;
         }
 
         public async Task<IndexerUrl> Indexer(string symbol)

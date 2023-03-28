@@ -72,6 +72,9 @@
     protected override async Task OnInitializedAsync()
     {
         _networkList = SwapsConfiguration.Networks.Keys.ToList();
+
+        await storage.FetchIndexerAndExplorer(false);
+
     }
 
 }

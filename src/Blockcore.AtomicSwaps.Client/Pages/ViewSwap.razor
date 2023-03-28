@@ -404,7 +404,7 @@
 
         try
         {
-            explorerUrl = storage.GetExplorerUrl();
+            explorerUrl = await storage.ExplorerUrl();
         }
         catch (Exception ex)
         {
