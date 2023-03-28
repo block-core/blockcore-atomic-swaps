@@ -27,8 +27,6 @@
 
 </MudText>
 
-<p class="alert-danger">@error</p>
-
 @if (swap != null)
 {
     @*=========================Swap info========================*@
@@ -404,7 +402,16 @@
 
         await this.RefreshConfirmations();
 
-        explorerUrl = await storage.GetExplorerUrl(); 
+        try
+        {
+            explorerUrl = storage.GetExplorerUrl();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+        }
+
     }
 
     private async Task DeleteSwap()
@@ -909,31 +916,39 @@
             return;
         }
 
-        var indexer = await storage.Indexer(swap.SwapTaker.CoinSymbol);
-        var url = $"/query/transaction/{swap.SwapTaker.SwapTransactionHash}";
-        var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
-
-        foreach (var output in res.outputs)
+        try
         {
-            if (output.address == swap.SwapTaker.SwapAddress)
+            var indexer = await storage.Indexer(swap.SwapTaker.CoinSymbol);
+            var url = $"/query/transaction/{swap.SwapTaker.SwapTransactionHash}";
+            var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
+            foreach (var output in res.outputs)
             {
-                if (!string.IsNullOrEmpty(output.spentInTransaction))
+                if (output.address == swap.SwapTaker.SwapAddress)
                 {
-                    url = $"/query/transaction/{output.spentInTransaction}/hex";
-                    var trxHex = await Http.GetStringAsync(indexer.Url + url);
-
-                    if (res != null)
+                    if (!string.IsNullOrEmpty(output.spentInTransaction))
                     {
-                        swap.SwapTaker.ExchangeTransactionHex = trxHex; // the other side didn't tell us they spent the coins
+                        url = $"/query/transaction/{output.spentInTransaction}/hex";
+                        var trxHex = await Http.GetStringAsync(indexer.Url + url);
 
-                        var exchangeTransaciton = network.Consensus.ConsensusFactory.CreateTransaction(trxHex);
+                        if (res != null)
+                        {
+                            swap.SwapTaker.ExchangeTransactionHex = trxHex; // the other side didn't tell us they spent the coins
 
-                        var secret = SwapScripts.GetSecretFromScriptSig(exchangeTransaciton);
+                            var exchangeTransaciton = network.Consensus.ConsensusFactory.CreateTransaction(trxHex);
 
-                        this.SharedSecret = secret.ToString();
+                            var secret = SwapScripts.GetSecretFromScriptSig(exchangeTransaciton);
+
+                            this.SharedSecret = secret.ToString();
+                        }
                     }
                 }
             }
+
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
         }
     }
 
