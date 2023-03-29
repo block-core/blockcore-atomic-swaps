@@ -24,7 +24,7 @@ namespace Blockcore.AtomicSwaps.Client.HostedServices
                     {
                         await _storage.FetchIndexerAndExplorer(false);
 
-                        await Task.Delay(TimeSpan.FromHours(4), stoppingToken);
+                        await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
                     }
                 }
                 catch (Exception ex)
