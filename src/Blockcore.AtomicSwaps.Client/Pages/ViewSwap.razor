@@ -18,6 +18,7 @@
 @inject IBlockchainApiService BlockchainApiService;
 @inject IWalletService WalletService
 @inject ISnackbarService SnackbarService
+@inject PeriodicExecutorService PeriodicExecutor
 
 <PageTitle>View Swaps</PageTitle>
 
@@ -71,11 +72,11 @@
 
         </MudCardContent>
         <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="RefreshSwap">Refresh Swap</MudButton>
+            <MudButton Variant="Variant.Filled" class="m-3" Color="Color.Primary" @onclick="RefreshSwap">Refresh Swap</MudButton>
 
             @if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="RefreshConfirmations">Refresh confirmations</MudButton>
+                <MudButton Variant="Variant.Filled" class="m-3" Color="Color.Primary" @onclick="RefreshConfirmations">Refresh confirmations</MudButton>
 
             }
         </MudCardActions>
@@ -355,6 +356,11 @@
         hasWallet = await WalletConnector.HasBlockcoreWallet();
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
 
+        PeriodicExecutor.JobExecuted += HandleJobExecuted;
+
+        //interval = 30 sec
+        PeriodicExecutor.StartExecuting(30000);
+
         string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
 
         if (string.IsNullOrEmpty(swapRes))
@@ -413,6 +419,32 @@
         }
 
     }
+
+
+    public void Dispose()
+    {
+
+        PeriodicExecutor.JobExecuted -= HandleJobExecuted;
+   
+    }
+
+
+    async void HandleJobExecuted(object sender, JobExecutedEventArgs e)
+    {
+
+        await this.RefreshSwap();
+
+        if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
+        {
+            await this.RefreshConfirmations();
+        }
+
+        StateHasChanged();
+
+    }
+
+
+
 
     private async Task DeleteSwap()
     {
