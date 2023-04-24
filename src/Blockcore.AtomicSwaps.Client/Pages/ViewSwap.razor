@@ -25,11 +25,17 @@
 <MudText Align="Align.Center" Typo="Typo.h4">View Swaps</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8">
 
-
 </MudText>
-
+@if (showLodaling)
+{
+    <div class="app-loading-spinner">
+        <div class="spinner-border" role="status"></div>
+        loading...
+    </div>
+}
 @if (swap != null)
 {
+
     @*=========================Swap info========================*@
     <MudCard Class="mb-5">
         <MudCardHeader>
@@ -47,7 +53,7 @@
                 <MudText Typo="Typo.body1">@swap.SwapMaker.CoinSymbol for @swap.SwapTaker.CoinSymbol</MudText>
             </CardHeaderContent>
             <CardHeaderActions>
-                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Default" />
+                <MudIconButton @onclick="() => this.goToSetting()" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" />
             </CardHeaderActions>
         </MudCardHeader>
         <MudCardContent>
@@ -72,23 +78,17 @@
 
         </MudCardContent>
         <MudCardActions>
-            <MudButton Variant="Variant.Filled" class="m-3" Color="Color.Primary" @onclick="RefreshSwap">Refresh Swap</MudButton>
-
-            @if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
-            {
-                <MudButton Variant="Variant.Filled" class="m-3" Color="Color.Primary" @onclick="RefreshConfirmations">Refresh confirmations</MudButton>
-
-            }
+            <MudButton Variant="Variant.Filled" class="m-3" Color="Color.Primary" @onclick="Refresh">Refresh ( @counter )</MudButton>
         </MudCardActions>
     </MudCard>
 
 
-    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-        <MudTabPanel Text="Step 1">
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" @ref="tabs" PanelClass="pa-6">
+        <MudTabPanel Text="Step 1" @ref="step1">
 
             @*=========================Step1 - swap created by maker ========================*@
 
-            <h3>Step 1 - swap created by the maker</h3>
+            <h3>Swap created by the maker</h3>
 
             <p>Maker Pubkey - @swap.SwapMaker.SenderPubkey</p>
             <p>Shared secret hash - @swap.SharedSecretHash</p>
@@ -97,9 +97,11 @@
             {
                 <button class="btn btn-danger" @onclick="DeleteSwap">Delete Swap</button>
             }
-
+            <div class="d-flex justify-content-end mt-3">
+                <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step2)">Next Step</MudButton>
+            </div>
         </MudTabPanel>
-        <MudTabPanel Text="Step 2">
+        <MudTabPanel Text="Step 2" @ref="step2">
 
 
             @*=========================Step2 - swap locked by taker ========================*@
@@ -127,10 +129,20 @@
                 }
             }
 
-
+            <div class="d-flex justify-content-between mt-3">
+                <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step1)">Previous Step</MudButton>
+                @if (swap.SwapTaker.SenderPubkey != null)
+                {
+                    <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step3)">Next Step</MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="@Variant.Filled" Color="Color.Primary" Disabled=true>Next Step</MudButton>
+                }
+            </div>
 
         </MudTabPanel>
-        <MudTabPanel Text="Step 3">
+        <MudTabPanel Text="Step 3" @ref="step3">
             @*=========================Step3 - maker creates swap trx ========================*@
 
             <h3>Step 3 - maker funds the swap</h3>
@@ -172,8 +184,20 @@
                     <button class="btn btn-info" @onclick="BuildMakerSwap">Build Maker Swap Transaction</button>
                 }
             }
+
+            <div class="d-flex justify-content-between mt-3">
+                <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step2)">Previous Step</MudButton>
+                @if (swap.SwapMaker.SwapTransactionHash != null && MakerSwapTransactionConfirmations > 0)
+                {
+                    <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step4)">Next Step</MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="@Variant.Filled" Color="Color.Primary" Disabled=true>Next Step</MudButton>
+                }
+            </div>
         </MudTabPanel>
-        <MudTabPanel Text="Step 4">
+        <MudTabPanel Text="Step 4" @ref="step4">
             @*=========================Step4 - taker creates swap trx ========================*@
 
             <h3>Step 4 - taker funds the swap</h3>
@@ -220,15 +244,26 @@
                 }
             }
 
+            <div class="d-flex justify-content-between mt-3">
+                <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step3)">Previous Step</MudButton>
+                @if (swap.SwapTaker.SwapTransactionHash != null && TakerSwapTransactionConfirmations > 0)
+                {
+                    <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step5)">Next Step</MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="@Variant.Filled" Color="Color.Primary" Disabled=true>Next Step</MudButton>
+                }
+            </div>
         </MudTabPanel>
-        <MudTabPanel Text="Step 5">
+        <MudTabPanel Text="Step 5" @ref="step5">
             @*=========================Step5 - maker creates exchange trx (reveal secret) ========================*@
 
             <h3>Step 5 - maker claims coins (reveal secret)</h3>
 
             <p><strong>Maker receives @Money.Satoshis(swap.SwapTaker.Amount) @swap.SwapTaker.CoinSymbol</strong></p>
 
-            @if (@swap.SwapTaker.ExchangeTransactionHash != null)
+            @if (swap.SwapTaker.ExchangeTransactionHash != null)
             {
                 var url = $"{explorerUrl}/{swap.SwapTaker.CoinSymbol}/explorer/transaction/{swap.SwapTaker.ExchangeTransactionHash}";
 
@@ -266,8 +301,21 @@
                 }
             }
 
+            <div class="d-flex justify-content-between mt-3">
+
+                <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step4)">Previous Step</MudButton>
+                @if (swap.SwapTaker.ExchangeTransactionHash != null )
+                {
+                <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step6)">Next Step</MudButton>
+
+                }
+                else
+                {
+                    <MudButton Variant="@Variant.Filled" Color="Color.Primary" Disabled=true>Next Step</MudButton>
+                }
+            </div>
         </MudTabPanel>
-        <MudTabPanel Text="Step 6">
+        <MudTabPanel Text="Step 6" @ref="step6">
 
             @*=========================Step6 - Taker creates exchange trx (discover secret) ========================*@
 
@@ -320,18 +368,30 @@
                 }
             }
 
+            <div class="d-flex justify-content-start mt-3">
+                <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step5)">Previous Step</MudButton>
+            </div>
         </MudTabPanel>
     </MudTabs>
 
 }
 
 @code {
-    private SwapSession? swap;
-
-    string error;
 
     [Parameter]
     public string swapSession { get; set; }
+    private SwapSession? swap;
+    string error;
+
+    MudTabs tabs;
+
+    MudTabPanel step1;
+    MudTabPanel step2;
+    MudTabPanel step3;
+    MudTabPanel step4;
+    MudTabPanel step5;
+    MudTabPanel step6;
+
 
     string SharedSecret { get; set; }
 
@@ -348,18 +408,19 @@
     WalletAccounts _walletAccounts = new();
 
     private bool hasWallet;
-
+    private bool showLodaling = true;
     private string explorerUrl = String.Empty;
+
+    private static System.Timers.Timer aTimer;
+    private int counter = 0;
+    private int swapInterval = 0;
+
 
     protected override async Task OnInitializedAsync()
     {
         hasWallet = await WalletConnector.HasBlockcoreWallet();
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
 
-        PeriodicExecutor.JobExecuted += HandleJobExecuted;
-
-        //interval = 30 sec
-        PeriodicExecutor.StartExecuting(30000);
 
         string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
 
@@ -417,20 +478,7 @@
             error = ex.Message;
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
         }
-
-    }
-
-
-    public void Dispose()
-    {
-
-        PeriodicExecutor.JobExecuted -= HandleJobExecuted;
-   
-    }
-
-
-    async void HandleJobExecuted(object sender, JobExecutedEventArgs e)
-    {
+        swapInterval = storage.GetIntervalSwapsDataUpdate();
 
         await this.RefreshSwap();
 
@@ -438,13 +486,51 @@
         {
             await this.RefreshConfirmations();
         }
+        showLodaling = false;
+        StartTimer();
 
+    }
+
+    void ActiveStep(MudTabPanel panel)
+    {
+        tabs.ActivatePanel(panel);
+    }
+
+    public void StartTimer()
+    {
+
+        counter = swapInterval;
+        aTimer = new System.Timers.Timer(1000);
+        aTimer.Elapsed += CountDownTimer;
+        aTimer.Enabled = true;
+
+    }
+
+    public async void CountDownTimer(Object source, System.Timers.ElapsedEventArgs e)
+    {
+        if (counter > 0)
+        {
+            counter -= 1;
+        }
+        else
+        {
+            await Refresh();
+
+        }
         StateHasChanged();
 
     }
 
+    private async Task Refresh()
+    {
+        await this.RefreshSwap();
 
-
+        if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
+        {
+            await this.RefreshConfirmations();
+        }
+        counter = swapInterval;
+    }
 
     private async Task DeleteSwap()
     {
@@ -1187,5 +1273,10 @@
     private void ShowScriptTaker()
     {
         ShowScriptTakerFlag = !ShowScriptTakerFlag;
+    }
+
+    protected async Task goToSetting()
+    {
+        NavigationManager.NavigateTo($"settings");
     }
 }

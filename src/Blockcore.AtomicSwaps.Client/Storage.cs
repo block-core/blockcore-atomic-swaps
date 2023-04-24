@@ -188,5 +188,21 @@ namespace Blockcore.AtomicSwaps.Client
 
             return new IndexerUrl { Symbol = symbol, Url = res };
         }
+
+
+        public void SetIntervalSwapsDataUpdate(int interval)
+        {
+            _storage.SetItemAsString("swapInterval", interval.ToString());
+        }
+
+        public int GetIntervalSwapsDataUpdate()
+        {
+            var res = _storage.GetItemAsString("swapInterval");
+            if (string.IsNullOrEmpty(res))
+            {
+                res = "10";
+            }
+            return Int32.Parse(res);
+        }
     }
 }
