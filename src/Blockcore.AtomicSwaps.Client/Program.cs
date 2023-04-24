@@ -9,6 +9,8 @@ using MudBlazor.Services;
 using Blockcore.AtomicSwaps.Client.Services.UserPreferences;
 using Blockcore.AtomicSwaps.Client.Services;
 using Microsoft.JSInterop;
+using Microsoft.Extensions.Hosting;
+using Blockcore.AtomicSwaps.Client.HostedServices;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -42,5 +44,11 @@ builder.Services.AddBlockcoreWallet();
 builder.Services.AddBlockcoreDns();
 
 builder.Services.AddMudServices();
+
+builder.Services.AddHostedService<UpdateDataFromDnsHostedService>();
+
+builder.Services.AddSingleton<UpdateDataFromDnsHostedService>();
+
+builder.Services.AddSingleton<PeriodicExecutorService>();
 
 await builder.Build().RunAsync();

@@ -132,10 +132,21 @@
             </MudCard>
         }
     </MudTabPanel>
+
+    <MudTabPanel Text="Options" ToolTip="Options">
+
+        <MudCard>
+            <MudCardContent>
+                <MudText Align="Align.Start" Class="mb-8 mt-8">The time interval between swap data updates:</MudText>
+                <MudNumericField Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Timer" AdornmentColor="Color.Warning" T="int" Value="@swapInterval" ValueChanged="(async (x)=> HandleIntervalChange(x))" Min="5" Max="99999" Label="Enter the number of seconds" Variant="Variant.Outlined"  />
+            </MudCardContent>
+        </MudCard>
+    </MudTabPanel>
 </MudTabs>
 
 
 @code {
+    private int swapInterval { get; set; }
     private bool hasWallet;
     private WalletAccounts _walletAccounts = new WalletAccounts();
     List<string> _networkList = new();
@@ -150,14 +161,17 @@
         hasWallet = await WalletConnector.HasBlockcoreWallet();
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
         _networkList = SwapsConfiguration.Networks.Keys.ToList();
-
         await storage.FetchIndexerAndExplorer(false);
-
+        swapInterval = storage.GetIntervalSwapsDataUpdate();
         await LoadExplorers();
         SelectedExplorer = storage.GetExplorerUrl().Replace("https://", "");
-
         await LoadIndexers();
+    }
 
+    public void HandleIntervalChange(int interval)
+    {
+        storage.SetIntervalSwapsDataUpdate(interval);
+        swapInterval = interval;
     }
 
     private async Task LoadIndexers()
@@ -166,11 +180,11 @@
         {
             var indexers = await DnsService.GetServicesByNetwork(item);
             _indexors.Add(new NetworkIndexers()
-            {
-                Symbol = item, 
-                Indexers = indexers.ToList(), 
-                SelectedIndexer = storage.GetIndexerUrl(item) != null ? storage.GetIndexerUrl(item).Replace("https://", "").Replace("/api", "") : string.Empty
-            });
+                {
+                    Symbol = item,
+                    Indexers = indexers.ToList(),
+                    SelectedIndexer = storage.GetIndexerUrl(item) != null ? storage.GetIndexerUrl(item).Replace("https://", "").Replace("/api", "") : string.Empty
+                });
         }
 
     }
