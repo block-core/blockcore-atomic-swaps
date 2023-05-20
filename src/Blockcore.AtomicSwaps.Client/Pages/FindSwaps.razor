@@ -21,46 +21,47 @@
 {
     <MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">No wallet found please install the wallet at blockcore.net</MudAlert>
 }
-else{
-
-<MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Fetch" Class="mt-5 mb-5">Fetch Swaps</MudButton>
-
-@if (swaps != null)
+else
 {
 
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Fetch" Class="mt-5 mb-5">Fetch Swaps</MudButton>
 
-    <MudTable Items="@swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Primary">
-        <HeaderContent>
-            <MudTh>Swap</MudTh>
-            <MudTh>From</MudTh>
-            <MudTh>TO</MudTh>
-            <MudTh>Date</MudTh>
-            <MudTh>Is Mine</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh></MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd Class="text-one-line" DataLabel="Swap">
-                <MudAvatarGroup Max="2" Spacing="3" MaxColor="Color.Primary">
-                    @{
-                        var makerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @context.SwapMaker.CoinSymbol);
-                        var takerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @context.SwapTaker.CoinSymbol);
-                    }
-                    <MudAvatar Image="@makerCoinImg" />
-                    <MudAvatar Image="@takerCoinImg" />
-                </MudAvatarGroup>
-            </MudTd>
-            <MudTd Class="text-one-line" DataLabel="Maker">@Money.Satoshis(context.SwapMaker.Amount) - @context.SwapMaker.CoinSymbol</MudTd>
-            <MudTd Class="text-one-line" DataLabel="Taker">@Money.Satoshis(context.SwapTaker.Amount) - @context.SwapTaker.CoinSymbol</MudTd>
-            <MudTd Class="text-one-line" DataLabel="Date">@context.Created </MudTd>
-            <MudTd Class="text-one-line" DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.SwapMaker.SenderPubkey) ? "I am maker" : _walletAccounts.HasAccountKey(context.SwapTaker.SenderPubkey) ? "I am taker" : "not my swap")</MudTd>
-                <MudTd Class="text-one-line" DataLabel="Status">@context.Status </MudTd>
-                <MudTd DataLabel="Details">
-                    <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
+    @if (swaps != null)
+    {
+
+
+        <MudTable Items="@swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>Swap</MudTh>
+                <MudTh>From</MudTh>
+                <MudTh>TO</MudTh>
+                <MudTh>Date</MudTh>
+                <MudTh>Is Mine</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd Class="text-one-line" DataLabel="Swap">
+                    <MudAvatarGroup Max="2" Spacing="3" MaxColor="Color.Primary">
+                        @{
+                            var makerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @context.SwapMaker.CoinSymbol);
+                            var takerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @context.SwapTaker.CoinSymbol);
+                        }
+                        <MudAvatar Image="@makerCoinImg" />
+                        <MudAvatar Image="@takerCoinImg" />
+                    </MudAvatarGroup>
                 </MudTd>
-            </RowTemplate>
-        </MudTable>
-}
+                <MudTd Class="text-one-line" DataLabel="Maker">@Money.Satoshis(context.SwapMaker.Amount) - @context.SwapMaker.CoinSymbol</MudTd>
+                <MudTd Class="text-one-line" DataLabel="Taker">@Money.Satoshis(context.SwapTaker.Amount) - @context.SwapTaker.CoinSymbol</MudTd>
+                <MudTd Class="text-one-line" DataLabel="Date">@context.Created </MudTd>
+                <MudTd Class="text-one-line" DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.SwapMaker.SenderPubkey) ? "I am maker" : _walletAccounts.HasAccountKey(context.SwapTaker.SenderPubkey) ? "I am taker" : "not my swap")</MudTd>
+                    <MudTd Class="text-one-line" DataLabel="Status">@context.Status </MudTd>
+                    <MudTd DataLabel="Details">
+                        <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+    }
 
 }
 @code {
@@ -84,7 +85,11 @@ else{
     {
         try
         {
-            this.swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
+            var _swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
+            var privateSwaps = _swaps.Where(c => c.IsPrivate && (_walletAccounts.HasAccountKey(c.SwapTaker.SenderPubkey) || (_walletAccounts.HasAccountKey(c.SwapMaker.SenderPubkey))));
+            var publicSwaps = _swaps.Where(c => !c.IsPrivate);
+            this.swaps = privateSwaps.Concat(publicSwaps).ToList();
+
         }
         catch (Exception ex)
         {

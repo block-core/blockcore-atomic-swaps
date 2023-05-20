@@ -30,6 +30,7 @@ public class SwapSession
     public string? SharedSecretHash { get; set; }
     public string? SharedSecret { get; set; }
     public string Status { get; set; }
+    public bool IsPrivate { get; set; }
 }
 
 public class AddressBalance
@@ -145,7 +146,7 @@ public class WalletAccounts
 
     public bool HasAccountKey(string pubkey)
     {
-	    return Accounts.Values.Any(a => a.Pubkey == pubkey);
+        return Accounts.Values.Any(a => a.Pubkey == pubkey);
     }
     public bool HasCoin(string coinSymbol)
     {
@@ -183,7 +184,7 @@ public class WalletAccount
     public int AccountPurpose { get; set; }
 }
 
-public class WalletResultMessage<T> where T: class
+public class WalletResultMessage<T> where T : class
 {
     public string key { get; set; }
     public string signature { get; set; }
