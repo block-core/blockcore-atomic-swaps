@@ -1,7 +1,7 @@
 using Blockcore.AtomicSwaps.BlockcoreWallet;
 using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions;
 using Blockcore.Utilities;
-using NBitcoin;
+using Blockcore.NBitcoin;
 using System.Text.Json;
 using Blockcore.AtomicSwaps.Shared;
 

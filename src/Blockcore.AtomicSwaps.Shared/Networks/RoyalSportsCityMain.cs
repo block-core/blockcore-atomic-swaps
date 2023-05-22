@@ -6,10 +6,10 @@ using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using Blockcore.P2P;
-using NBitcoin;
-using NBitcoin.BitcoinCore;
-using NBitcoin.BouncyCastle.Math;
-using NBitcoin.DataEncoders;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BitcoinCore;
+using Blockcore.NBitcoin.BouncyCastle.math;
+using Blockcore.NBitcoin.DataEncoders;
 
 namespace Blockcore.AtomicSwaps.Shared.Networks
 {

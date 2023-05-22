@@ -1,16 +1,13 @@
-﻿using Blazored.LocalStorage;
-using Blockcore.AtomicSwaps.Client.Services;
+﻿using Blockcore.AtomicSwaps.Client.Services;
 using Blockcore.AtomicSwaps.Shared;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using Blockcore.Utilities;
-using Microsoft.AspNetCore.Components;
-using NBitcoin;
-using NBitcoin.Crypto;
-using System.Collections.Generic;
-using System.Linq;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.Crypto;
 using System.Reflection;
+using Blockcore.NBitcoin.BIP32;
 
 namespace Blockcore.AtomicSwaps.Client
 {

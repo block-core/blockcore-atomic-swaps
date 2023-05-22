@@ -5,8 +5,8 @@ using Blockcore.Consensus.BlockInfo;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
-using NBitcoin;
-using NBitcoin.DataEncoders;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.DataEncoders;
 
 namespace Blockcore.AtomicSwaps.Shared.Networks
 {

@@ -1,6 +1,6 @@
 ﻿using Blockcore.AtomicSwaps.BlockcoreWallet;
 using Blockcore.AtomicSwaps.Shared;
-using NBitcoin;
+using Blockcore.NBitcoin;
 
 namespace Blockcore.AtomicSwaps.Client.Services
 {

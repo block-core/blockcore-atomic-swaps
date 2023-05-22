@@ -1,12 +1,9 @@
 ﻿@page "/createswap"
-@using Blockcore.Utilities
 @using NBitcoin
-@using NBitcoin.Crypto
 @using Blockcore.AtomicSwaps.BlockcoreWallet
-@using System.Text.Json
-@using Blockcore.AtomicSwaps.BlockcoreWallet.Exceptions
 @using Blockcore.AtomicSwaps.Client.Services
 @using Blockcore.AtomicSwaps.Shared
+@using Blockcore.NBitcoin.BIP32
 
 @inject HttpClient Http
 @inject Storage storage;
