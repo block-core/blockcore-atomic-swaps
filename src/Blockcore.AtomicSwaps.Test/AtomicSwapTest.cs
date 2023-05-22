@@ -1,6 +1,6 @@
 using Blockcore.AtomicSwaps.Shared;
 using Blockcore.Consensus.TransactionInfo;
-using NBitcoin;
+using Blockcore.NBitcoin;
 using System;
 using System.Collections.Generic;
 using Xunit;

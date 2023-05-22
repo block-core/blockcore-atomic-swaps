@@ -1,7 +1,8 @@
-using NBitcoin;
+using Blockcore.NBitcoin;
 using System;
 using System.Collections.Generic;
 using Blockcore.AtomicSwaps.Shared;
+using Blockcore.NBitcoin.BIP32;
 using Xunit;
 
 namespace Blockcore.AtomicSwaps.Test

@@ -1,11 +1,9 @@
-using System.Diagnostics.Contracts;
 using System.Text;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
-using NBitcoin;
-using NBitcoin.BouncyCastle.Math;
-using NBitcoin.Policy;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.Policy;
 
 namespace Blockcore.AtomicSwaps.Shared
 {

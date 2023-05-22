@@ -1,6 +1,8 @@
 ﻿using Blockcore.Networks;
 using Blockcore.Utilities;
-using NBitcoin;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BIP32;
+using Blockcore.NBitcoin.BIP39;
 
 namespace Blockcore.AtomicSwaps.Shared
 {

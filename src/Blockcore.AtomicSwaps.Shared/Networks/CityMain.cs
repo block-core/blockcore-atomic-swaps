@@ -5,11 +5,11 @@ using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Networks;
 using Blockcore.P2P;
-using NBitcoin;
-using NBitcoin.BitcoinCore;
-using NBitcoin.BouncyCastle.Math;
-using NBitcoin.DataEncoders;
-using NBitcoin.Protocol;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BitcoinCore;
+using Blockcore.NBitcoin.BouncyCastle.math;
+using Blockcore.NBitcoin.DataEncoders;
+using Blockcore.NBitcoin.Protocol;
 
 namespace Blockcore.AtomicSwaps.Shared.Networks
 {
@@ -221,7 +221,7 @@ namespace Blockcore.AtomicSwaps.Shared.Networks
             PoWBlockReward = 2,
             PoSBlockReward = 20,
             LastPowBlock = 2500,
-            GenesisText = "July 27, 2018, New Scientiest, Bitcoin’s roots are in anarcho-capitalism", // The New York Times, 2020-04-16
+            GenesisText = "July 27, 2018, New Scientiest, Bitcoinï¿½s roots are in anarcho-capitalism", // The New York Times, 2020-04-16
             TargetSpacing = TimeSpan.FromSeconds(64),
             ProofOfStakeTimestampMask = 0x0000000F, // 0x0000003F // 64 sec
             PoSVersion = 3
