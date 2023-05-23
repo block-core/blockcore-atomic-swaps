@@ -85,11 +85,14 @@ else
     {
         try
         {
-            var _swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
-            var privateSwaps = _swaps.Where(c => c.IsPrivate && (_walletAccounts.HasAccountKey(c.SwapTaker.SenderPubkey) || (_walletAccounts.HasAccountKey(c.SwapMaker.SenderPubkey))));
-            var publicSwaps = _swaps.Where(c => !c.IsPrivate);
-            this.swaps = privateSwaps.Concat(publicSwaps).ToList();
+            var data = _walletAccounts.Accounts.Values.Where(c => c.Pubkey != null).Select(c => c.Pubkey).ToList();
 
+            var Swaps = await Http.PostAsJsonAsync("api/SwapCoordinator", data);
+            if (Swaps.IsSuccessStatusCode)
+            {
+                var swapList = await Swaps.Content.ReadFromJsonAsync<List<SwapSession>>();
+                this.swaps = swapList;
+            }
         }
         catch (Exception ex)
         {
