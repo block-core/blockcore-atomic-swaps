@@ -87,11 +87,16 @@ else
         {
             var data = _walletAccounts.Accounts.Values.Where(c => c.Pubkey != null).Select(c => c.Pubkey).ToList();
 
-            var Swaps = await Http.PostAsJsonAsync("api/SwapCoordinator", data);
+            var Swaps = await Http.PostAsJsonAsync("api/SwapCoordinator", data).ConfigureAwait(false);
             if (Swaps.IsSuccessStatusCode)
             {
-                var swapList = await Swaps.Content.ReadFromJsonAsync<List<SwapSession>>();
+                var swapList = await Swaps.Content.ReadFromJsonAsync<List<SwapSession>>().ConfigureAwait(false);
                 this.swaps = swapList;
+            }
+            else
+            {
+                var errorMessage = $"Server responded with status code {Swaps.StatusCode}: {Swaps.ReasonPhrase}";
+                await SnackbarService.ShowMessage(errorMessage, Defaults.Classes.Position.BottomEnd, Severity.Error);
             }
         }
         catch (Exception ex)
@@ -99,8 +104,8 @@ else
             error = ex.Message;
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
         }
-
     }
+
 
     protected override async Task OnInitializedAsync()
     {
