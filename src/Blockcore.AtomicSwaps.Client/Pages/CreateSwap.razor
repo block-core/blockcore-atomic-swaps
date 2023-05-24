@@ -84,7 +84,14 @@ else
                 }
                 else
                 {
-                    <MudButton FullWidth Color="Color.Primary" Variant="Variant.Filled" @onclick="CreateNewSwap">Create Swap</MudButton>
+                    <MudGrid Spacing="@spacing" Justify="Justify.Center">
+                        <MudItem sm="3" xl="3" xs="12" Class="d-flex align-center flex-grow-1 gap-4">
+                            <MudCheckBox @bind-Checked="@isPrivatie" Label="Private" Color="Color.Primary" Size="Size.Large"></MudCheckBox>
+                        </MudItem>
+                        <MudItem sm="9" xl="9" xs="12" Class="d-flex align-center flex-grow-1 gap-4">
+                            <MudButton FullWidth Color="Color.Primary" Variant="Variant.Filled" @onclick="CreateNewSwap">Create Swap</MudButton>
+                            </MudItem>
+                            </MudGrid>
                 }
             </MudPaper>
         </MudItem>
@@ -95,6 +102,8 @@ else
     public int spacing { get; set; } = 3;
 
     private List<SwapSession> swaps;
+
+    public bool isPrivatie { get; set; } = false;
 
     string error;
 
@@ -143,6 +152,13 @@ else
         if (swapFrom == swapTo)
         {
             error = "Cant swap to the same network";
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            return;
+        }
+
+        if (amountToSell == 0 || amountToBuy == 0)
+        {
+            error = "Error: The amount to sell or buy cannot be zero. Please enter a valid amount.";
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
@@ -234,6 +250,7 @@ else
                 SwapSessionId = sessionId,
                 Created = DateTime.UtcNow,
                 Status = SwapsDataStatus.Available,
+                IsPrivate = this.isPrivatie,
                 SharedSecretHash = sharedSecretHash.ToString(),
                 SwapMaker = new SwapSessionCoin
                 {
