@@ -5,7 +5,7 @@
 @using Blockcore.AtomicSwaps.BlockcoreWallet
 @using Blockcore.AtomicSwaps.Shared
 @inject HttpClient Http
-@inject Storage storage;
+@inject Storage Storage;
 @inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
 @inject ILogger<FindSwaps> Logger;
@@ -17,7 +17,7 @@
 <MudText Align="Align.Center" Typo="Typo.h4">Find Atomic Swaps</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
 
-@if (!hasWallet)
+@if (!_hasWallet)
 {
     <MudAlert Severity="Severity.Normal" Class="mt-3 mb-3">No wallet found please install the wallet at blockcore.net</MudAlert>
 }
@@ -26,11 +26,11 @@ else
 
     <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Fetch" Class="mt-5 mb-5">Fetch Swaps</MudButton>
 
-    @if (swaps != null)
+    @if (_swaps != null)
     {
 
 
-        <MudTable Items="@swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Primary">
+        <MudTable Items="@_swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Primary">
             <HeaderContent>
                 <MudTh>Swap</MudTh>
                 <MudTh>From</MudTh>
@@ -64,69 +64,65 @@ else
     }
 
 }
+
+
 @code {
-    private IEnumerable<SwapSession> swaps = new List<SwapSession>();
+    private IEnumerable<SwapSession> _swaps = new List<SwapSession>();
     private bool _loading;
+    private bool _hasWallet;
+    private WalletAccounts? _walletAccounts;
+    private List<string> _networkList;
 
-    Networks.Network network;
-    List<string> NetworkList;
-
-    string error;
-
-    string SwapFrom = "STRAX";
-    string SwapTo = "CITY";
-
-    long amountToSell = 1;
-    long amountToBuy = 10;
-    private bool hasWallet;
-    WalletAccounts? _walletAccounts;
+    private string _swapFrom = "STRAX";
+    private string _swapTo = "CITY";
+    private long _amountToSell = 1;
+    private long _amountToBuy = 10;
+    
 
     private async Task Fetch()
     {
         try
         {
-            var data = _walletAccounts.Accounts.Values.Where(c => c.Pubkey != null).Select(c => c.Pubkey).ToList();
-
-            var Swaps = await Http.PostAsJsonAsync("api/SwapCoordinator", data).ConfigureAwait(false);
-            if (Swaps.IsSuccessStatusCode)
-            {
-                var swapList = await Swaps.Content.ReadFromJsonAsync<List<SwapSession>>().ConfigureAwait(false);
-                this.swaps = swapList;
-            }
-            else
-            {
-                var errorMessage = $"Server responded with status code {Swaps.StatusCode}: {Swaps.ReasonPhrase}";
-                await SnackbarService.ShowMessage(errorMessage, Defaults.Classes.Position.BottomEnd, Severity.Error);
-            }
+            _swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
         }
         catch (Exception ex)
         {
-            error = ex.Message;
-            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            await ShowErrorMessage(ex, Defaults.Classes.Position.BottomEnd, Severity.Error);
         }
     }
 
+    private async Task ShowErrorMessage(Exception ex, string position, Severity severity)
+    {
+        await SnackbarService.ShowMessage(ex.Message, position, severity);
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        NetworkList = SwapsConfiguration.Networks.Keys.ToList();
+        SetNetworkList();
+        await CheckWalletAndFetch();
+    }
 
-        if (await WalletConnector.HasBlockcoreWallet() == false)
+    private void SetNetworkList()
+    {
+        _networkList = SwapsConfiguration.Networks.Keys.ToList();
+    }
+
+    private async Task CheckWalletAndFetch()
+    {
+        if (!await WalletConnector.HasBlockcoreWallet())
         {
-            hasWallet = false;
+            _hasWallet = false;
             return;
         }
 
-        hasWallet = true;
-
-        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
-
-        await this.Fetch();
+        _hasWallet = true;
+        _walletAccounts = Storage.GetOrCreate<WalletAccounts>();
+        await Fetch();
     }
 
-    protected async Task ViewSwap(string session)
+    private void ViewSwap(string session)
     {
         NavigationManager.NavigateTo($"viewswap/{session}");
     }
-
 }
+ 
