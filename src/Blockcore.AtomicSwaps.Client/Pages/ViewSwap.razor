@@ -419,102 +419,105 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Logger.LogInformation("Starting OnInitializedAsync method.");
+        Logger.LogInformation("OnInitializedAsync: Starting method.");
 
         hasWallet = await WalletConnector.HasBlockcoreWallet();
-        Logger.LogInformation($"Has wallet: {hasWallet}");
+        Logger.LogInformation($"OnInitializedAsync: Has wallet: {hasWallet}");
 
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
-        Logger.LogInformation("Got or created WalletAccounts.");
+        Logger.LogInformation("OnInitializedAsync: Got or created WalletAccounts.");
 
         string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
-        Logger.LogInformation("Received swap session response.");
+        Logger.LogInformation("OnInitializedAsync: Received swap session response.");
 
         if (string.IsNullOrEmpty(swapRes))
         {
             error = $"Swap not found!";
-            Logger.LogWarning(error);
+            Logger.LogWarning("OnInitializedAsync: " + error);
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
 
         swap = JsonSerializer.Deserialize<SwapSession>(swapRes, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true
-            });
-        Logger.LogInformation("Swap session deserialized.");
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        });
+        Logger.LogInformation("OnInitializedAsync: Swap session deserialized.");
 
         if (swap != null)
         {
             Guard.NotNull(swap.SwapMaker, nameof(swap.SwapMaker));
             Guard.NotNull(swap.SwapTaker, nameof(swap.SwapTaker));
-            Logger.LogInformation("Guard checks for SwapMaker and SwapTaker passed.");
+            Logger.LogInformation("OnInitializedAsync: Guard checks for SwapMaker and SwapTaker passed.");
 
             // if I am the maker this is where my keys will be found
             if (swap.SwapMaker.SenderPubkey != null)
             {
                 Guard.NotNull(swap.SwapTaker.ReceiverPubkey, nameof(swap.SwapTaker.ReceiverPubkey));
-                Logger.LogInformation("Guard check for SwapTaker ReceiverPubkey passed.");
+                Logger.LogInformation("OnInitializedAsync: Guard check for SwapTaker ReceiverPubkey passed.");
 
                 var accountMakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapMaker.SenderPubkey);
                 mypubkeyMakerSide = accountMakerSide?.Pubkey;
-                Logger.LogInformation("MypubkeyMakerSide retrieved.");
+                Logger.LogInformation("OnInitializedAsync: MypubkeyMakerSide retrieved.");
 
                 var accountTakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapTaker.ReceiverPubkey);
                 mypubkeyTakerSide = accountTakerSide?.Pubkey;
-                Logger.LogInformation("MypubkeyTakerSide retrieved.");
+                Logger.LogInformation("OnInitializedAsync: MypubkeyTakerSide retrieved.");
             }
 
             // if I am the taker this is where my keys will be found
             if (mypubkeyMakerSide == null && swap.SwapTaker.SenderPubkey != null)
             {
                 Guard.NotNull(swap.SwapMaker.ReceiverPubkey, nameof(swap.SwapMaker.ReceiverPubkey));
-                Logger.LogInformation("Guard check for SwapMaker ReceiverPubkey passed.");
+                Logger.LogInformation("OnInitializedAsync: Guard check for SwapMaker ReceiverPubkey passed.");
 
                 var accountMakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapMaker.ReceiverPubkey);
                 mypubkeyMakerSide = accountMakerSide?.Pubkey;
-                Logger.LogInformation("MypubkeyMakerSide retrieved.");
+                Logger.LogInformation("OnInitializedAsync: MypubkeyMakerSide retrieved.");
 
                 var accountTakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapTaker.SenderPubkey);
                 mypubkeyTakerSide = accountTakerSide?.Pubkey;
-                Logger.LogInformation("MypubkeyTakerSide retrieved.");
+                Logger.LogInformation("OnInitializedAsync: MypubkeyTakerSide retrieved.");
             }
         }
 
         await this.RefreshConfirmations();
-        Logger.LogInformation("Confirmations refreshed.");
+        Logger.LogInformation("OnInitializedAsync: Confirmations refreshed.");
 
         try
         {
             explorerUrl = await storage.ExplorerUrl();
-            Logger.LogInformation("Explorer URL retrieved.");
+            Logger.LogInformation("OnInitializedAsync: Explorer URL retrieved.");
         }
         catch (Exception ex)
         {
             error = ex.Message;
-            Logger.LogError($"Error retrieving Explorer URL: {error}");
+            Logger.LogError("OnInitializedAsync: Error retrieving Explorer URL: " + error);
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
         }
 
         swapInterval = storage.GetIntervalSwapsDataUpdate();
-        Logger.LogInformation("Swap interval retrieved.");
+        Logger.LogInformation("OnInitializedAsync: Swap interval updated.");
 
         await this.RefreshSwap();
-        Logger.LogInformation("Swap refreshed.");
+        Logger.LogInformation("OnInitializedAsync: Swap refreshed.");
 
         if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
         {
             await this.RefreshConfirmations();
-            Logger.LogInformation("Confirmations refreshed.");
+            Logger.LogInformation("OnInitializedAsync: Confirmations refreshed again.");
         }
 
         showLodaling = false;
-        Logger.LogInformation("showLodaling set to false.");
+        Logger.LogInformation("OnInitializedAsync: ShowLodaling set to false.");
 
         StartTimer();
-        Logger.LogInformation("Timer started.");
+        Logger.LogInformation("OnInitializedAsync: Timer started.");
+
+        Logger.LogInformation("OnInitializedAsync: Ending method.");
     }
+
 
     void ActiveStep(MudTabPanel panel)
     {
