@@ -27,7 +27,7 @@
 <MudText Align="Align.Center" Class="mb-8 mt-8">
 
 </MudText>
-@if (showLodaling)
+@if (showLoading)
 {
     <div class="app-loading-spinner">
         <div class="spinner-border" role="status"></div>
@@ -305,9 +305,9 @@
             <div class="d-flex justify-content-between mt-3">
 
                 <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step4)">Previous Step</MudButton>
-                @if (swap.SwapTaker.ExchangeTransactionHash != null )
+                @if (swap.SwapTaker.ExchangeTransactionHash != null)
                 {
-                <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step6)">Next Step</MudButton>
+                    <MudButton Variant="@Variant.Filled" Color="Color.Primary" OnClick="() => ActiveStep(step6)">Next Step</MudButton>
 
                 }
                 else
@@ -381,41 +381,38 @@
 
     [Parameter]
     public string swapSession { get; set; }
+
     private SwapSession? swap;
-    string error;
+    private string error;
 
-    MudTabs tabs;
+    private MudTabs tabs;
+    private MudTabPanel step1;
+    private MudTabPanel step2;
+    private MudTabPanel step3;
+    private MudTabPanel step4;
+    private MudTabPanel step5;
+    private MudTabPanel step6;
 
-    MudTabPanel step1;
-    MudTabPanel step2;
-    MudTabPanel step3;
-    MudTabPanel step4;
-    MudTabPanel step5;
-    MudTabPanel step6;
+    public string SharedSecret { get; set; }
+    public string mypubkeyMakerSide;
+    public string mypubkeyTakerSide;
 
+    public int MakerSwapTransactionConfirmations;
+    public int TakerSwapTransactionConfirmations;
+    public int MakerExchangeTransactionConfirmations;
+    public int TakerExchangeTransactionConfirmations;
+    public int MakerRecoveryTransactionConfirmations;
+    public int TakerRecoveryTransactionConfirmations;
 
-    string SharedSecret { get; set; }
-
-    string mypubkeyMakerSide;
-    string mypubkeyTakerSide;
-
-    int MakerSwapTransactionConfirmations;
-    int TakerSwapTransactionConfirmations;
-    int MakerExchangeTransactionConfirmations;
-    int TakerExchangeTransactionConfirmations;
-    int MakerRecoveryTransactionConfirmations;
-    int TakerRecoveryTransactionConfirmations;
-
-    WalletAccounts _walletAccounts = new();
+    private WalletAccounts _walletAccounts = new WalletAccounts();
 
     private bool hasWallet;
-    private bool showLodaling = true;
-    private string explorerUrl = String.Empty;
+    public bool showLoading = true;
+    private string explorerUrl = string.Empty;
 
     private static System.Timers.Timer aTimer;
     private int counter = 0;
     private int swapInterval = 0;
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -426,28 +423,27 @@
 
         _walletAccounts = storage.GetOrCreate<WalletAccounts>();
 
-        string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
+        string swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
 
         if (string.IsNullOrEmpty(swapRes))
         {
-            error = $"Swap not found!";
+            error = "Swap not found!";
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             Logger.LogInformation("OnInitializedAsync: Swap not found.");
             return;
         }
 
         swap = JsonSerializer.Deserialize<SwapSession>(swapRes, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
-        });
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            });
 
         if (swap != null)
         {
             Guard.NotNull(swap.SwapMaker, nameof(swap.SwapMaker));
             Guard.NotNull(swap.SwapTaker, nameof(swap.SwapTaker));
 
-            // if I am the maker this is where my keys will be found
             if (swap.SwapMaker.SenderPubkey != null)
             {
                 Guard.NotNull(swap.SwapTaker.ReceiverPubkey, nameof(swap.SwapTaker.ReceiverPubkey));
@@ -461,7 +457,6 @@
                 Logger.LogInformation($"OnInitializedAsync: mypubkeyTakerSide: {mypubkeyTakerSide}");
             }
 
-            // if I am the taker this is where my keys will be found
             if (mypubkeyMakerSide == null && swap.SwapTaker.SenderPubkey != null)
             {
                 Guard.NotNull(swap.SwapMaker.ReceiverPubkey, nameof(swap.SwapMaker.ReceiverPubkey));
@@ -476,7 +471,7 @@
             }
         }
 
-        await this.RefreshConfirmations();
+        await RefreshConfirmations();
 
         try
         {
@@ -493,33 +488,35 @@
         swapInterval = storage.GetIntervalSwapsDataUpdate();
         Logger.LogInformation($"OnInitializedAsync: Swap interval: {swapInterval}");
 
-        await this.RefreshSwap();
+        await RefreshSwap();
 
         if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
         {
-            await this.RefreshConfirmations();
+            await RefreshConfirmations();
             Logger.LogInformation("OnInitializedAsync: Swap transaction hash is present. Refreshing confirmations.");
         }
 
-        showLodaling = false;
+        showLoading = false;
         StartTimer();
 
         Logger.LogInformation("OnInitializedAsync: Method ended.");
     }
 
-    void ActiveStep(MudTabPanel panel)
+
+    private void ActiveStep(MudTabPanel panel)
     {
         tabs.ActivatePanel(panel);
+        Logger.LogInformation($"ActiveStep: Panel activated: {panel}");
     }
 
     public void StartTimer()
     {
-
         counter = swapInterval;
         aTimer = new System.Timers.Timer(1000);
         aTimer.Elapsed += CountDownTimer;
         aTimer.Enabled = true;
 
+        Logger.LogInformation("StartTimer: Timer started.");
     }
 
     public async void CountDownTimer(Object source, System.Timers.ElapsedEventArgs e)
@@ -531,43 +528,47 @@
         else
         {
             await Refresh();
-
         }
-        StateHasChanged();
 
+        StateHasChanged();
+        Logger.LogInformation("CountDownTimer: Timer ticked.");
     }
 
     private async Task Refresh()
     {
-        await this.RefreshSwap();
+        await RefreshSwap();
 
         if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
         {
-            await this.RefreshConfirmations();
+            await RefreshConfirmations();
         }
+
         counter = swapInterval;
+
+        Logger.LogInformation("Refresh: Data refreshed.");
     }
 
     private async Task DeleteSwap()
     {
-        // this method is of course problematic because anyone can delete using an api call
-        // we need to add pubkey validation to each request to the api
-
         if (swap.SwapMaker.SenderPubkey == mypubkeyMakerSide || swap.SwapTaker.SenderPubkey == mypubkeyTakerSide)
         {
             await Http.DeleteAsync($"api/SwapCoordinator/delete/{swapSession}");
+            Logger.LogInformation("DeleteSwap: Swap deleted successfully.");
         }
         else
         {
             error = "Only the owner can delete a swap";
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            Logger.LogInformation("DeleteSwap: Failed to delete swap. Not the owner.");
             return;
         }
 
         var swaps = storage.GetSwaps();
+
         if (swaps != null)
         {
             var myswap = swaps.FirstOrDefault(s => s.SwapSessionId == swapSession);
+
             if (myswap != null)
             {
                 swaps.Remove(myswap);
@@ -575,7 +576,8 @@
             }
         }
 
-        NavigationManager.NavigateTo($"/");
+        NavigationManager.NavigateTo("/");
+        Logger.LogInformation("DeleteSwap: Navigation to home page.");
     }
 
     private async Task TakerAcceptSwap()
@@ -608,6 +610,8 @@
 
         myswaps.Add(swap);
         storage.SetSwaps(myswaps);
+
+        Logger.LogInformation("TakerAcceptSwap: Swap accepted as taker.");
     }
 
     private async Task BuildMakerSwap()
@@ -615,28 +619,49 @@
         if (swap.SwapMaker.SenderPubkey != mypubkeyMakerSide)
             throw new Exception("Maker pubkey was changed");
 
+        Logger.LogInformation("BuildMakerSwap: Building Maker swap...");
+
         await BuildSideSwap1(swap.SwapMaker, DateTime.UtcNow.AddHours(48));
+
+        Logger.LogInformation("BuildMakerSwap: Maker swap side built.");
 
         await PostSwap(swap);
 
-        await this.RefreshSwap();
+        Logger.LogInformation("BuildMakerSwap: Maker swap posted.");
 
-        await this.BlockchainApiService.Broadcast(swap.SwapMaker.CoinSymbol, swap.SwapMaker.SwapTransactionHex);
+        await RefreshSwap();
+
+        Logger.LogInformation("BuildMakerSwap: Swap refreshed.");
+
+        await BlockchainApiService.Broadcast(swap.SwapMaker.CoinSymbol, swap.SwapMaker.SwapTransactionHex);
+
+        Logger.LogInformation("BuildMakerSwap: Maker swap broadcasted.");
     }
+
+
 
     private async Task BuildTakerSwap()
     {
         if (swap.SwapTaker.SenderPubkey != mypubkeyTakerSide)
             throw new Exception("Taker pubkey was changed");
 
+        Logger.LogInformation("BuildTakerSwap: Building Taker swap...");
+
         await BuildSideSwap1(swap.SwapTaker, swap.SwapMaker.RecoveryLockTime.Value.AddHours(-24));
 
+        Logger.LogInformation("BuildTakerSwap: Taker swap side built.");
 
         await PostSwap(swap);
 
-        await this.RefreshSwap();
+        Logger.LogInformation("BuildTakerSwap: Taker swap posted.");
 
-        await this.BlockchainApiService.Broadcast(swap.SwapTaker.CoinSymbol, swap.SwapTaker.SwapTransactionHex);
+        await RefreshSwap();
+
+        Logger.LogInformation("BuildTakerSwap: Swap refreshed.");
+
+        await BlockchainApiService.Broadcast(swap.SwapTaker.CoinSymbol, swap.SwapTaker.SwapTransactionHex);
+
+        Logger.LogInformation("BuildTakerSwap: Taker swap broadcasted.");
     }
 
     private async Task BuildSideSwap1(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
@@ -668,14 +693,14 @@
                 network = swapSessionCoin.CoinSymbol,
                 feeRate = "medium",
                 recipients = new()
+        {
+            new()
             {
-                new()
-                {
-                    hint = "swap address",
-                    address = swapSessionCoin.SwapAddress,
-                    amount = swapSessionCoin.Amount + swapSessionCoin.NetworkFee,
-                }
+                hint = "swap address",
+                address = swapSessionCoin.SwapAddress,
+                amount = swapSessionCoin.Amount + swapSessionCoin.NetworkFee,
             }
+        }
             };
 
         var trxContext = await WalletService.SendCoins(sendTo);
@@ -690,9 +715,9 @@
             Logger.LogWarning("trxid was null");
             Logger.LogWarning("trxhex=" + trxContext.transactionHex);
         }
-    }
 
-    //private async Task BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
+        Logger.LogInformation("BuildSideSwap1: Side swap built.");
+    }
     //{
     //    ExtKey.UseBCForHMACSHA512 = true;
     //    NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
@@ -763,6 +788,8 @@
                 storage.SetSwaps(myswaps);
             }
         }
+
+        Logger.LogInformation("RefreshSwap: Swap session refreshed.");
     }
 
     private async Task PostSwap(SwapSession swap)
@@ -777,6 +804,8 @@
             myswaps.Add(swap);
             storage.SetSwaps(myswaps);
         }
+
+        Logger.LogInformation("PostSwap: Swap session posted.");
     }
 
     private async Task RefreshConfirmations()
@@ -812,6 +841,8 @@
                 swap.SwapMaker.ExchangeTransactionHash,
                 swap?.SwapMaker.ExchangeTransactionHex);
         }
+
+        Logger.LogInformation("RefreshConfirmations: Swap confirmations refreshed.");
     }
 
     //private async Task MakerExchangeFunds()
@@ -894,164 +925,204 @@
 
     private async Task MakerExchangeFunds1()
     {
-        ExtKey.UseBCForHMACSHA512 = true;
-        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
-        if (swap.SwapTaker.ReceiverPubkey != mypubkeyTakerSide)
-            throw new Exception("Maker pubkey was changed");
-
-        Networks.Network network = SwapsConfiguration.Networks[swap.SwapTaker.CoinSymbol];
-
-        var account = _walletAccounts.GetAccountByKey(swap.SwapMaker.SenderPubkey);
-        var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(account, swap.SwapSessionId);
-        if (!string.IsNullOrEmpty(errorOut))
+        try
         {
-            error = errorOut;
-            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            ExtKey.UseBCForHMACSHA512 = true;
+            NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
-            return;
+            if (swap.SwapTaker.ReceiverPubkey != mypubkeyTakerSide)
+            {
+                throw new Exception("Maker pubkey was changed");
+            }
+
+            Networks.Network network = SwapsConfiguration.Networks[swap.SwapTaker.CoinSymbol];
+
+            var account = _walletAccounts.GetAccountByKey(swap.SwapMaker.SenderPubkey);
+            var (errorOut, sharedSecret, sharedSecretHash) = await WalletService.GenerateSecretHash(account, swap.SwapSessionId);
+            if (!string.IsNullOrEmpty(errorOut))
+            {
+                error = errorOut;
+                await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+                Logger.LogWarning("Failed to generate secret hash: {Error}", error);
+                return;
+            }
+
+            if (sharedSecretHash == null || sharedSecretHash.ToString() != swap.SharedSecretHash)
+            {
+                throw new Exception("Secret hash was not generated correctly");
+            }
+
+            var walletConnectInput = new WalletConnectInput { WalletAccounts = _walletAccounts };
+            var errorRes = await WalletService.ConnectWallet(walletConnectInput);
+            if (!string.IsNullOrEmpty(errorRes))
+            {
+                error = errorRes;
+                await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+                Logger.LogWarning("Failed to connect to the wallet: {Error}", error);
+                return;
+            }
+
+            account = _walletAccounts.GetAccountByKey(swap.SwapTaker.ReceiverPubkey);
+
+            var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnectInput, account);
+
+            await ExchangeSwapFund1(swap.SwapTaker, sharedSecret, address, account);
+
+            swap.Status = SwapsDataStatus.Complete;
+
+            await PostSwap(swap);
+
+            await RefreshSwap();
+
+            await BlockchainApiService.Broadcast(swap.SwapTaker.CoinSymbol, swap.SwapTaker.ExchangeTransactionHex);
+
+            Logger.LogInformation("MakerExchangeFunds1: Maker exchange funds completed successfully.");
         }
-
-        if (sharedSecretHash == null || sharedSecretHash.ToString() != swap.SharedSecretHash)
+        catch (Exception ex)
         {
-            throw new Exception("Secret hash was not generated correctly");
+            Logger.LogError(ex, "MakerExchangeFunds1: An error occurred during maker exchange funds.");
+            throw;
         }
-
-        var walletConnecet = new WalletConnectInput { WalletAccounts = _walletAccounts };
-        var errorRes = await WalletService.ConnectWallet(walletConnecet);
-        if (!string.IsNullOrEmpty(errorRes))
-        {
-            error = errorRes;
-            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-            return;
-        }
-
-        account = _walletAccounts.GetAccountByKey(swap.SwapTaker.ReceiverPubkey);
-
-        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
-
-        await ExchangeSwapFund1(swap.SwapTaker, sharedSecret, address, account);
-
-        swap.Status = SwapsDataStatus.Complete;
-
-        await PostSwap(swap);
-
-        await this.RefreshSwap();
-
-        await this.BlockchainApiService.Broadcast(swap.SwapTaker.CoinSymbol, swap.SwapTaker.ExchangeTransactionHex);
     }
 
     private async Task TakerExchangeFunds1()
     {
-        ExtKey.UseBCForHMACSHA512 = true;
-        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
-        if (swap.SwapMaker.ReceiverPubkey != mypubkeyMakerSide)
-            throw new Exception("Taker pubkey was changed");
-
-        if (string.IsNullOrEmpty(this.SharedSecret))
-            throw new Exception("Missing shared secret");
-
-        Networks.Network network = SwapsConfiguration.Networks[swap.SwapMaker.CoinSymbol];
-
-        var walletConnecet = new WalletConnectInput { WalletAccounts = _walletAccounts };
-        var errorRes = await WalletService.ConnectWallet(walletConnecet);
-        if (!string.IsNullOrEmpty(errorRes))
+        try
         {
-            error = errorRes;
-            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-            return;
+            ExtKey.UseBCForHMACSHA512 = true;
+            NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+            if (swap.SwapMaker.ReceiverPubkey != mypubkeyMakerSide)
+            {
+                throw new Exception("Taker pubkey was changed");
+            }
+
+            if (string.IsNullOrEmpty(this.SharedSecret))
+            {
+                throw new Exception("Missing shared secret");
+            }
+
+            Networks.Network network = SwapsConfiguration.Networks[swap.SwapMaker.CoinSymbol];
+
+            var walletConnectInput = new WalletConnectInput { WalletAccounts = _walletAccounts };
+            var errorRes = await WalletService.ConnectWallet(walletConnectInput);
+            if (!string.IsNullOrEmpty(errorRes))
+            {
+                error = errorRes;
+                await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+                Logger.LogWarning("Failed to connect to the wallet: {Error}", error);
+                return;
+            }
+
+            var account = _walletAccounts.GetAccountByKey(swap.SwapMaker.ReceiverPubkey);
+
+            var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnectInput, account);
+
+            await ExchangeSwapFund1(swap.SwapMaker, new uint256(this.SharedSecret), address, account);
+
+            swap.Status = SwapsDataStatus.Complete;
+
+            await PostSwap(swap);
+
+            await RefreshSwap();
+
+            await BlockchainApiService.Broadcast(swap.SwapMaker.CoinSymbol, swap.SwapMaker.ExchangeTransactionHex);
+
+            Logger.LogInformation("TakerExchangeFunds1: Taker exchange funds completed successfully.");
         }
-
-        var account = _walletAccounts.GetAccountByKey(swap.SwapMaker.ReceiverPubkey);
-
-        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
-
-        await ExchangeSwapFund1(swap.SwapMaker, new uint256(this.SharedSecret), address, account);
-
-        swap.Status = SwapsDataStatus.Complete;
-
-        await PostSwap(swap);
-
-        await this.RefreshSwap();
-
-        await this.BlockchainApiService.Broadcast(swap.SwapMaker.CoinSymbol, swap.SwapMaker.ExchangeTransactionHex);
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "TakerExchangeFunds1: An error occurred during taker exchange funds.");
+            throw;
+        }
     }
 
     private async Task ExchangeSwapFund1(SwapSessionCoin swapSessionCoin, uint256 sharedSecret, string sendToAddress, WalletAccount account)
     {
-        //if (mypubkeyTakerSide != swapSessionCoin.ReceiverPubkey)
-        //    throw new Exception("Invalid key");
-
-        Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
-
-        var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
-        var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
-
-        var unsignedExchangeTransaction = SwapBuilder.CreateSwapSpendUnsignedTransaction(
-            network,
-            transaciton,
-            sendToAddress,
-            new Money(swapSessionCoin.NetworkFee));
-
-        var swapCoinsInput = new BlockcoreWalletSwapCoins
-            {
-                walletId = account.WalletId,
-                accountId = account.AccountId,
-                network = network.CoinTicker,
-                swapTrxHex = swapSessionCoin.SwapTransactionHex,
-                redeemScriptHex = swapSessionCoin.SwapRedeemScriptHex,
-                secretHashHex = Encoders.Hex.EncodeData(sharedSecret.ToBytes()),
-                trxToSignHex = unsignedExchangeTransaction.ToHex(network.Consensus.ConsensusFactory),
-                message = $"Swap {Money.Satoshis(swapSessionCoin.Amount)} {swapSessionCoin.CoinSymbol} to {sendToAddress}"
-            };
-
-        var result = await WalletService.SwapCoins(swapCoinsInput);
-
-        if (result == null)
-            throw new Exception("Failed to call SwapCoins api method on the wallet");
-
-        if (string.IsNullOrEmpty(result.transactionId))
+        try
         {
-            if (string.IsNullOrEmpty(result.privateKey))
-                throw new Exception("Private key was not provided by wallet");
+            Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
 
-            var privkey = new Key(Encoders.Hex.DecodeData(result.privateKey));
+            var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
+            var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
 
-            var exchangeTransaction = SwapBuilder.SignSwapSpendUnsignedTransaction(
+            var unsignedExchangeTransaction = SwapBuilder.CreateSwapSpendUnsignedTransaction(
                 network,
                 transaciton,
-                unsignedExchangeTransaction,
-                redeemScript,
-                sharedSecret,
-                privkey);
+                sendToAddress,
+                new Money(swapSessionCoin.NetworkFee));
 
-            swapSessionCoin.ExchangeTransactionHex = exchangeTransaction.ToHex(network.Consensus.ConsensusFactory);
-            swapSessionCoin.ExchangeTransactionHash = exchangeTransaction.GetHash().ToString();
+            var swapCoinsInput = new BlockcoreWalletSwapCoins
+                {
+                    walletId = account.WalletId,
+                    accountId = account.AccountId,
+                    network = network.CoinTicker,
+                    swapTrxHex = swapSessionCoin.SwapTransactionHex,
+                    redeemScriptHex = swapSessionCoin.SwapRedeemScriptHex,
+                    secretHashHex = Encoders.Hex.EncodeData(sharedSecret.ToBytes()),
+                    trxToSignHex = unsignedExchangeTransaction.ToHex(network.Consensus.ConsensusFactory),
+                    message = $"Swap {Money.Satoshis(swapSessionCoin.Amount)} {swapSessionCoin.CoinSymbol} to {sendToAddress}"
+                };
+
+            var result = await WalletService.SwapCoins(swapCoinsInput);
+
+            if (result == null)
+            {
+                throw new Exception("Failed to call SwapCoins api method on the wallet");
+            }
+
+            if (string.IsNullOrEmpty(result.transactionId))
+            {
+                if (string.IsNullOrEmpty(result.privateKey))
+                {
+                    throw new Exception("Private key was not provided by wallet");
+                }
+
+                var privkey = new Key(Encoders.Hex.DecodeData(result.privateKey));
+
+                var exchangeTransaction = SwapBuilder.SignSwapSpendUnsignedTransaction(
+                    network,
+                    transaciton,
+                    unsignedExchangeTransaction,
+                    redeemScript,
+                    sharedSecret,
+                    privkey);
+
+                swapSessionCoin.ExchangeTransactionHex = exchangeTransaction.ToHex(network.Consensus.ConsensusFactory);
+                swapSessionCoin.ExchangeTransactionHash = exchangeTransaction.GetHash().ToString();
+            }
+            else
+            {
+                swapSessionCoin.ExchangeTransactionHex = result.transactionHex;
+                swapSessionCoin.ExchangeTransactionHash = result.transactionId;
+            }
+
+            Logger.LogInformation("ExchangeSwapFund1: Exchange swap fund completed successfully.");
         }
-        else
+        catch (Exception ex)
         {
-            swapSessionCoin.ExchangeTransactionHex = result.transactionHex;
-            swapSessionCoin.ExchangeTransactionHash = result.transactionId;
+            Logger.LogError(ex, "ExchangeSwapFund1: An error occurred during exchange swap fund.");
+            throw;
         }
     }
 
+
     private async Task ScanForSecretHash()
     {
-        Networks.Network network = SwapsConfiguration.Networks[swap.SwapTaker.CoinSymbol];
-
-        if (swap.SwapTaker.ExchangeTransactionHex != null)
-        {
-            var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swap.SwapTaker.ExchangeTransactionHex);
-
-            var secret = SwapScripts.GetSecretFromScriptSig(transaciton);
-
-            this.SharedSecret = secret.ToString();
-            return;
-        }
-
         try
         {
+            Networks.Network network = SwapsConfiguration.Networks[swap.SwapTaker.CoinSymbol];
+
+            if (swap.SwapTaker.ExchangeTransactionHex != null)
+            {
+                var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swap.SwapTaker.ExchangeTransactionHex);
+
+                var secret = SwapScripts.GetSecretFromScriptSig(transaciton);
+
+                this.SharedSecret = secret.ToString();
+                return;
+            }
+
             var indexer = await storage.Indexer(swap.SwapTaker.CoinSymbol);
             var url = $"/query/transaction/{swap.SwapTaker.SwapTransactionHash}";
             var res = await Http.GetFromJsonAsync<TransactionData>(indexer.Url + url);
@@ -1078,13 +1149,17 @@
                 }
             }
 
+            Logger.LogInformation("ScanForSecretHash: Secret hash scan completed successfully.");
         }
         catch (Exception ex)
         {
+            Logger.LogError(ex, "ScanForSecretHash: An error occurred during secret hash scan.");
             error = ex.Message;
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            throw;
         }
     }
+
 
     //private async Task MakerRecoverFunds()
     //{
@@ -1155,127 +1230,158 @@
 
     private async Task MakerRecoverFunds1()
     {
-        ExtKey.UseBCForHMACSHA512 = true;
-        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
-        if (swap.SwapMaker.SenderPubkey != mypubkeyMakerSide)
-            throw new Exception("Maker pubkey was changed");
-
-        Networks.Network network = SwapsConfiguration.Networks[swap.SwapMaker.CoinSymbol];
-
-        var walletConnecet = new WalletConnectInput { WalletAccounts = _walletAccounts };
-        var errorRes = await WalletService.ConnectWallet(walletConnecet);
-        if (!string.IsNullOrEmpty(errorRes))
+        try
         {
-            error = errorRes;
-            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-            return;
+            ExtKey.UseBCForHMACSHA512 = true;
+            NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+            if (swap.SwapMaker.SenderPubkey != mypubkeyMakerSide)
+                throw new Exception("Maker pubkey was changed");
+
+            Networks.Network network = SwapsConfiguration.Networks[swap.SwapMaker.CoinSymbol];
+
+            var walletConnecet = new WalletConnectInput { WalletAccounts = _walletAccounts };
+            var errorRes = await WalletService.ConnectWallet(walletConnecet);
+            if (!string.IsNullOrEmpty(errorRes))
+            {
+                error = errorRes;
+                await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+                return;
+            }
+
+            var account = _walletAccounts.GetAccountByKey(swap.SwapMaker.SenderPubkey);
+
+            var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
+
+            await RecoverFunds1(swap.SwapMaker, address, account);
+
+            swap.Status = SwapsDataStatus.Complete;
+
+            await PostSwap(swap);
+
+            await this.RefreshSwap();
+
+            await this.BlockchainApiService.Broadcast(swap.SwapMaker.CoinSymbol, swap.SwapMaker.RecoveryTransactionHex);
+
+            Logger.LogInformation("MakerRecoverFunds1: Funds recovery completed successfully.");
         }
-
-        var account = _walletAccounts.GetAccountByKey(swap.SwapMaker.SenderPubkey);
-
-        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
-
-        await RecoverFunds1(swap.SwapMaker, address, account);
-
-        swap.Status = SwapsDataStatus.Complete;
-
-        await PostSwap(swap);
-
-        await this.RefreshSwap();
-
-        await this.BlockchainApiService.Broadcast(swap.SwapMaker.CoinSymbol, swap.SwapMaker.RecoveryTransactionHex);
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "MakerRecoverFunds1: An error occurred during funds recovery.");
+            error = ex.Message;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            throw;
+        }
     }
 
     private async Task TakerRecoverFunds1()
     {
-        ExtKey.UseBCForHMACSHA512 = true;
-        NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
-        if (swap.SwapTaker.SenderPubkey != mypubkeyTakerSide)
-            throw new Exception("Taker pubkey was changed");
-
-        Networks.Network network = SwapsConfiguration.Networks[swap.SwapTaker.CoinSymbol];
-
-        var walletConnecet = new WalletConnectInput { WalletAccounts = _walletAccounts };
-        var errorRes = await WalletService.ConnectWallet(walletConnecet);
-        if (!string.IsNullOrEmpty(errorRes))
+        try
         {
-            error = errorRes;
-            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
-            return;
+            ExtKey.UseBCForHMACSHA512 = true;
+            NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+            if (swap.SwapTaker.SenderPubkey != mypubkeyTakerSide)
+                throw new Exception("Taker pubkey was changed");
+
+            Networks.Network network = SwapsConfiguration.Networks[swap.SwapTaker.CoinSymbol];
+
+            var walletConnecet = new WalletConnectInput { WalletAccounts = _walletAccounts };
+            var errorRes = await WalletService.ConnectWallet(walletConnecet);
+            if (!string.IsNullOrEmpty(errorRes))
+            {
+                error = errorRes;
+                await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+                return;
+            }
+
+            var account = _walletAccounts.GetAccountByKey(swap.SwapTaker.SenderPubkey);
+
+            var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
+
+            await RecoverFunds1(swap.SwapTaker, address, account);
+
+            swap.Status = SwapsDataStatus.Complete;
+
+            await PostSwap(swap);
+
+            await this.RefreshSwap();
+
+            await this.BlockchainApiService.Broadcast(swap.SwapTaker.CoinSymbol, swap.SwapTaker.RecoveryTransactionHex);
+
+            Logger.LogInformation("TakerRecoverFunds1: Funds recovery completed successfully.");
         }
-
-        var account = _walletAccounts.GetAccountByKey(swap.SwapTaker.SenderPubkey);
-
-        var address = SwapsConfiguration.GetNextAvailableAddress1(walletConnecet, account);
-
-        await RecoverFunds1(swap.SwapTaker, address, account);
-
-        swap.Status = SwapsDataStatus.Complete;
-
-        await PostSwap(swap);
-
-        await this.RefreshSwap();
-
-        await this.BlockchainApiService.Broadcast(swap.SwapTaker.CoinSymbol, swap.SwapTaker.RecoveryTransactionHex);
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "TakerRecoverFunds1: An error occurred during funds recovery.");
+            error = ex.Message;
+            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            throw;
+        }
     }
 
     private async Task RecoverFunds1(SwapSessionCoin swapSessionCoin, string sendToAddress, WalletAccount account)
     {
-        //if (mypubkey != swapSessionCoin.SenderPubkey)
-        //    throw new Exception("Invalid key");
-
-        Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
-
-        var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
-        var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
-
-        var unsignedRecoverTransaction = SwapBuilder.CreateSwapRecoveryUnsignedTransaction(
-            network,
-            transaciton,
-            sendToAddress,
-            new Money(swapSessionCoin.NetworkFee),
-            swapSessionCoin.RecoveryLockTime!.Value);
-
-        var swapCoinsInput = new BlockcoreWalletSwapCoins
-            {
-                walletId = account.WalletId,
-                accountId = account.AccountId,
-                network = network.CoinTicker,
-                swapTrxHex = swapSessionCoin.SwapTransactionHex,
-                redeemScriptHex = swapSessionCoin.SwapRedeemScriptHex,
-                secretHashHex = null, // this means it is recover not swap
-                trxToSignHex = unsignedRecoverTransaction.ToHex(network.Consensus.ConsensusFactory),
-                message = $"Recover {Money.Satoshis(swapSessionCoin.Amount)} {swapSessionCoin.CoinSymbol} to {sendToAddress}"
-            };
-
-        var result = await WalletService.SwapCoins(swapCoinsInput);
-
-        if (result == null)
-            throw new Exception("Failed to call SwapCoins api method on the wallet");
-
-        if (string.IsNullOrEmpty(result.transactionId))
+        try
         {
-            if (string.IsNullOrEmpty(result.privateKey))
-                throw new Exception("Private key was not provided by wallet");
+            Networks.Network network = SwapsConfiguration.Networks[swapSessionCoin.CoinSymbol];
 
-            var privkey = new Key(Encoders.Hex.DecodeData(result.privateKey));
+            var transaciton = network.Consensus.ConsensusFactory.CreateTransaction(swapSessionCoin.SwapTransactionHex);
+            var redeemScript = Script.FromHex(swapSessionCoin.SwapRedeemScriptHex);
 
-            var recoveryTransaction = SwapBuilder.SignSwapRecoveryUnsignedTransaction(
+            var unsignedRecoverTransaction = SwapBuilder.CreateSwapRecoveryUnsignedTransaction(
                 network,
                 transaciton,
-                unsignedRecoverTransaction,
-                redeemScript,
-                privkey);
+                sendToAddress,
+                new Money(swapSessionCoin.NetworkFee),
+                swapSessionCoin.RecoveryLockTime!.Value);
 
-            swapSessionCoin.RecoveryTransactionHex = recoveryTransaction.ToHex(network.Consensus.ConsensusFactory);
-            swapSessionCoin.RecoveryTransactionHash = recoveryTransaction.GetHash().ToString();
+            var swapCoinsInput = new BlockcoreWalletSwapCoins
+                {
+                    walletId = account.WalletId,
+                    accountId = account.AccountId,
+                    network = network.CoinTicker,
+                    swapTrxHex = swapSessionCoin.SwapTransactionHex,
+                    redeemScriptHex = swapSessionCoin.SwapRedeemScriptHex,
+                    secretHashHex = null, // this means it is recover not swap
+                    trxToSignHex = unsignedRecoverTransaction.ToHex(network.Consensus.ConsensusFactory),
+                    message = $"Recover {Money.Satoshis(swapSessionCoin.Amount)} {swapSessionCoin.CoinSymbol} to {sendToAddress}"
+                };
+
+            var result = await WalletService.SwapCoins(swapCoinsInput);
+
+            if (result == null)
+                throw new Exception("Failed to call SwapCoins api method on the wallet");
+
+            if (string.IsNullOrEmpty(result.transactionId))
+            {
+                if (string.IsNullOrEmpty(result.privateKey))
+                    throw new Exception("Private key was not provided by wallet");
+
+                var privkey = new Key(Encoders.Hex.DecodeData(result.privateKey));
+
+                var recoveryTransaction = SwapBuilder.SignSwapRecoveryUnsignedTransaction(
+                    network,
+                    transaciton,
+                    unsignedRecoverTransaction,
+                    redeemScript,
+                    privkey);
+
+                swapSessionCoin.RecoveryTransactionHex = recoveryTransaction.ToHex(network.Consensus.ConsensusFactory);
+                swapSessionCoin.RecoveryTransactionHash = recoveryTransaction.GetHash().ToString();
+            }
+            else
+            {
+                swapSessionCoin.RecoveryTransactionHex = result.transactionHex;
+                swapSessionCoin.RecoveryTransactionHash = result.transactionId;
+            }
+
+            Logger.LogInformation("RecoverFunds1: Funds recovery completed successfully.");
         }
-        else
+        catch (Exception ex)
         {
-            swapSessionCoin.RecoveryTransactionHex = result.transactionHex;
-            swapSessionCoin.RecoveryTransactionHash = result.transactionId;
+            Logger.LogError(ex, "RecoverFunds1: An error occurred during funds recovery.");
+            throw;
         }
     }
 
