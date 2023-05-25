@@ -444,9 +444,14 @@
 
         if (swap != null)
         {
+            Guard.NotNull(swap.SwapMaker, nameof(swap.SwapMaker));
+            Guard.NotNull(swap.SwapTaker, nameof(swap.SwapTaker));
+
             // if I am the maker this is where my keys will be found
             if (swap.SwapMaker.SenderPubkey != null)
             {
+                Guard.NotNull(swap.SwapTaker.ReceiverPubkey, nameof(swap.SwapTaker.ReceiverPubkey));
+
                 var accountMakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapMaker.SenderPubkey);
                 mypubkeyMakerSide = accountMakerSide?.Pubkey;
                 Logger.LogInformation($"OnInitializedAsync: mypubkeyMakerSide: {mypubkeyMakerSide}");
@@ -459,6 +464,8 @@
             // if I am the taker this is where my keys will be found
             if (mypubkeyMakerSide == null && swap.SwapTaker.SenderPubkey != null)
             {
+                Guard.NotNull(swap.SwapMaker.ReceiverPubkey, nameof(swap.SwapMaker.ReceiverPubkey));
+
                 var accountMakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapMaker.ReceiverPubkey);
                 mypubkeyMakerSide = accountMakerSide?.Pubkey;
                 Logger.LogInformation($"OnInitializedAsync: mypubkeyMakerSide: {mypubkeyMakerSide}");
