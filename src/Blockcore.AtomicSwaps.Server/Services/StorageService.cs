@@ -11,7 +11,7 @@ namespace Blockcore.AtomicSwaps.Server.Services
     public interface IStorageService
     {
         Task<IEnumerable<SwapSession>> Get();
-        Task<IEnumerable<SwapSession>> Post(List<string> pubKeys);
+        Task<IEnumerable<SwapSession>> Get(List<string> pubKeys);
 
         Task<SwapSession?> Get(string session);
         Task Add(SwapSession swap);
@@ -69,7 +69,7 @@ namespace Blockcore.AtomicSwaps.Server.Services
         }
 
         //post pubKeys and return private swaps
-        public async Task<IEnumerable<SwapSession>> Post(List<string> pubKeys)
+        public async Task<IEnumerable<SwapSession>> Get(List<string> pubKeys)
         {
             await using var swapContext = new SwapContext(dbPath);
 
