@@ -419,15 +419,21 @@
 
     protected override async Task OnInitializedAsync()
     {
-        hasWallet = await WalletConnector.HasBlockcoreWallet();
-        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+        Logger.LogInformation("Starting OnInitializedAsync method.");
 
+        hasWallet = await WalletConnector.HasBlockcoreWallet();
+        Logger.LogInformation($"Has wallet: {hasWallet}");
+
+        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+        Logger.LogInformation("Got or created WalletAccounts.");
 
         string? swapRes = await Http.GetStringAsync($"api/SwapCoordinator/session/{swapSession}");
+        Logger.LogInformation("Received swap session response.");
 
         if (string.IsNullOrEmpty(swapRes))
         {
             error = $"Swap not found!";
+            Logger.LogWarning(error);
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
@@ -437,59 +443,77 @@
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = true
             });
+        Logger.LogInformation("Swap session deserialized.");
 
         if (swap != null)
         {
             Guard.NotNull(swap.SwapMaker, nameof(swap.SwapMaker));
             Guard.NotNull(swap.SwapTaker, nameof(swap.SwapTaker));
+            Logger.LogInformation("Guard checks for SwapMaker and SwapTaker passed.");
 
             // if I am the maker this is where my keys will be found
             if (swap.SwapMaker.SenderPubkey != null)
             {
                 Guard.NotNull(swap.SwapTaker.ReceiverPubkey, nameof(swap.SwapTaker.ReceiverPubkey));
+                Logger.LogInformation("Guard check for SwapTaker ReceiverPubkey passed.");
 
                 var accountMakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapMaker.SenderPubkey);
                 mypubkeyMakerSide = accountMakerSide?.Pubkey;
+                Logger.LogInformation("MypubkeyMakerSide retrieved.");
 
                 var accountTakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapTaker.ReceiverPubkey);
                 mypubkeyTakerSide = accountTakerSide?.Pubkey;
+                Logger.LogInformation("MypubkeyTakerSide retrieved.");
             }
 
             // if I am the taker this is where my keys will be found
             if (mypubkeyMakerSide == null && swap.SwapTaker.SenderPubkey != null)
             {
                 Guard.NotNull(swap.SwapMaker.ReceiverPubkey, nameof(swap.SwapMaker.ReceiverPubkey));
+                Logger.LogInformation("Guard check for SwapMaker ReceiverPubkey passed.");
 
                 var accountMakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapMaker.ReceiverPubkey);
                 mypubkeyMakerSide = accountMakerSide?.Pubkey;
+                Logger.LogInformation("MypubkeyMakerSide retrieved.");
 
                 var accountTakerSide = _walletAccounts.TryGetAccountByKey(swap.SwapTaker.SenderPubkey);
                 mypubkeyTakerSide = accountTakerSide?.Pubkey;
+                Logger.LogInformation("MypubkeyTakerSide retrieved.");
             }
         }
 
         await this.RefreshConfirmations();
+        Logger.LogInformation("Confirmations refreshed.");
 
         try
         {
             explorerUrl = await storage.ExplorerUrl();
+            Logger.LogInformation("Explorer URL retrieved.");
         }
         catch (Exception ex)
         {
             error = ex.Message;
+            Logger.LogError($"Error retrieving Explorer URL: {error}");
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
         }
+
         swapInterval = storage.GetIntervalSwapsDataUpdate();
+        Logger.LogInformation("Swap interval retrieved.");
 
         await this.RefreshSwap();
+        Logger.LogInformation("Swap refreshed.");
 
         if (swap.SwapMaker.SwapTransactionHash != null || swap.SwapTaker.SwapTransactionHash != null)
         {
             await this.RefreshConfirmations();
+            Logger.LogInformation("Confirmations refreshed.");
         }
-        showLodaling = false;
-        StartTimer();
 
+        showLodaling = false;
+        Logger.LogInformation("showLodaling set to false.");
+
+        StartTimer();
+        Logger.LogInformation("Timer started.");
     }
 
     void ActiveStep(MudTabPanel panel)
