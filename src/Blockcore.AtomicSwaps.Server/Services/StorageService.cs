@@ -11,7 +11,7 @@ namespace Blockcore.AtomicSwaps.Server.Services
     public interface IStorageService
     {
         Task<IEnumerable<SwapSession>> Get();
-        Task<IEnumerable<SwapSession>> Post(List<string> pubKeys);
+        Task<IEnumerable<SwapSession>> Get(List<string> pubKeys);
 
         Task<SwapSession?> Get(string session);
         Task Add(SwapSession swap);
@@ -68,14 +68,13 @@ namespace Blockcore.AtomicSwaps.Server.Services
             return swaps.ToList();
         }
 
-        //post pubKeys and get public and private swaps
-        public async Task<IEnumerable<SwapSession>> Post(List<string> pubKeys)
+        //post pubKeys and return private swaps
+        public async Task<IEnumerable<SwapSession>> Get(List<string> pubKeys)
         {
             await using var swapContext = new SwapContext(dbPath);
 
             var swaps = await swapContext.Swaps
-                 .Where(s => (s.Status == SwapsDataStatus.Available || s.Status == SwapsDataStatus.InProgress)
-                  && (!s.IsPrivate || pubKeys.Contains(s.SwapTaker.SenderPubkey) || pubKeys.Contains(s.SwapMaker.SenderPubkey)))
+                 .Where(s => s.IsPrivate && (pubKeys.Contains(s.SwapTaker.SenderPubkey) || pubKeys.Contains(s.SwapMaker.SenderPubkey)))
                  .OrderByDescending(s => s.Created)
                  .ToListAsync();
 

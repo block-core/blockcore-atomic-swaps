@@ -27,7 +27,7 @@ namespace Blockcore.AtomicSwaps.Server.Controllers
         [HttpPost]
         public async Task<IEnumerable<SwapSession>> Post(List<string> pubKeys)
         {
-            return await _storageService.Post(pubKeys);
+            return await _storageService.Get(pubKeys);
         }
         [HttpGet]
         [Route("session/{swapSessionId}")]

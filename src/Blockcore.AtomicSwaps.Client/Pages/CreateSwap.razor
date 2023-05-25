@@ -32,7 +32,7 @@ else
                 <MudGrid Spacing="@spacing" Justify="Justify.Center">
                     <MudItem sm="6" xl="6" xs="12">
                         <MudSelect T="string" Value="swapFrom" Adornment="Adornment.End" Label="From" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Wallet" AdornmentColor="Color.Warning" Placeholder="Please Select" ValueChanged="value => SwapFromValueChanged(value)">
-                            @foreach (var prp in _networkList)
+                            @foreach (var prp in networkList)
                             {
                                 <MudSelectItem Value="@prp">
                                     <img src="https://chains.blockcore.net/assets/@prp/icon.png" height="24" class="mr-1" /> @prp
@@ -59,7 +59,7 @@ else
                 <MudGrid Spacing="@spacing" Justify="Justify.Center">
                     <MudItem sm="6" xl="6" xs="12">
                         <MudSelect T="string" @bind-Value="swapTo" Adornment="Adornment.End" Label="To" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Wallet" AdornmentColor="Color.Secondary" Placeholder="Please Select">
-                            @foreach (var prp in _networkList)
+                            @foreach (var prp in networkList)
                             {
                                 <MudSelectItem Value="@prp">
                                     <img src="https://chains.blockcore.net/assets/@prp/icon.png" height="24" class="mr-1" /> @prp
@@ -78,7 +78,7 @@ else
     <MudGrid Spacing="@spacing" Justify="Justify.Center">
         <MudItem sm="12" xl="8" xs="12" lg="8">
             <MudPaper Class="pa-4">
-                @if (!_walletAccounts.Connected)
+                @if (!walletAccounts.Connected)
                 {
                     <MudButton FullWidth Color="Color.Primary" Variant="Variant.Filled" disabled="@busy" @onclick="ConnectWallet">Connect Wallet</MudButton>
                 }
@@ -100,38 +100,34 @@ else
 
 @code {
     public int spacing { get; set; } = 3;
-
-    private List<SwapSession> swaps;
-
     public bool isPrivatie { get; set; } = false;
+    public bool hasWallet { get; private set; }
+    public bool busy { get; private set; } = false;
 
-    string error;
+    private string error;
+    private string swapFrom = "";
+    private string swapTo = "";
+    private string swapFromMaxAmmountText = "";
+    private decimal amountToSell = 0;
+    private decimal amountToBuy = 0;
+    private decimal swapFromTotalBalance = 0;
 
-    string swapFrom = "";
-    string swapTo = "";
-
-    string swapFromMaxAmmountText = "";
-
-    decimal amountToSell = 0;
-    decimal amountToBuy = 0;
-    private bool hasWallet;
-    private bool busy = false;
-    decimal swapFromTotalBalance = 0;
-    WalletAccounts _walletAccounts = new();
-    List<string> _networkList = new();
+    private WalletAccounts walletAccounts = new();
+    private List<string> networkList = new();
+    private List<SwapSession> swaps;
 
     protected override async Task OnInitializedAsync()
     {
         hasWallet = await WalletConnector.HasBlockcoreWallet();
-        _networkList = SwapsConfiguration.Networks.Keys.ToList();
-        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
+        networkList = SwapsConfiguration.Networks.Keys.ToList();
+        walletAccounts = storage.GetOrCreate<WalletAccounts>();
     }
     void SwapFromValueChanged(string selected)
     {
         try
         {
             swapFrom = selected;
-            var accountMakerSide = _walletAccounts.FindAccount(swapFrom);
+            var accountMakerSide = walletAccounts.FindAccount(swapFrom);
             var amountToSellSats = Money.Coins(amountToSell);
             swapFromTotalBalance = Money.Satoshis(accountMakerSide.Balance).ToUnit(MoneyUnit.BTC);
         }
@@ -165,7 +161,7 @@ else
 
         Networks.Network network = SwapsConfiguration.Networks[swapFrom];
 
-        var errorRes = await WalletService.ConnectWallet(_walletAccounts);
+        var errorRes = await WalletService.ConnectWallet(walletAccounts);
 
         if (!string.IsNullOrEmpty(errorRes))
         {
@@ -174,22 +170,22 @@ else
             return;
         }
 
-        if (!_walletAccounts.HasCoin(swapFrom))
+        if (!walletAccounts.HasCoin(swapFrom))
         {
             error = $"The coin {swapFrom} network is not found in wallet";
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
 
-        if (!_walletAccounts.HasCoin(swapTo))
+        if (!walletAccounts.HasCoin(swapTo))
         {
             error = $"The coin {swapTo} network is not found in wallet";
             await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
             return;
         }
 
-        var accountMakerSide = _walletAccounts.FindAccount(swapFrom);
-        var accountTakerSide = _walletAccounts.FindAccount(swapTo);
+        var accountMakerSide = walletAccounts.FindAccount(swapFrom);
+        var accountTakerSide = walletAccounts.FindAccount(swapTo);
 
         var amountToSellSats = Money.Coins(amountToSell);
         var amountToBuySats = Money.Coins(amountToBuy);
@@ -297,7 +293,7 @@ else
 
     private async Task ConnectWallet()
     {
-        error = await WalletService.ConnectWallet(_walletAccounts);
+        error = await WalletService.ConnectWallet(walletAccounts);
         await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
     }
 

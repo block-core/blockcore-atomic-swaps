@@ -5,7 +5,7 @@
 @using Blockcore.AtomicSwaps.BlockcoreWallet
 @using Blockcore.AtomicSwaps.Shared
 @inject HttpClient Http
-@inject Storage storage;
+@inject Storage Storage;
 @inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
 @inject ILogger<FindSwaps> Logger;
@@ -28,9 +28,7 @@ else
 
     @if (swaps != null)
     {
-
-
-        <MudTable Items="@swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Primary">
+        <MudTable Items="@swaps" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@loading" LoadingProgressColor="Color.Primary">
             <HeaderContent>
                 <MudTh>Swap</MudTh>
                 <MudTh>From</MudTh>
@@ -54,7 +52,7 @@ else
                 <MudTd Class="text-one-line" DataLabel="Maker">@Money.Satoshis(context.SwapMaker.Amount) - @context.SwapMaker.CoinSymbol</MudTd>
                 <MudTd Class="text-one-line" DataLabel="Taker">@Money.Satoshis(context.SwapTaker.Amount) - @context.SwapTaker.CoinSymbol</MudTd>
                 <MudTd Class="text-one-line" DataLabel="Date">@context.Created </MudTd>
-                <MudTd Class="text-one-line" DataLabel="Is Mine">@(_walletAccounts.HasAccountKey(context.SwapMaker.SenderPubkey) ? "I am maker" : _walletAccounts.HasAccountKey(context.SwapTaker.SenderPubkey) ? "I am taker" : "not my swap")</MudTd>
+                <MudTd Class="text-one-line" DataLabel="Is Mine">@(walletAccounts.HasAccountKey(context.SwapMaker.SenderPubkey) ? "I am maker" : walletAccounts.HasAccountKey(context.SwapTaker.SenderPubkey) ? "I am taker" : "not my swap")</MudTd>
                     <MudTd Class="text-one-line" DataLabel="Status">@context.Status </MudTd>
                     <MudTd DataLabel="Details">
                         <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary" @onclick="() => this.ViewSwap(context.SwapSessionId)">Details</MudButton>
@@ -64,69 +62,64 @@ else
     }
 
 }
+
+
 @code {
     private IEnumerable<SwapSession> swaps = new List<SwapSession>();
-    private bool _loading;
-
-    Networks.Network network;
-    List<string> NetworkList;
-
-    string error;
-
-    string SwapFrom = "STRAX";
-    string SwapTo = "CITY";
-
-    long amountToSell = 1;
-    long amountToBuy = 10;
+    private bool loading;
     private bool hasWallet;
-    WalletAccounts? _walletAccounts;
+    private WalletAccounts? walletAccounts;
+    private List<string> networkList;
+
+    private string swapFrom = "STRAX";
+    private string swapTo = "CITY";
+    private long amountToSell = 1;
+    private long amountToBuy = 10;
+
 
     private async Task Fetch()
     {
         try
         {
-            var data = _walletAccounts.Accounts.Values.Where(c => c.Pubkey != null).Select(c => c.Pubkey).ToList();
-
-            var Swaps = await Http.PostAsJsonAsync("api/SwapCoordinator", data).ConfigureAwait(false);
-            if (Swaps.IsSuccessStatusCode)
-            {
-                var swapList = await Swaps.Content.ReadFromJsonAsync<List<SwapSession>>().ConfigureAwait(false);
-                this.swaps = swapList;
-            }
-            else
-            {
-                var errorMessage = $"Server responded with status code {Swaps.StatusCode}: {Swaps.ReasonPhrase}";
-                await SnackbarService.ShowMessage(errorMessage, Defaults.Classes.Position.BottomEnd, Severity.Error);
-            }
+            swaps = await Http.GetFromJsonAsync<List<SwapSession>>("api/SwapCoordinator");
         }
         catch (Exception ex)
         {
-            error = ex.Message;
-            await SnackbarService.ShowMessage(error, Defaults.Classes.Position.BottomEnd, Severity.Error);
+            await ShowErrorMessage(ex, Defaults.Classes.Position.BottomEnd, Severity.Error);
         }
     }
 
+    private async Task ShowErrorMessage(Exception ex, string position, Severity severity)
+    {
+        await SnackbarService.ShowMessage(ex.Message, position, severity);
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        NetworkList = SwapsConfiguration.Networks.Keys.ToList();
+        SetNetworkList();
+        await CheckWalletAndFetch();
+    }
 
-        if (await WalletConnector.HasBlockcoreWallet() == false)
+    private void SetNetworkList()
+    {
+        networkList = SwapsConfiguration.Networks.Keys.ToList();
+    }
+
+    private async Task CheckWalletAndFetch()
+    {
+        if (!await WalletConnector.HasBlockcoreWallet())
         {
             hasWallet = false;
             return;
         }
 
         hasWallet = true;
-
-        _walletAccounts = storage.GetOrCreate<WalletAccounts>();
-
-        await this.Fetch();
+        walletAccounts = Storage.GetOrCreate<WalletAccounts>();
+        await Fetch();
     }
 
-    protected async Task ViewSwap(string session)
+    private void ViewSwap(string session)
     {
         NavigationManager.NavigateTo($"viewswap/{session}");
     }
-
 }
