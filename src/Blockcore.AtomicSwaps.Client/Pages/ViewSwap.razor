@@ -600,7 +600,10 @@
         if (swap.SwapMaker.SenderPubkey != mypubkeyMakerSide)
             throw new Exception("Maker pubkey was changed");
 
-        await BuildSideSwap1(swap.SwapMaker, DateTime.UtcNow.AddHours(48));
+        var res = await BuildSideSwap1(swap.SwapMaker, DateTime.UtcNow.AddHours(48));
+
+        // ugly hack to fix issue 63 https://github.com/block-core/blockcore-atomic-swaps/issues/63
+        swap.SwapMaker = res;
 
         await PostSwap(swap);
 
@@ -614,8 +617,10 @@
         if (swap.SwapTaker.SenderPubkey != mypubkeyTakerSide)
             throw new Exception("Taker pubkey was changed");
 
-        await BuildSideSwap1(swap.SwapTaker, swap.SwapMaker.RecoveryLockTime.Value.AddHours(-24));
-
+        var res = await BuildSideSwap1(swap.SwapTaker, swap.SwapMaker.RecoveryLockTime.Value.AddHours(-24));
+        
+        // ugly hack to fix issue 63 https://github.com/block-core/blockcore-atomic-swaps/issues/63
+        swap.SwapTaker = res;
 
         await PostSwap(swap);
 
@@ -624,7 +629,7 @@
         await this.BlockchainApiService.Broadcast(swap.SwapTaker.CoinSymbol, swap.SwapTaker.SwapTransactionHex);
     }
 
-    private async Task BuildSideSwap1(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
+    private async Task<SwapSessionCoin> BuildSideSwap1(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
     {
         ExtKey.UseBCForHMACSHA512 = true;
         NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
@@ -675,6 +680,8 @@
             Logger.LogWarning("trxid was null");
             Logger.LogWarning("trxhex=" + trxContext.transactionHex);
         }
+
+        return swapSessionCoin;
     }
 
     //private async Task BuildSideSwap(SwapSessionCoin swapSessionCoin, DateTime recoveryLockTime)
