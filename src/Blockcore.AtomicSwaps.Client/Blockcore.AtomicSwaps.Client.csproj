@@ -36,6 +36,10 @@
 	<ItemGroup>
 		<None Include="Script\package-lock.json" />
 		<None Include="Script\package.json" />
+		<None Include="wwwroot\js\appUpdate.js" />
+		<None Include="wwwroot\js\jquery.js" />
+		<None Include="wwwroot\js\scroll.js" />
+		<None Include="wwwroot\js\sounds.js" />
 	</ItemGroup>
 
 	<ItemGroup>
