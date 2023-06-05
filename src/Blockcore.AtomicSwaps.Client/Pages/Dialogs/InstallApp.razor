@@ -1,0 +1,25 @@
+﻿<MudDialog Class="ma-5 py-2 rounded-lg">
+    <DialogContent>
+        <MudPaper Elevation="0" Class="d-flex flex-column gap-3 justify-center">
+            <div class="d-flex justify-center">
+                <img src="/icon-192.png" class="mb-5"  width="100"/>
+            </div> 
+            <MudText Align="Align.Center" Typo="Typo.h6" Color="Color.Default" Style="font-weight: 600"> Add Blockcore Atomic Swaps to Home screen </MudText>
+            <MudText Align="Align.Center" Typo="Typo.body2" Class=""> Install Blockcore Atomic Swaps on your home screen, and access it just like a regular app. </MudText>
+        </MudPaper>
+        <div class="mt-5 d-flex flex-column gap-2 justify-center">
+            <MudButton Class="rounded-lg" DisableElevation Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit"> Add To Home Screen </MudButton>
+            <MudButton Class="rounded-lg" DisableElevation Color="Color.Default" Variant="Variant.Text" OnClick="Cancel"> Maybe Later </MudButton>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    void Cancel() => MudDialog.Cancel();
+}

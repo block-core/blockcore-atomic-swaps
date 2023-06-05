@@ -5,6 +5,8 @@ using Blockcore.AtomicSwaps.Client.Services.UserPreferences;
 using Blockcore.AtomicSwaps.Client.Services;
 using MudBlazor;
 using Blockcore.AtomicSwaps.Client.Pages.Dialogs;
+using Microsoft.JSInterop;
+using NLog.Config;
 
 namespace Blockcore.AtomicSwaps.Client.Shared
 {
@@ -13,11 +15,24 @@ namespace Blockcore.AtomicSwaps.Client.Shared
         [Inject] private LayoutService LayoutService { get; set; }
 
         private MudThemeProvider _mudThemeProvider;
-
+        static Action OnInstallable;
         protected override void OnInitialized()
         {
             LayoutService.MajorUpdateOccured += LayoutServiceOnMajorUpdateOccured;
             LayoutService.SetBaseTheme(Theme.Theme.SwapsTheme());
+
+            OnInstallable = async () =>
+            {
+                var parameters = new DialogParameters();
+                var options = new DialogOptions() { CloseButton = false, NoHeader = true, MaxWidth = MaxWidth.Small, Position = DialogPosition.BottomCenter };
+                var dialog = _dialogService.Show<InstallApp>("", parameters, options);
+                var result = await dialog.Result;
+                if (!result.Cancelled)
+                {
+                    await _jsRuntime.InvokeVoidAsync("BlazorPWA.installPWA");
+                }
+            };
+
             base.OnInitialized();
         }
 
@@ -56,5 +71,32 @@ namespace Blockcore.AtomicSwaps.Client.Shared
             var options = new DialogOptions { CloseOnEscapeKey = true };
             DialogService.Show<Github>("Github", options);
         }
+
+        [JSInvokable("PWAInstallable")]
+        public static Task PWAInstallable()
+        {
+            OnInstallable.Invoke();
+            return Task.CompletedTask;
+        }
+
+        [JSInvokable("ShowUpdateVersion")]
+        public Task ShowUpdateVersion()
+        {
+            _snackBar.Configuration.PositionClass = Defaults.Classes.Position.BottomCenter;
+            var message = "New version available.";
+            _snackBar.Add(message, Severity.Info, config =>
+            {
+                config.RequireInteraction = true;
+                config.ShowCloseIcon = false;
+                config.Action = "UPDATE?";
+                config.Onclick = async (snackbar) =>
+                {
+                    await _jsRuntime.InvokeVoidAsync("AtomicSwaps.onUserUpdate");
+                };
+            });
+            return Task.CompletedTask;
+        }
+
+
     }
 }
