@@ -1,4 +1,4 @@
-﻿@page "/findswaps"
+﻿@page "/swaps"
 
 @using Blockcore.AtomicSwaps.Client.Services;
 @using NBitcoin
@@ -8,11 +8,11 @@
 @inject Storage Storage;
 @inject SwapsConfiguration SwapsConfiguration;
 @inject NavigationManager NavigationManager;
-@inject ILogger<FindSwaps> Logger;
+@inject ILogger<Swaps> Logger;
 @inject IBlockcoreWalletConnector WalletConnector
 @inject ISnackbarService SnackbarService
 
-<PageTitle>Find Atomic Swaps</PageTitle>
+<PageTitle>Swaps</PageTitle>
 
 <MudText Align="Align.Center" Typo="Typo.h4">Find Atomic Swaps</MudText>
 <MudText Align="Align.Center" Class="mb-8 mt-8"></MudText>
