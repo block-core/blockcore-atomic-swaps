@@ -2,7 +2,7 @@
 
     buildOptions: {
         out: '../wwwroot/js',
-        clean: true
+        clean: false
     },
 
     mount: {
