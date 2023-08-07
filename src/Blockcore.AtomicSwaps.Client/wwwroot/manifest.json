@@ -1,6 +1,6 @@
 {
-  "name": "Blockcore Atomic Swaps",
-  "short_name": "AtomicSwaps",
+  "name": "Blockcore Atomic Swap",
+  "short_name": "Swap",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
