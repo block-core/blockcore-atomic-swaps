@@ -12,7 +12,7 @@ namespace Blockcore.AtomicSwaps.Client.Theme
 		{
 			var theme = new MudTheme()
 			{
-				Palette = LandingPageLightPalette,
+				PaletteLight = LandingPageLightPalette,
 				PaletteDark = LandingPageDarkPalette,
 				Shadows = LandingPageShadows,
 				LayoutProperties = LandingPageLayoutProperties,
@@ -26,7 +26,7 @@ namespace Blockcore.AtomicSwaps.Client.Theme
 		{
 			var theme = new MudTheme()
 			{
-				Palette = SwapsLightPalette,
+				PaletteLight = SwapsLightPalette,
 				PaletteDark = SwapsDarkPalette,
 				LayoutProperties = new LayoutProperties()
 			};
@@ -37,7 +37,7 @@ namespace Blockcore.AtomicSwaps.Client.Theme
 
 		#region Swaps
 
-		private static readonly Palette SwapsLightPalette = new()
+		private static readonly PaletteLight SwapsLightPalette = new()
 		{
 			Black = "#110e2d",
 			AppbarText = "#424242",
@@ -55,8 +55,7 @@ namespace Blockcore.AtomicSwaps.Client.Theme
 			Primary = "#7e6fff",
 			Surface = "#1e1e2d",
 			Background = "#151521",
-			BackgroundGrey = "#151521",
-			AppbarText = "#92929f",
+ 			AppbarText = "#92929f",
 			AppbarBackground = "rgb(26,26,39)",
 			DrawerBackground = "#1e1e2d",
 			ActionDefault = "#74718e",
@@ -141,12 +140,11 @@ namespace Blockcore.AtomicSwaps.Client.Theme
 				TextTransform = "none"
 			}
 		};
-		private static readonly Palette LandingPageLightPalette = new()
+		private static readonly PaletteLight LandingPageLightPalette = new()
 		{
 			AppbarText = "#424242",
 			AppbarBackground = "rgba(0,0,0,0)",
-			BackgroundGrey = "#F9FAFC",
-			TextSecondary = "#425466",
+ 			TextSecondary = "#425466",
 			Dark = "#110E2D",
 			DarkLighten = "#1A1643",
 			GrayDefault = "#4B5563",
@@ -157,8 +155,7 @@ namespace Blockcore.AtomicSwaps.Client.Theme
 		{
 			AppbarText = "#92929f",
 			AppbarBackground = "rgba(0,0,0,0)",
-			BackgroundGrey = "#1a1a27",
-			Surface = "#1e1e2d",
+ 			Surface = "#1e1e2d",
 			Background = "#151521",
 			Dark = "#111019",
 			DarkLighten = "#1A1643",

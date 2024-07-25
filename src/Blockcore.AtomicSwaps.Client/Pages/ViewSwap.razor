@@ -46,8 +46,12 @@
                         var makerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapMaker.CoinSymbol);
                         var takerCoinImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @swap.SwapTaker.CoinSymbol);
                     }
-                    <MudAvatar Image="@makerCoinImg" />
-                    <MudAvatar Image="@takerCoinImg" />
+                    <MudAvatar>
+                        <MudImage Src="@makerCoinImg" />
+                    </MudAvatar>
+                    <MudAvatar>
+                        <MudImage Src="@takerCoinImg" />
+                    </MudAvatar>
                 </MudAvatarGroup>
             </CardHeaderAvatar>
             <CardHeaderContent>

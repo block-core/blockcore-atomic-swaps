@@ -45,7 +45,10 @@
                                 @{
                                     var networkImg = String.Format("https://chains.blockcore.net/assets/{0}/icon.png", @item.Symbol);
                                 }
-                                <MudAvatar Image="@networkImg" />
+                                 <MudAvatar>
+                                    <MudImage Src="@networkImg" />
+                                </MudAvatar>
+ 
                             </MudAvatarGroup>
                         </CardHeaderAvatar>
                         <CardHeaderContent>
@@ -63,12 +66,12 @@
                                 {
                                     @if (res.Online)
                                     {
-                                        <MudRadio Color="Color.Success" Option="@res.Domain">@res.Domain</MudRadio>
+                                        <MudRadio T="string" Color="Color.Success" Option="@res.Domain">@res.Domain</MudRadio>
                                         <br />
                                     }
                                     else
                                     {
-                                        <MudRadio Color="Color.Error" Option="@res.Domain">@res.Domain</MudRadio>
+                                        <MudRadio T="string" Color="Color.Error" Option="@res.Domain">@res.Domain</MudRadio>
                                         <br />
                                     }
                                 }
@@ -102,11 +105,11 @@
                             {
                                 @if (res.Online)
                                 {
-                                    <MudRadio Color="Color.Success" Option="@res.Domain">@res.Domain</MudRadio>
+                                    <MudRadio T="string" Color="Color.Success" Option="@res.Domain">@res.Domain</MudRadio>
                                 }
                                 else
                                 {
-                                    <MudRadio Color="Color.Error" Option="@res.Domain">@res.Domain</MudRadio>
+                                    <MudRadio T="string" Color="Color.Error" Option="@res.Domain">@res.Domain</MudRadio>
                                 }
                             }
                         </MudRadioGroup>

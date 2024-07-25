@@ -27,7 +27,7 @@ namespace Blockcore.AtomicSwaps.Client.Shared
                 var options = new DialogOptions() { CloseButton = false, NoHeader = true, MaxWidth = MaxWidth.Small, Position = DialogPosition.BottomCenter };
                 var dialog = _dialogService.Show<InstallApp>("", parameters, options);
                 var result = await dialog.Result;
-                if (!result.Cancelled)
+                if (!result!.Canceled)
                 {
                     await _jsRuntime.InvokeVoidAsync("BlazorPWA.installPWA");
                 }
